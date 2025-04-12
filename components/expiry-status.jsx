@@ -14,7 +14,7 @@ const ExpiryStatus = ({ expiryDate }) => {
         <div
           className={`${bgcolor} p-2 rounded-md flex items-center justify-center `}
         >
-          {color.includes("green") ? (
+          {bgcolor.includes("green") ? (
             <CheckCircle size={20} stroke={`${color}`} />
           ) : (
             <TriangleAlert size={20} stroke={`${color}`} />
