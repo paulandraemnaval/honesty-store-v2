@@ -31,8 +31,9 @@ async function createSession(userId, path) {
   await setDoc(sessionDoc, sessionData);
 
   const sessionId = sessionDoc.id;
+  const cookieStore = await cookies();
   const encryptedSession = await encrypt({ sessionId, expiresAt });
-  cookies().set("session", encryptedSession, {
+  cookieStore.set("session", encryptedSession, {
     httpOnly: true,
     secure: true,
     expires: expiresAt,

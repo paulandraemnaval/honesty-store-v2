@@ -52,6 +52,9 @@ const InventoryReport = () => {
         <Button
           variant="ghost"
           className="px-4 py-2 bg-mainButtonColor backdrop-blur-sm border transition-colors text-white cursor-pointer"
+          onClick={() => {
+            console.log("clicked");
+          }}
         >
           <Plus /> <Table />
         </Button>

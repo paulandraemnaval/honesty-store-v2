@@ -7,7 +7,7 @@ export async function POST(request) {
   try {
     await signOut(auth);
 
-    cookies().set("session", "", {
+    await cookies().set("session", "", {
       httpOnly: true,
       secure: true,
       expires: new Date(0),

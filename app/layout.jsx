@@ -1,4 +1,5 @@
 import "@/styles/globals.css";
+import { Toaster } from "@/components/ui/sonner";
 export const metadata = {
   // Basic metadata
   title: "Honesty Store IMS | Inventory Management System",
@@ -71,7 +72,10 @@ export default function Layout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Document</title>
       </head>
-      <body className="h-[100vh] w-full font-inter">{children}</body>
+      <body className="h-[100vh] w-full font-inter">
+        {children}
+        <Toaster expand={true} richColors />
+      </body>
     </html>
   );
 }

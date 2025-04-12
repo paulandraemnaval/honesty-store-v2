@@ -2,15 +2,7 @@ import { NextResponse } from "next/server";
 import { decrypt } from "@/utils/session";
 import { cookies } from "next/headers";
 
-const protectedRoutes = [
-  "/admin/user",
-  "/admin/user/manage_account",
-  "/admin/user/manage/add_product",
-  "/admin/user/manage/add_supplier",
-  "/admin/user/manage/create_audit",
-  "/admin/user/manage/create_category",
-  "/admin/user/manage/create_report",
-];
+const protectedRoutes = [];
 const publicRoutes = ["/admin"];
 
 export default async function middleware(req) {
@@ -22,7 +14,9 @@ export default async function middleware(req) {
 
   const isPublicRoute = publicRoutes.includes(path);
 
-  const encryptedSession = cookies().get("session")?.value;
+  const cookieStore = await cookies();
+
+  const encryptedSession = cookieStore.get("session")?.value;
 
   const sessionData = await decrypt(encryptedSession);
 

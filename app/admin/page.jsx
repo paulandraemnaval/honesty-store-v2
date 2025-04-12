@@ -21,7 +21,7 @@ export function Page() {
           </span>
         </div>
         <span className="font-bold text-3xl text-white mt-auto flex  w-full justify-center items-center p-4">
-          Your one stop solution for inventory management
+          Your one stop solution for inventory management.
         </span>
       </div>
       <div className="flex-1 flex-col items-center justify-center w-full h-full p-4 bg-white flex">

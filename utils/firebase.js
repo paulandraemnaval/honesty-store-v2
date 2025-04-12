@@ -56,7 +56,8 @@ export const createLog = async (
 };
 
 export const getLoggedInUser = async () => {
-  const encryptedSession = cookies().get("session")?.value; // Get the session cookie
+  const cookieStore = await cookies();
+  const encryptedSession = cookieStore.get("session")?.value; // Get the session cookie
   if (!encryptedSession) {
     console.log("No session cookie found.");
     return null;

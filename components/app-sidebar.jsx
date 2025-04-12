@@ -1,6 +1,6 @@
 "use client";
 import icons from "@/constants/icons";
-import { LogOut } from "lucide-react";
+import { Loader2, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -18,7 +18,19 @@ import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "./ui/separator";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useGlobalContext } from "@/contexts/global-context";
 import React from "react";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTrigger,
+} from "./ui/dialog";
 
 const items = [
   {
@@ -49,7 +61,25 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const router = useRouter();
   const { open, openMobile } = useSidebar();
+  const { setUser, user } = useGlobalContext();
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: async () =>
+      fetch("/api/admin/signout", {
+        method: "POST",
+        body: JSON.stringify({}),
+      }),
+    onSuccess: () => {
+      toast.success("Successfully logged out");
+      setUser(null);
+      router.push("/admin");
+    },
+  });
+
+  function handleLogout() {
+    mutateAsync();
+  }
   return (
     <Sidebar variant="sidebar" collapsible="icon">
       <SidebarHeader className="p-4">
@@ -121,14 +151,38 @@ export function AppSidebar() {
               </div>
             </div>
 
-            <Button
-              variant="outline"
-              className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Log out
-            </Button>
-
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="w-fit">
+                <DialogHeader className="font-semibold">Log out</DialogHeader>
+                <DialogDescription>
+                  Are you sure you want to log out? All unsaved changes will be
+                  lost.
+                </DialogDescription>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    className="w-fit justify-start text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
+                    onClick={handleLogout}
+                  >
+                    {isPending ? (
+                      <Loader2 className="h-4 w-4" />
+                    ) : (
+                      <LogOut className="mr-2 h-4 w-4" />
+                    )}
+                    {isPending ? "Logging out..." : "Log out"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <div className="pt-2 border-t">
               <p className="text-xs text-center text-muted-foreground">
                 &copy; {new Date().getFullYear()} Honesty Store IMS
@@ -146,8 +200,15 @@ export function AppSidebar() {
             <Button
               variant="outline"
               className="flex items-center w-full justify-center text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
+              onClick={handleLogout}
+              disabled={isPending}
             >
-              <LogOut className=" h-4 w-4" />
+              {isPending ? (
+                <Loader2 className="h-4 w-4" />
+              ) : (
+                <LogOut className=" h-4 w-4" />
+              )}
+              {isPending ? "Logging out..." : "Log out"}
             </Button>
           </div>
         )}
