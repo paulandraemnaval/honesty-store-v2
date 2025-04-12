@@ -245,7 +245,12 @@ const ProductCard = ({ product, onViewDetails, admin, category }) => {
       </CardHeader>
       <CardContent className="p-3">
         {category && (
-          <p className="text-xs text-muted-foreground">{category}</p>
+          <div className="flex justify-between">
+            <p className="text-xs text-muted-foreground">{category}</p>
+            {admin ? (
+              <p className="text-xs text-muted-foreground">{units} units</p>
+            ) : null}
+          </div>
         )}
         <h3 className="line-clamp-2 font-medium">{name}</h3>
       </CardContent>
