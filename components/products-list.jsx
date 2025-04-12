@@ -11,17 +11,11 @@ import {
 import Image from "next/image";
 import { Button } from "./ui/button";
 import ExpriryStatus from "./expiry-status";
-import { MoreHorizontalIcon, PackagePlus, X } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "./ui/sheet";
-import ProductForm from "./product-form";
-import InventoryTable from "./inventory-table";
+import { MoreHorizontal, PackagePlus, X } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { usePathname } from "next/navigation";
+import { AdminProductMore, CustomerProductMore } from "./product-more";
+import ExpiryStatus from "./expiry-status";
 
 const products = [
   {
@@ -189,6 +183,7 @@ const products = [
 const ProductsList = ({ ...props }) => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const pathName = usePathname();
 
   const openProductSheet = (product) => {
     setSelectedProduct(product);
@@ -204,87 +199,73 @@ const ProductsList = ({ ...props }) => {
           key={index}
           product={product}
           onViewDetails={() => openProductSheet(product)}
+          admin={pathName.includes("admin")}
+          category={"category here"}
         />
       ))}
 
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent className="w-full p-4 bg-white shadow-md flex items-center">
-          <div className="w-full">
-            <div className="flex justify-between items-start mb-4">
-              <SheetHeader className="flex flex-col justify-start text-left">
-                <SheetTitle className="text-lg font-semibold">
-                  Product Details
-                </SheetTitle>
-                <SheetDescription className="text-sm text-muted-foreground">
-                  View and edit product details here.
-                </SheetDescription>
-              </SheetHeader>
-            </div>
-
-            <Tabs defaultValue="product" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="product">Edit Product</TabsTrigger>
-                <TabsTrigger value="inventory">Browse Inventories</TabsTrigger>
-              </TabsList>
-              <TabsContent
-                value="product"
-                className="overflow-y-auto max-h-[80vh]"
-              >
-                <ProductForm product={selectedProduct} />
-              </TabsContent>
-              <TabsContent value="inventory">
-                <InventoryTable product={selectedProduct} />
-              </TabsContent>
-            </Tabs>
-          </div>
+          {pathName.includes("admin") ? (
+            <AdminProductMore />
+          ) : (
+            <CustomerProductMore />
+          )}
         </SheetContent>
       </Sheet>
     </div>
   );
 };
 
-const ProductCard = ({ product, onViewDetails }) => {
+const ProductCard = ({ product, onViewDetails, admin, category }) => {
   const { name, expiryDate, units, price } = product;
 
   return (
-    <Card className="w-full max-w-xs shadow-xs overflow-hidden gap-2 py-4">
-      <CardHeader className="flex flex-row items-center w-full px-4">
-        <CardTitle className="text-[0.80rem] font-medium mr-auto">
-          {name}
-        </CardTitle>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onViewDetails(product)}
-        >
-          <MoreHorizontalIcon />
-        </Button>
-      </CardHeader>
-      <CardContent className="p-0 mb-2">
-        <div className="relative w-full aspect-[4/3]">
+    <Card className="group overflow-hidden transition-all duration-300 hover:shadow-md py-0 gap-0">
+      <CardHeader className="relative p-0">
+        <div className="relative h-48 w-full overflow-hidden">
           <Image
-            src="/defaultImages/jolibbee.jpg"
-            alt="Placeholder"
+            src={"/defaultImages/jolibbee.jpg" || "/placeholder.svg"}
+            alt={name}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
+          <div className="absolute right-2 top-2 z-10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8  bg-white/80 backdrop-blur-sm"
+              onClick={onViewDetails}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
+      </CardHeader>
+      <CardContent className="p-3">
+        {category && (
+          <p className="text-xs text-muted-foreground">{category}</p>
+        )}
+        <h3 className="line-clamp-2 font-medium">{name}</h3>
       </CardContent>
-      <CardFooter className="px-4">
-        <div className="flex flex-1 flex-col mr-auto justify-around h-full">
-          <span className="text-xs">{units} units</span>
-          <span className="mr-auto ">₱{price}</span>
-        </div>
-        <div className="flex justify-around h-full items-center gap-2">
-          <ExpriryStatus expiryDate={expiryDate} />
-
-          <Button variant="outline" className="icon-button">
-            <PackagePlus stroke="white" />
-          </Button>
-        </div>
+      <CardFooter className="p-3 pt-0">
+        <p className="text-lg font-bold mr-auto">₱{price}</p>
+        {admin ? <AdminButtons expiryDate={expiryDate} /> : null}
       </CardFooter>
     </Card>
   );
 };
+
+function AdminButtons({ expiryDate }) {
+  return (
+    <div className="flex gap-2">
+      <ExpiryStatus expiryDate={expiryDate} />
+      <Button variant="outline" className="icon-button">
+        <PackagePlus stroke="white" />
+      </Button>
+    </div>
+  );
+}
 
 export default ProductsList;
