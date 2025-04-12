@@ -29,6 +29,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
 
@@ -156,13 +157,14 @@ export function AppSidebar() {
                 <Button
                   variant="outline"
                   className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
+                  disabled={isPending}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Log out
                 </Button>
               </DialogTrigger>
               <DialogContent className="w-fit">
-                <DialogHeader className="font-semibold">Log out</DialogHeader>
+                <DialogTitle>Log out?</DialogTitle>
                 <DialogDescription>
                   Are you sure you want to log out? All unsaved changes will be
                   lost.

@@ -43,7 +43,7 @@ function AuthForm() {
     },
   });
 
-  const { setUser } = useGlobalContext();
+  const { user, setUser } = useGlobalContext();
 
   const { mutateAsync, isPending, isError, error } = useMutation({
     mutationFn: (values) => Login(values),
@@ -138,7 +138,7 @@ function AuthForm() {
             </div>
             <Button
               className="bg-[#4285F4] w-full hover:bg-[#4285F4] cursor-pointer mt-4"
-              disabled={isPending}
+              disabled={isPending || user}
               type="submit"
             >
               {isPending ? <Loader2 /> : null} Sign-in
