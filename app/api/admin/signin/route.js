@@ -1,4 +1,4 @@
-import { auth, db, createLog } from "@utils/firebase";
+import { auth, db, createLog } from "@/utils/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { NextResponse } from "next/server";
 import {
@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 import bcryptjs from "bcryptjs";
 import { cookies } from "next/headers";
-import { encrypt } from "@utils/session";
+import { encrypt } from "@/utils/session";
 
 async function createSession(userId, path) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 1000);

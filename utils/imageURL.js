@@ -1,5 +1,5 @@
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "@utils/firebase";
+import { storage } from "@/utils/firebase";
 
 export default async function getImageURL(file, docId, folderName) {
   if (!file) {

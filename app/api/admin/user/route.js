@@ -1,4 +1,4 @@
-import { getLoggedInUser } from "@utils/firebase";
+import { getLoggedInUser } from "@/utils/firebase";
 
 import { NextResponse } from "next/server";
 

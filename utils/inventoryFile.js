@@ -1,4 +1,4 @@
-import { db } from "@utils/firebase";
+import { db } from "@/utils/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { report2 } from "./sheets";
 import { formatDateToLong, formatDate } from "./formatDate";

@@ -13,7 +13,7 @@ import {
   getDocs,
   orderBy,
 } from "firebase/firestore";
-import { decrypt } from "@utils/session";
+import { decrypt } from "@/utils/session";
 import { cookies } from "next/headers";
 
 const firebaseConfig = {

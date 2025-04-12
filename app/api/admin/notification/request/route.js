@@ -1,4 +1,4 @@
-import { db, getLoggedInUser } from "@utils/firebase";
+import { db, getLoggedInUser } from "@/utils/firebase";
 import { collection, Timestamp, doc, setDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
 

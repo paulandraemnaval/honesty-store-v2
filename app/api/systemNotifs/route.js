@@ -3,7 +3,7 @@ import {
   getLoggedInUser,
   expiredInventoriesToday,
   twoWeeksBeforeExpiration,
-} from "@utils/firebase";
+} from "@/utils/firebase";
 import {
   collection,
   Timestamp,

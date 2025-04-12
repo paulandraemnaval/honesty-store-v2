@@ -4,7 +4,7 @@ import {
   getLoggedInUser,
   checkCollectionExists,
   getLastReportEndDate,
-} from "@utils/firebase";
+} from "@/utils/firebase";
 import {
   collection,
   getDocs,

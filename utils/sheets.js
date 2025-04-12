@@ -1,6 +1,6 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
 import { JWT } from "google-auth-library";
-import { db } from "@utils/firebase";
+import { db } from "@/utils/firebase";
 import {
   collection,
   where,

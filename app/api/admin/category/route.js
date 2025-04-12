@@ -1,4 +1,4 @@
-import { db, createLog, getLoggedInUser } from "@utils/firebase";
+import { db, createLog, getLoggedInUser } from "@/utils/firebase";
 import {
   collection,
   getDocs,
@@ -7,7 +7,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { NextResponse } from "next/server";
-import getImageURL from "@utils/imageURL";
+import getImageURL from "@/utils/imageURL";
 
 //----------------------------------------GET--------------------------------------
 export async function GET() {

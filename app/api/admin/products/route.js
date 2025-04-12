@@ -4,7 +4,7 @@ import {
   getLoggedInUser,
   checkCollectionExists,
   getLastReportEndDate,
-} from "@utils/firebase";
+} from "@/utils/firebase";
 import {
   collection,
   getDocs,
@@ -19,7 +19,7 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { NextResponse } from "next/server";
-import getImageURL from "@utils/imageURL";
+import getImageURL from "@/utils/imageURL";
 
 export async function GET() {
   let products = [];

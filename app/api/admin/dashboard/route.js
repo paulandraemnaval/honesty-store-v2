@@ -1,9 +1,9 @@
-import { db } from "@utils/firebase";
+import { db } from "@/utils/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { NextResponse } from "next/server";
-import { report1 } from "@utils/sheets";
-import { formatDate } from "@utils/formatDate";
-import { getProfitData, getSalesData } from "@utils/export";
+import { report1 } from "@/utils/sheets";
+import { formatDate } from "@/utils/formatDate";
+import { getProfitData, getSalesData } from "@/utils/export";
 
 export const revalidate = 0;
 

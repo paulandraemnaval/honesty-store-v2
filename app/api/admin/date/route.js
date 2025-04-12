@@ -1,10 +1,10 @@
-import { db } from "@utils/firebase";
+import { db } from "@/utils/firebase";
 import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
 import { NextResponse } from "next/server";
-import { createInventoryList } from "@utils/inventoryFile";
-import { exportSheetToPDF } from "@utils/export";
-import { report2 } from "@utils/sheets";
-import { formatDate } from "@utils/formatDate";
+import { createInventoryList } from "@/utils/inventoryFile";
+import { exportSheetToPDF } from "@/utils/export";
+import { report2 } from "@/utils/sheets";
+import { formatDate } from "@/utils/formatDate";
 
 export async function GET(request) {
   const url = new URL(request.url);

@@ -1,4 +1,4 @@
-import { db } from "@utils/firebase";
+import { db } from "@/utils/firebase";
 import {
   collection,
   Timestamp,

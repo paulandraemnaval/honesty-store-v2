@@ -1,4 +1,4 @@
-import { db, createLog, getLoggedInUser } from "@utils/firebase";
+import { db, createLog, getLoggedInUser } from "@/utils/firebase";
 import {
   collection,
   getDoc,
@@ -11,7 +11,7 @@ import {
   where,
 } from "firebase/firestore";
 import { NextResponse } from "next/server";
-import { roundToTwoDecimals } from "@utils/calculations";
+import { roundToTwoDecimals } from "@/utils/calculations";
 
 export async function POST(request) {
   //create audit

@@ -1,7 +1,7 @@
-import { db, auth } from "@utils/firebase";
+import { db, auth } from "@/utils/firebase";
 import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
 import { NextResponse } from "next/server";
-import getImageURL from "@utils/imageURL";
+import getImageURL from "@/utils/imageURL";
 
 export async function GET(request, { params }) {
   const { id } = params;

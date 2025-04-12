@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { generateReport, report1 } from "@utils/sheets";
-import { createInventoryList } from "@utils/inventoryFile";
-import { formatDate } from "@utils/formatDate";
-import { exportSheetToPDF } from "@utils/export";
-import { db } from "@utils/firebase";
+import { generateReport, report1 } from "@/utils/sheets";
+import { createInventoryList } from "@/utils/inventoryFile";
+import { formatDate } from "@/utils/formatDate";
+import { exportSheetToPDF } from "@/utils/export";
+import { db } from "@/utils/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
 export async function GET(request, { params }) {

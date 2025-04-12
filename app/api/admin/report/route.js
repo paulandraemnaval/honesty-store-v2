@@ -4,7 +4,7 @@ import {
   getLoggedInUser,
   checkCollectionExists,
   getLastReportEndDate,
-} from "@utils/firebase";
+} from "@/utils/firebase";
 import {
   collection,
   where,
@@ -20,10 +20,10 @@ import {
   startAfter,
 } from "firebase/firestore";
 import { NextResponse } from "next/server";
-import { generateReport } from "@utils/sheets";
-import { exportSheetToPDF } from "@utils/export";
-import { formatDate } from "@utils/formatDate";
-import { report1 } from "@utils/sheets";
+import { generateReport } from "@/utils/sheets";
+import { exportSheetToPDF } from "@/utils/export";
+import { formatDate } from "@/utils/formatDate";
+import { report1 } from "@/utils/sheets";
 
 export async function POST(request) {
   try {
