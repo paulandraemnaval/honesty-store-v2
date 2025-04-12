@@ -39,9 +39,6 @@ export const metadata = {
     icon: [{ url: "/metaIcons/tab_icon.png", type: "image/png" }],
   },
 
-  // Theme color for browser UI
-  themeColor: "#ffffff",
-
   // Canonical URL
   alternates: {
     canonical: "https://honesty-store-ims.vercel.app/",
@@ -60,6 +57,10 @@ export const metadata = {
     index: true,
     follow: true,
   },
+};
+
+export const viewport = {
+  themeColor: "#ffffff",
 };
 
 export default function Layout({ children }) {

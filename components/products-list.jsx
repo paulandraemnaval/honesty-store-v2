@@ -252,7 +252,7 @@ const ProductCard = ({ product, onViewDetails, admin, category }) => {
             ) : null}
           </div>
         )}
-        <h3 className="line-clamp-2 font-medium">{name}</h3>
+        <p className="line-clamp-2">{name}</p>
       </CardContent>
       <CardFooter className="p-3 pt-0">
         <p className="text-lg font-bold mr-auto">₱{price}</p>
