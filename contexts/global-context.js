@@ -1,7 +1,15 @@
 "use client";
 import { createContext, useContext, useState } from "react";
 
-const GlobalContext = createContext();
+const GlobalContext = createContext({
+  products: [],
+  setProducts: () => {},
+  setSelectedProduct: () => {},
+  lastVisible: null,
+  setLastVisible: () => {},
+  setCategories: () => {},
+  categories: [],
+});
 export const useGlobalContext = () => useContext(GlobalContext);
 
 export default function GlobalContextProvider({ children }) {
