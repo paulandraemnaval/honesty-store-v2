@@ -11,7 +11,7 @@ import Image from "next/image";
 import icons from "@/constants/icons";
 import { usePathname } from "next/navigation";
 import AddProduct from "./add-product";
-const ProductsDisplay = () => {
+const ProductsDisplay = ({ customer }) => {
   const [categoryFilter, setCategoryFilter] = React.useState("all");
   const [supplierFilter, setSupplierFilter] = React.useState("all");
   const [ascendingFilter, setAscendingFilter] = React.useState("ascending");
@@ -63,6 +63,7 @@ const ProductsDisplay = () => {
         categoryFilter={categoryFilter}
         supplierFilter={supplierFilter}
         ascendingFilter={ascendingFilter}
+        customer={customer}
       />
     </div>
   );

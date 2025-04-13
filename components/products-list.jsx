@@ -14,7 +14,7 @@ import { useGlobalContext } from "@/contexts/global-context";
 import { toast } from "sonner";
 import { categoriesGET, inventoryGET } from "@/lib/utils";
 
-const ProductsList = ({ ...props }) => {
+const ProductsList = ({ customer }) => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [hidesentinel, setHideSentinel] = useState(false);
   const pathName = usePathname();
@@ -55,7 +55,7 @@ const ProductsList = ({ ...props }) => {
       setHideSentinel(true);
       toast.error("Error fetching more products");
     },
-    queryKey: ["prodwinv"],
+    mutationKey: ["prodwinv", lastVisible],
   });
 
   useEffect(() => {
@@ -102,22 +102,27 @@ const ProductsList = ({ ...props }) => {
   return (
     <>
       <div
-        className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full ${props.className} px-6 py-4`}
+        className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full  px-6 py-4`}
       >
-        {products?.map((prodwinv, index) => (
-          <ProductCard
-            key={index}
-            prod={prodwinv?.product || prodwinv}
-            inv={prodwinv?.inventory}
-            onViewDetails={() =>
-              openProductSheet(prodwinv?.product || prodwinv)
-            }
-            admin={pathName.includes("admin")}
-            category={getProductCategory(
-              prodwinv?.product?.product_category || prodwinv?.product_category
-            )}
-          />
-        ))}
+        {products?.map((prodwinv, index) => {
+          if (!prodwinv.inventory && customer) return null;
+
+          return (
+            <ProductCard
+              key={index}
+              prod={prodwinv?.product || prodwinv}
+              inv={prodwinv?.inventory}
+              onViewDetails={() =>
+                openProductSheet(prodwinv?.product || prodwinv)
+              }
+              admin={pathName.includes("admin")}
+              category={getProductCategory(
+                prodwinv?.product?.product_category ||
+                  prodwinv?.product_category
+              )}
+            />
+          );
+        })}
 
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <SheetContent className="w-full p-4 bg-white shadow-md flex items-center">

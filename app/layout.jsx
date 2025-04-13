@@ -1,6 +1,5 @@
 import "@/styles/globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 export const metadata = {
   // Basic metadata
   title: "Honesty Store IMS | Inventory Management System",
