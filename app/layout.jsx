@@ -65,6 +65,19 @@ export const viewport = {
   themeColor: "#ffffff",
 };
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: false,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+    mutations: {
+      retry: false,
+    },
+  },
+});
+
 export default function Layout({ children }) {
   return (
     <html lang="en">
@@ -74,8 +87,10 @@ export default function Layout({ children }) {
         <title>Document</title>
       </head>
       <body className="h-[100vh] w-full font-inter">
-        {children}
-        <Toaster expand={true} richColors position="bottom-center" />
+        <QueryClientProvider client={queryClient}>
+          {children}
+          <Toaster expand={true} richColors position="bottom-center" />
+        </QueryClientProvider>
       </body>
     </html>
   );
