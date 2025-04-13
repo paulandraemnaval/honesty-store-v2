@@ -1,5 +1,6 @@
 import "@/styles/globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { QueryClientProvider } from "@tanstack/react-query";
 export const metadata = {
   // Basic metadata
   title: "Honesty Store IMS | Inventory Management System",
@@ -73,8 +74,10 @@ export default function Layout({ children }) {
         <title>Document</title>
       </head>
       <body className="h-[100vh] w-full font-inter">
-        {children}
-        <Toaster expand={true} richColors position="bottom-center" />
+        <QueryClientProvider client={queryClient}>
+          {children}
+          <Toaster expand={true} richColors position="bottom-center" />
+        </QueryClientProvider>
       </body>
     </html>
   );
