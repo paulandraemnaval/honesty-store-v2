@@ -12,5 +12,9 @@ const queryClient = new QueryClient({
 });
 
 export default function Layout({ children }) {
-  return <GlobalContextProvider>{children}</GlobalContextProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <GlobalContextProvider>{children}</GlobalContextProvider>
+    </QueryClientProvider>
+  );
 }
