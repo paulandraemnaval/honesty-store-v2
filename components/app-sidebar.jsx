@@ -32,6 +32,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
+import { Logout } from "@/lib/utils";
 
 const items = [
   {
@@ -66,15 +67,19 @@ export function AppSidebar() {
   const { open, openMobile } = useSidebar();
   const { setUser, user } = useGlobalContext();
   const { mutateAsync, isPending } = useMutation({
-    mutationFn: async () =>
-      fetch("/api/admin/signout", {
-        method: "POST",
-        body: JSON.stringify({}),
-      }),
-    onSuccess: () => {
-      toast.success("Successfully logged out");
-      setUser(null);
-      router.push("/admin");
+    mutationFn: () => Logout(),
+    queryKey: ["logout"],
+    onSuccess: ({ status }) => {
+      if (status === 200) {
+        toast.success("Successfully logged out");
+        setUser(null);
+        router.push("/admin");
+      } else {
+        toast.error("Failed to log out");
+      }
+    },
+    onError: (error) => {
+      toast.error("An error occurred while logging out");
     },
   });
 
@@ -137,7 +142,6 @@ export function AppSidebar() {
           <div className="p-4 space-y-4">
             <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted cursor-pointer transition-colors">
               <Avatar className="h-10 w-10 border-2 border-primary/10">
-                <AvatarImage src="/placeholder.svg?height=40&width=40" />
                 <AvatarFallback className="bg-primary/10 text-primary font-medium">
                   JD
                 </AvatarFallback>

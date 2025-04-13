@@ -25,7 +25,6 @@ export async function GET(request) {
   let inventories = [];
   const url = new URL(request.url);
   const productId = url.searchParams.get("productId");
-  console.log(productId);
 
   try {
     const inventoryRef = collection(db, "Inventory");
@@ -216,6 +215,7 @@ export async function PATCH(request) {
     let fullQuery;
 
     if (reportExist && lastVisible !== "") {
+      console.log(lastVisible, "FROM PATCH INVENTORY");
       const lastDocSnapshot = await getDoc(doc(db, "Inventory", lastVisible));
       if (!lastDocSnapshot.exists()) {
         return NextResponse.json(

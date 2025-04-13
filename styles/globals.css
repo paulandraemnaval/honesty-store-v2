@@ -165,4 +165,32 @@
   .sheets-button {
     @apply px-4 py-2 bg-sheetsButtonColor text-white rounded-md hover:bg-sheetsButtonColor/80 hover:text-white cursor-pointer;
   }
+
+  .sheet-title {
+    @apply text-lg font-semibold;
+  }
+
+  .sheet-header {
+    @apply flex flex-col justify-start text-left;
+  }
+
+  .sheet-description {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .sheet-content {
+    @apply px-6 py-4;
+  }
+
+  .form-scroll-area {
+    @apply h-[55vh] pr-4;
+  }
+
+  .form-checkbox {
+    @apply data-[state=checked]:bg-mainButtonColor data-[state=checked]:border-mainButtonColor;
+  }
+
+  .form-title {
+    @apply text-2xl font-bold mb-6;
+  }
 }

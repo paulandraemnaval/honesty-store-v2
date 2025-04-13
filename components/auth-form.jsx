@@ -45,10 +45,10 @@ function AuthForm() {
 
   const { user, setUser } = useGlobalContext();
 
-  const { mutateAsync, isPending, isError, error } = useMutation({
+  const { mutateAsync, isPending } = useMutation({
     mutationFn: (values) => Login(values),
+    queryKey: ["login"],
     onSuccess: ({ status, user }) => {
-      console.log(status, user);
       if (status === 200) {
         toast.success("Successfully logged in");
         setUser(user);

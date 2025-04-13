@@ -19,40 +19,38 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-const data = [
-  {
-    category_name: "Canned Goods",
-    category_image: "https://via.placeholder.com/150?text=Canned+Goods",
-    category_description:
-      "Shelf-stable food items including meat, vegetables, and sauces.",
-  },
-  {
-    category_name: "Beverages",
-    category_image: "https://via.placeholder.com/150?text=Beverages",
-    category_description:
-      "Drinks such as juice, soda, milk, and energy drinks.",
-  },
-  {
-    category_name: "Instant Noodles",
-    category_image: "https://via.placeholder.com/150?text=Instant+Noodles",
-    category_description: "Ready-to-cook noodle packs for quick meals.",
-  },
-  {
-    category_name: "Snacks",
-    category_image: "https://via.placeholder.com/150?text=Snacks",
-    category_description: "Chips, biscuits, and other packaged munchies.",
-  },
-  {
-    category_name: "Dairy Products",
-    category_image: "https://via.placeholder.com/150?text=Dairy+Products",
-    category_description:
-      "Milk, cheese, butter, and other perishable dairy items.",
-  },
-];
-
-export default function ComboBox({ name }) {
+export default function ComboBox({
+  data,
+  datatype,
+  defaultValue,
+  setSelectedValue,
+  disabled,
+}) {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("");
+
+  function getValue() {
+    const ret = data.find((item) => item.category_id === defaultValue);
+    if (ret) {
+      setValue(ret.category_name);
+      setSelectedValue(ret.category_id);
+    }
+  }
+
+  function getPlaceholder() {
+    if (datatype === "Product Category") {
+      return "Search Category";
+    }
+    if (datatype === "Supplier") {
+      return "Search Supplier";
+    }
+  }
+
+  React.useEffect(() => {
+    if (defaultValue) {
+      getValue();
+    }
+  }, []);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -62,25 +60,25 @@ export default function ComboBox({ name }) {
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
+          disabled={disabled}
         >
-          {value
-            ? data.find((data) => data.category_name === value)?.category_name
-            : `Select ${name}`}
+          {value ? value : `Select ${datatype}`}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command>
-          <CommandInput placeholder={`Search ${name}`} />
+          <CommandInput placeholder={getPlaceholder()} />
           <CommandList className="w-full">
-            <CommandEmpty>No Categories found.</CommandEmpty>
+            <CommandEmpty>No {datatype} found.</CommandEmpty>
             <CommandGroup>
-              {data.map((data) => (
+              {data.map((data, index) => (
                 <CommandItem
-                  key={data.category_name}
+                  key={index}
                   value={data.category_name}
                   onSelect={(currentValue) => {
                     setValue(currentValue === value ? "" : currentValue);
+                    setSelectedValue(data.category_id);
                     setOpen(false);
                   }}
                 >

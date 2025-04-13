@@ -1,13 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { useEffect, useState, useRef } from "react";
+import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import Image from "next/image";
 import { Button } from "./ui/button";
 import ExpriryStatus from "./expiry-status";
@@ -16,217 +10,139 @@ import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { usePathname } from "next/navigation";
 import { AdminProductMore, CustomerProductMore } from "./product-more";
 import ExpiryStatus from "./expiry-status";
-
-const products = [
-  {
-    name: "Lucky Me! Pancit Canton",
-    expiryDate: "2025-02-15T00:00:00.000Z",
-    units: 120,
-    price: 14.5,
-    description:
-      "A classic Filipino instant noodle favorite, best served hot with calamansi and chili.",
-  },
-  {
-    name: "Purefoods Corned Beef",
-    expiryDate: "2025-04-20T00:00:00.000Z",
-    units: 80,
-    price: 36.75,
-    description:
-      "Juicy and meaty corned beef made from quality beef cuts, perfect with garlic rice.",
-  },
-  {
-    name: "Century Tuna Hot & Spicy",
-    expiryDate: "2026-01-05T00:00:00.000Z",
-    units: 150,
-    price: 31.0,
-    description:
-      "Healthy and flavorful tuna with a spicy kick, rich in Omega-3.",
-  },
-  {
-    name: "Del Monte Pineapple Juice",
-    expiryDate: "2025-09-25T00:00:00.000Z",
-    units: 200,
-    price: 23.5,
-    description:
-      "Refreshing pineapple juice packed with Vitamin C, a perfect drink for hot days.",
-  },
-  {
-    name: "Bear Brand Sterilized Milk",
-    expiryDate: "2025-08-20T00:00:00.000Z",
-    units: 180,
-    price: 28.0,
-    description:
-      "Fortified with Iron and Zinc, trusted by Filipino families for generations.",
-  },
-  {
-    name: "Lucky Me! Pancit Canton",
-    expiryDate: "2025-06-15T00:00:00.000Z",
-    units: 120,
-    price: 14.5,
-    description:
-      "A classic Filipino instant noodle favorite, best served hot with calamansi and chili.",
-  },
-  {
-    name: "Purefoods Corned Beef",
-    expiryDate: "2025-12-10T00:00:00.000Z",
-    units: 80,
-    price: 36.75,
-    description:
-      "Juicy and meaty corned beef made from quality beef cuts, perfect with garlic rice.",
-  },
-  {
-    name: "Century Tuna Hot & Spicy",
-    expiryDate: "2026-01-05T00:00:00.000Z",
-    units: 150,
-    price: 31.0,
-    description:
-      "Healthy and flavorful tuna with a spicy kick, rich in Omega-3.",
-  },
-  {
-    name: "Del Monte Pineapple Juice",
-    expiryDate: "2025-09-25T00:00:00.000Z",
-    units: 200,
-    price: 23.5,
-    description:
-      "Refreshing pineapple juice packed with Vitamin C, a perfect drink for hot days.",
-  },
-  {
-    name: "Bear Brand Sterilized Milk",
-    expiryDate: "2025-08-20T00:00:00.000Z",
-    units: 180,
-    price: 28.0,
-    description:
-      "Fortified with Iron and Zinc, trusted by Filipino families for generations.",
-  },
-  {
-    name: "Lucky Me! Pancit Canton",
-    expiryDate: "2025-06-15T00:00:00.000Z",
-    units: 120,
-    price: 14.5,
-    description:
-      "A classic Filipino instant noodle favorite, best served hot with calamansi and chili.",
-  },
-  {
-    name: "Purefoods Corned Beef",
-    expiryDate: "2025-12-10T00:00:00.000Z",
-    units: 80,
-    price: 36.75,
-    description:
-      "Juicy and meaty corned beef made from quality beef cuts, perfect with garlic rice.",
-  },
-  {
-    name: "Century Tuna Hot & Spicy",
-    expiryDate: "2026-01-05T00:00:00.000Z",
-    units: 150,
-    price: 31.0,
-    description:
-      "Healthy and flavorful tuna with a spicy kick, rich in Omega-3.",
-  },
-  {
-    name: "Del Monte Pineapple Juice",
-    expiryDate: "2025-09-25T00:00:00.000Z",
-    units: 200,
-    price: 23.5,
-    description:
-      "Refreshing pineapple juice packed with Vitamin C, a perfect drink for hot days.",
-  },
-  {
-    name: "Bear Brand Sterilized Milk",
-    expiryDate: "2025-08-20T00:00:00.000Z",
-    units: 180,
-    price: 28.0,
-    description:
-      "Fortified with Iron and Zinc, trusted by Filipino families for generations.",
-  },
-  {
-    name: "Lucky Me! Pancit Canton",
-    expiryDate: "2025-06-15T00:00:00.000Z",
-    units: 120,
-    price: 14.5,
-    description:
-      "A classic Filipino instant noodle favorite, best served hot with calamansi and chili.",
-  },
-  {
-    name: "Purefoods Corned Beef",
-    expiryDate: "2025-12-10T00:00:00.000Z",
-    units: 80,
-    price: 36.75,
-    description:
-      "Juicy and meaty corned beef made from quality beef cuts, perfect with garlic rice.",
-  },
-  {
-    name: "Century Tuna Hot & Spicy",
-    expiryDate: "2026-01-05T00:00:00.000Z",
-    units: 150,
-    price: 31.0,
-    description:
-      "Healthy and flavorful tuna with a spicy kick, rich in Omega-3.",
-  },
-  {
-    name: "Del Monte Pineapple Juice",
-    expiryDate: "2025-09-25T00:00:00.000Z",
-    units: 200,
-    price: 23.5,
-    description:
-      "Refreshing pineapple juice packed with Vitamin C, a perfect drink for hot days.",
-  },
-  {
-    name: "Bear Brand Sterilized Milk",
-    expiryDate: "2025-08-20T00:00:00.000Z",
-    units: 180,
-    price: 28.0,
-    description:
-      "Fortified with Iron and Zinc, trusted by Filipino families for generations.",
-  },
-];
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useGlobalContext } from "@/contexts/global-context";
+import { toast } from "sonner";
+import { categoriesGET, inventoryGET } from "@/lib/utils";
 
 const ProductsList = ({ ...props }) => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [hidesentinel, setHideSentinel] = useState(false);
   const pathName = usePathname();
+  const sentinelRef = useRef(null);
 
-  const openProductSheet = (product) => {
+  const {
+    products,
+    setProducts,
+    setSelectedProduct,
+    lastVisible,
+    setLastVisible,
+    setCategories,
+    categories,
+  } = useGlobalContext();
+
+  const {
+    data: cats,
+    isLoading: catLoading,
+    isSuccess: catSuccess,
+  } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => categoriesGET(),
+  });
+
+  const {
+    mutateAsync,
+    isPending,
+    data: prodwinv,
+    isLoading: prodwinvLoading,
+  } = useMutation({
+    mutationFn: () => inventoryGET(lastVisible),
+    onSuccess: (data) => {
+      if (!data.lastVisible) setHideSentinel(true);
+      setProducts(data.data);
+      setLastVisible(data.lastVisible);
+    },
+    onError: (error) => {
+      setHideSentinel(true);
+      toast.error("Error fetching more products");
+    },
+    queryKey: ["prodwinv"],
+  });
+
+  useEffect(() => {
+    if (!catLoading && catSuccess) {
+      setCategories(cats.data);
+    }
+  }, [catSuccess]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isPending) {
+          mutateAsync();
+          console.log("Loading more products...");
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.unobserve(sentinel);
+      observer.disconnect();
+    };
+  }, [isPending, mutateAsync]);
+
+  function openProductSheet(product) {
     setSelectedProduct(product);
     setIsSheetOpen(true);
-  };
+  }
+
+  function getProductCategory(categoryId) {
+    if (categories) {
+      const category = categories.find((cat) => cat.category_id === categoryId);
+      return category ? category.category_name : "Uncategorized";
+    }
+    return "Unknown Category";
+  }
 
   return (
-    <div
-      className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full ${props.className} px-6 py-4`}
-    >
-      {products.map((product, index) => (
-        <ProductCard
-          key={index}
-          product={product}
-          onViewDetails={() => openProductSheet(product)}
-          admin={pathName.includes("admin")}
-          category={"category here"}
-        />
-      ))}
+    <>
+      <div
+        className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full ${props.className} px-6 py-4`}
+      >
+        {products?.map((prodwinv, index) => (
+          <ProductCard
+            key={index}
+            prod={prodwinv?.product || prodwinv}
+            inv={prodwinv?.inventory}
+            onViewDetails={() =>
+              openProductSheet(prodwinv?.product || prodwinv)
+            }
+            admin={pathName.includes("admin")}
+            category={getProductCategory(
+              prodwinv?.product?.product_category || prodwinv?.product_category
+            )}
+          />
+        ))}
 
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="w-full p-4 bg-white shadow-md flex items-center">
-          {pathName.includes("admin") ? (
-            <AdminProductMore />
-          ) : (
-            <CustomerProductMore />
-          )}
-        </SheetContent>
-      </Sheet>
-    </div>
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+          <SheetContent className="w-full p-4 bg-white shadow-md flex items-center">
+            {pathName.includes("admin") ? (
+              <AdminProductMore />
+            ) : (
+              <CustomerProductMore />
+            )}
+          </SheetContent>
+        </Sheet>
+      </div>
+      <div className="w-full" ref={sentinelRef} hidden={hidesentinel}></div>
+    </>
   );
 };
 
-const ProductCard = ({ product, onViewDetails, admin, category }) => {
-  const { name, expiryDate, units, price } = product;
-
+const ProductCard = ({ prod, inv, onViewDetails, admin, category }) => {
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-md py-0 gap-0">
       <CardHeader className="relative p-0">
         <div className="relative h-48 w-full overflow-hidden">
           <Image
-            src={"/defaultImages/jolibbee.jpg" || "/placeholder.svg"}
-            alt={name}
+            src={prod?.product_image_url || "/defaultImages/jolibbee.jpg"}
+            alt={"product_image"}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -243,20 +159,28 @@ const ProductCard = ({ product, onViewDetails, admin, category }) => {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-3">
-        {category && (
+      <CardContent className="p-3 h-full">
+        {admin && (
           <div className="flex justify-between">
             <p className="text-xs text-muted-foreground">{category}</p>
-            {admin ? (
-              <p className="text-xs text-muted-foreground">{units} units</p>
+            {admin && inv ? (
+              <p className="text-xs text-muted-foreground">
+                {inv?.inventory_total_units} units
+              </p>
             ) : null}
           </div>
         )}
-        <p className="line-clamp-2">{name}</p>
+        <p className="line-clamp-2 ">{prod?.product_name}</p>
       </CardContent>
       <CardFooter className="p-3 pt-0">
-        <p className="text-lg font-bold mr-auto">₱{price}</p>
-        {admin ? <AdminButtons expiryDate={expiryDate} /> : null}
+        <p className="text-lg font-bold mr-auto">
+          {inv
+            ? `₱${parseFloat(inv?.inventory_retail_price).toFixed(2)}`
+            : "No Inventory"}
+        </p>
+        {admin ? (
+          <AdminButtons expiryDate={inv?.inventory_expiration_date} />
+        ) : null}
       </CardFooter>
     </Card>
   );
@@ -265,7 +189,7 @@ const ProductCard = ({ product, onViewDetails, admin, category }) => {
 function AdminButtons({ expiryDate }) {
   return (
     <div className="flex gap-2">
-      <ExpiryStatus expiryDate={expiryDate} />
+      {expiryDate ? <ExpiryStatus expiryDate={expiryDate} /> : null}
       <Button variant="outline" className="icon-button">
         <PackagePlus stroke="white" />
       </Button>

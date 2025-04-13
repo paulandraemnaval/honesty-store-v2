@@ -51,7 +51,7 @@ const InventoryReport = () => {
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
-          className="px-4 py-2 bg-mainButtonColor backdrop-blur-sm border transition-colors text-white cursor-pointer"
+          className="custom-form-button"
           onClick={() => {
             console.log("clicked");
           }}
@@ -111,10 +111,7 @@ const InventoryReport = () => {
             </PopoverContent>
           </Popover>
         </div>
-        <Button
-          variant="outline"
-          className="w-full mt-2 bg-mainButtonColor text-white cursor-pointer"
-        >
+        <Button variant="outline" className="custom-form-button w-full mt-2">
           Generate Inventory Report
         </Button>
       </PopoverContent>

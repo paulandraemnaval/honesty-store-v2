@@ -109,7 +109,7 @@ export default function CategoryForm({ method }) {
                       {imagePreview ? (
                         <>
                           <img
-                            src={imagePreview || "/placeholder.svg"}
+                            src={imagePreview}
                             alt="Product preview"
                             className="h-full w-full object-contain"
                           />

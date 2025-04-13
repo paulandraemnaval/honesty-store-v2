@@ -59,12 +59,16 @@ export async function PATCH(request, { params }) {
   try {
     const reqFormData = await request.formData();
     const inventory_wholesale_price = parseFloat(
-      reqFormData.get("wholesale_price")
+      reqFormData.get("inventory_wholesale_price")
     );
-    const product_id = reqFormData.get("inventory_product");
-    const supplier_id = reqFormData.get("inventory_supplier");
-    const inventory_total_units = parseInt(reqFormData.get("total_units"));
-    const inventory_retail_price = parseFloat(reqFormData.get("retail_price"));
+    const product_id = reqFormData.get("product_id");
+    const supplier_id = reqFormData.get("supplier_id");
+    const inventory_total_units = parseInt(
+      reqFormData.get("inventory_total_units")
+    );
+    const inventory_retail_price = parseFloat(
+      reqFormData.get("inventory_retail_price")
+    );
     const inventory_description = reqFormData.get("inventory_description");
     const inventory_profit_margin = parseFloat(
       reqFormData.get("inventory_profit_margin")

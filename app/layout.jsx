@@ -74,7 +74,7 @@ export default function Layout({ children }) {
       </head>
       <body className="h-[100vh] w-full font-inter">
         {children}
-        <Toaster expand={true} richColors />
+        <Toaster expand={true} richColors position="bottom-center" />
       </body>
     </html>
   );

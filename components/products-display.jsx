@@ -4,13 +4,13 @@ import FilterBar from "@/components/filter-bar";
 import ProductsList from "@/components/products-list";
 import SearchInput from "@/components/search-input";
 import AscendFilter from "@/components/ascend-filter";
-import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "./ui/sidebar";
-import { Plus, PhilippinePeso } from "lucide-react";
+import { PhilippinePeso } from "lucide-react";
 import InventoryReport from "./inventory-report";
 import Image from "next/image";
 import icons from "@/constants/icons";
 import { usePathname } from "next/navigation";
+import AddProduct from "./add-product";
 const ProductsDisplay = () => {
   const [categoryFilter, setCategoryFilter] = React.useState("all");
   const [supplierFilter, setSupplierFilter] = React.useState("all");
@@ -55,12 +55,7 @@ const ProductsDisplay = () => {
         {pathName.includes("admin") ? (
           <>
             <InventoryReport />
-            <Button
-              variant="ghost"
-              className="px-4 py-2 bg-mainButtonColor backdrop-blur-sm border transition-colors text-white cursor-pointer"
-            >
-              <Plus /> Add Product
-            </Button>
+            <AddProduct />
           </>
         ) : null}
       </div>

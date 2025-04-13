@@ -100,6 +100,7 @@ export async function POST(request) {
     return NextResponse.json(
       {
         message: "Account signed in successfully",
+        userData: user.docs[0].data(),
         accountData,
         sessionData,
         logData,
