@@ -15,7 +15,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "./ui/separator";
 import { useMutation } from "@tanstack/react-query";
@@ -33,6 +33,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { Logout } from "@/lib/utils";
+import Link from "next/link";
 
 const items = [
   {
@@ -114,7 +115,7 @@ export function AppSidebar() {
                   <React.Fragment key={item.title}>
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild>
-                        <a href={item.url}>
+                        <Link href={item.url}>
                           <Image
                             src={item.icon}
                             alt={item.title}
@@ -123,7 +124,7 @@ export function AppSidebar() {
                             className="object-cover"
                           />
                           <span>{item.title}</span>
-                        </a>
+                        </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     {(index + 1) % 2 === 0 && index !== items.length - 1 ? (

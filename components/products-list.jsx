@@ -9,27 +9,19 @@ import { Sheet, SheetContent } from "./ui/sheet";
 import { usePathname } from "next/navigation";
 import { AdminProductMore, CustomerProductMore } from "./product-more";
 import ExpiryStatus from "./expiry-status";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useGlobalContext } from "@/contexts/global-context";
-import { toast } from "sonner";
 import { categoriesGET, inventoryGET } from "@/lib/utils";
+import { Skeleton } from "./ui/skeleton";
 
 const ProductsList = ({ customer }) => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [hidesentinel, setHideSentinel] = useState(false);
-  const pathName = usePathname();
   const sentinelRef = useRef(null);
+  const pathName = usePathname();
 
-  const {
-    products,
-    setProducts,
-    setSelectedProduct,
-    lastVisible,
-    setLastVisible,
-    setCategories,
-    categories,
-  } = useGlobalContext();
+  const { setSelectedProduct, setCategories, categories } = useGlobalContext();
 
+  // Categories query
   const {
     data: cats,
     isLoading: catLoading,
@@ -37,45 +29,51 @@ const ProductsList = ({ customer }) => {
   } = useQuery({
     queryKey: ["categories"],
     queryFn: () => categoriesGET(),
+    staleTime: 30 * 60 * 1000, // 30 minutes
   });
 
+  // Products infinite query
   const {
-    mutateAsync,
-    isPending,
-    data: prodwinv,
-    isLoading: prodwinvLoading,
-  } = useMutation({
-    mutationFn: () => inventoryGET(lastVisible),
-    onSuccess: (data) => {
-      if (!data.lastVisible) setHideSentinel(true);
-      setProducts(data.data);
-      setLastVisible(data.lastVisible);
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: productsLoading,
+    isError,
+  } = useInfiniteQuery({
+    queryKey: [`products-${customer ? "customer" : "admin"}`],
+    queryFn: ({ pageParam = "" }) => inventoryGET(pageParam),
+    getNextPageParam: (lastPage) => {
+      return lastPage.lastVisible || undefined;
     },
-    onError: (error) => {
-      setHideSentinel(true);
-      toast.error("Error fetching more products");
-    },
-    mutationKey: ["prodwinv", lastVisible],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
+
+  const products = data?.pages.flatMap((page) => page.data) || [];
 
   useEffect(() => {
     if (!catLoading && catSuccess) {
       setCategories(cats.data);
     }
-  }, [catSuccess]);
+  }, [catSuccess, cats?.data, catLoading, setCategories]);
 
+  // Intersection observer for infinite scroll
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !isPending) {
-          mutateAsync();
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
           console.log("Loading more products...");
+          fetchNextPage();
         }
       },
-      { threshold: 1.0 }
+      { rootMargin: "150px", threshold: 0.2 } // Load a bit earlier for smoother experience
     );
 
     observer.observe(sentinel);
@@ -84,7 +82,7 @@ const ProductsList = ({ customer }) => {
       observer.unobserve(sentinel);
       observer.disconnect();
     };
-  }, [isPending, mutateAsync]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   function openProductSheet(product) {
     setSelectedProduct(product);
@@ -99,45 +97,89 @@ const ProductsList = ({ customer }) => {
     return "Unknown Category";
   }
 
+  if (isError) {
+    return (
+      <div className="p-8 text-center">
+        Error loading products. Please try again.
+      </div>
+    );
+  }
+
   return (
     <>
       <div
-        className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full  px-6 py-4`}
+        className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full px-6 py-4`}
       >
-        {products?.map((prodwinv, index) => {
-          if (!prodwinv.inventory && customer) return null;
+        {productsLoading && !products.length ? (
+          <ProductListSkeleton />
+        ) : (
+          products.map((prodwinv, index) => {
+            if (!prodwinv.inventory && customer) return null;
 
-          return (
-            <ProductCard
-              key={index}
-              prod={prodwinv?.product || prodwinv}
-              inv={prodwinv?.inventory}
-              onViewDetails={() =>
-                openProductSheet(prodwinv?.product || prodwinv)
-              }
-              admin={pathName.includes("admin")}
-              category={getProductCategory(
-                prodwinv?.product?.product_category ||
-                  prodwinv?.product_category
-              )}
-            />
-          );
-        })}
-
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetContent className="w-full p-4 bg-white shadow-md flex items-center">
-            {pathName.includes("admin") ? (
-              <AdminProductMore />
-            ) : (
-              <CustomerProductMore />
-            )}
-          </SheetContent>
-        </Sheet>
+            return (
+              <ProductCard
+                key={`${
+                  prodwinv?.product?.product_id || prodwinv?.product_id
+                }-${index}`}
+                prod={prodwinv?.product || prodwinv}
+                inv={prodwinv?.inventory}
+                onViewDetails={() =>
+                  openProductSheet(prodwinv?.product || prodwinv)
+                }
+                admin={pathName.includes("admin")}
+                category={getProductCategory(
+                  prodwinv?.product?.product_category ||
+                    prodwinv?.product_category
+                )}
+              />
+            );
+          })
+        )}
       </div>
-      <div className="w-full" ref={sentinelRef} hidden={hidesentinel}></div>
+
+      {/* Always show sentinel unless explicitly determined there are no more pages */}
+      {hasNextPage !== false && (
+        <div className="w-full py-4 flex justify-center" ref={sentinelRef}>
+          {isFetchingNextPage && (
+            <div className="loader text-sm text-muted-foreground">
+              Loading more...
+            </div>
+          )}
+        </div>
+      )}
+
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent className="w-full p-4 bg-white shadow-md flex items-center">
+          {pathName.includes("admin") ? (
+            <AdminProductMore />
+          ) : (
+            <CustomerProductMore />
+          )}
+        </SheetContent>
+      </Sheet>
     </>
   );
 };
+
+function ProductListSkeleton() {
+  return (
+    <>
+      {Array(10)
+        .fill(0)
+        .map((_, i) => (
+          <Card key={i} className="h-fit">
+            <CardHeader className="p-0">
+              <Skeleton className="h-52 w-full rounded-none" />
+            </CardHeader>
+            <CardContent className=" space-y-2">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </CardContent>
+          </Card>
+        ))}
+    </>
+  );
+}
 
 const ProductCard = ({ prod, inv, onViewDetails, admin, category }) => {
   return (

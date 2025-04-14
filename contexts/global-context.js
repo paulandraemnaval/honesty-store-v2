@@ -10,6 +10,7 @@ const GlobalContext = createContext({
   setCategories: () => {},
   categories: [],
 });
+
 export const useGlobalContext = () => useContext(GlobalContext);
 
 export default function GlobalContextProvider({ children }) {
