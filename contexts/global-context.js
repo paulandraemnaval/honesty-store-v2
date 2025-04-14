@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const GlobalContext = createContext({
   products: [],
@@ -32,6 +32,23 @@ export default function GlobalContextProvider({ children }) {
   const [selectedInventory, setSelectedInventory] = useState();
   const [suppliers, setSuppliers] = useState(null);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState(null);
+  const [supplierFilter, setSupplierFilter] = useState(null);
+  const [ascendingPrice, setAscendingPrice] = useState(false);
+  const [catLoading, setCatLoading] = useState(true);
+  const [supLoading, setSupLoading] = useState(true);
+  const sortedProducts = useMemo(() => {
+    if (!Array.isArray(products)) return [];
+
+    return products
+      .filter((item) => item.inventory?.inventory_retail_price != null)
+      .sort((a, b) => {
+        const priceA = a.inventory.inventory_retail_price;
+        const priceB = b.inventory.inventory_retail_price;
+
+        return ascendingPrice ? priceA - priceB : priceB - priceA;
+      });
+  }, [products, ascendingPrice]);
 
   const value = {
     user,
@@ -54,6 +71,17 @@ export default function GlobalContextProvider({ children }) {
     setSuppliers,
     selectedSupplier,
     setSelectedSupplier,
+    ascendingPrice,
+    setAscendingPrice,
+    sortedProducts,
+    categoryFilter,
+    setCategoryFilter,
+    supplierFilter,
+    setSupplierFilter,
+    supLoading,
+    setSupLoading,
+    catLoading,
+    setCatLoading,
   };
 
   return (

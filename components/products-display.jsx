@@ -11,10 +11,10 @@ import Image from "next/image";
 import icons from "@/constants/icons";
 import { usePathname } from "next/navigation";
 import AddProduct from "./add-product";
+import { useGlobalContext } from "@/contexts/global-context";
+
 const ProductsDisplay = ({ customer }) => {
-  const [categoryFilter, setCategoryFilter] = React.useState("all");
-  const [supplierFilter, setSupplierFilter] = React.useState("all");
-  const [ascendingFilter, setAscendingFilter] = React.useState("ascending");
+  const { setAscendingPrice, ascendingPrice } = useGlobalContext();
   const pathName = usePathname();
   return (
     <div className="flex flex-col gap-4">
@@ -40,15 +40,10 @@ const ProductsDisplay = ({ customer }) => {
         </div>
 
         <SearchInput />
-        {pathName.includes("admin") ? (
-          <FilterBar
-            categoryFilter={categoryFilter}
-            supplierFilter={supplierFilter}
-          />
-        ) : null}
+        {pathName.includes("admin") ? <FilterBar /> : null}
         <AscendFilter
-          ascendingFilter={ascendingFilter}
-          setAscendingFilter={setAscendingFilter}
+          ascendingFilter={ascendingPrice}
+          setAscendingFilter={setAscendingPrice}
           icon={<PhilippinePeso size={20} />}
         />
 
@@ -59,12 +54,7 @@ const ProductsDisplay = ({ customer }) => {
           </>
         ) : null}
       </div>
-      <ProductsList
-        categoryFilter={categoryFilter}
-        supplierFilter={supplierFilter}
-        ascendingFilter={ascendingFilter}
-        customer={customer}
-      />
+      <ProductsList customer={customer} />
     </div>
   );
 };

@@ -9,10 +9,6 @@ import AuditList from "./audit-list";
 import AuditDialog from "./audit-modal";
 import { Package } from "lucide-react";
 const AuditDisplay = () => {
-  const [categoryFilter, setCategoryFilter] = React.useState("all");
-  const [supplierFilter, setSupplierFilter] = React.useState("all");
-  const [ascendingFilter, setAscendingFilter] = React.useState("ascending");
-
   return (
     <div className="flex flex-col gap-4">
       <div className="top-bar">

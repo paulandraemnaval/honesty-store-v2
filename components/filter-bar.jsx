@@ -16,8 +16,20 @@ import { MoreHorizontal } from "lucide-react";
 import CategoryForm from "@/components/category-form";
 import SupplierForm from "@/components/supplier-form";
 import { useState } from "react";
+import FormRadioGroup from "./radio-group";
+import { useGlobalContext } from "@/contexts/global-context";
 
-export function FilterBar() {
+export default function FilterBar() {
+  const {
+    categories,
+    categoryFilter,
+    setCategoryFilter,
+    suppliers,
+    supplierFilter,
+    setSupplierFilter,
+    catLoading,
+    supLoading,
+  } = useGlobalContext();
   const [formType, setFormType] = useState("");
   const [mode, setMode] = useState("");
 
@@ -29,7 +41,11 @@ export function FilterBar() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" className=" w-fit flex-row-reverse">
+        <Button
+          variant="outline"
+          className=" w-fit flex-row-reverse"
+          disabled={catLoading || supLoading}
+        >
           Filter
         </Button>
       </SheetTrigger>
@@ -61,22 +77,13 @@ export function FilterBar() {
                 </SheetTrigger>
               </div>
 
-              <RadioGroup defaultValue="comfortable">
-                <div className="flex items-center space-x-2 w-full ">
-                  <RadioGroupItem value="default" id="r1" />
-                  <Label htmlFor="r1" className="mr-auto">
-                    Default
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="comfortable" id="r2" />
-                  <Label htmlFor="r2">Comfortable</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="compact" id="r3" />
-                  <Label htmlFor="r3">Compact</Label>
-                </div>
-              </RadioGroup>
+              <FormRadioGroup
+                data={categories}
+                currentSelected={categoryFilter}
+                setSelected={setCategoryFilter}
+                label_attr={"category_name"}
+                value_attr={"category_id"}
+              />
             </div>
             <div className="px-4 py-4 flex flex-col gap-4 border shadow-2xs rounded-md">
               <div className="flex w-full items-center gap-2">
@@ -110,20 +117,13 @@ export function FilterBar() {
                 </SheetContent>
               </div>
 
-              <RadioGroup defaultValue="comfortable">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="default" id="r1" />
-                  <Label htmlFor="r1">Default</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="comfortable" id="r2" />
-                  <Label htmlFor="r2">Comfortable</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="compact" id="r3" />
-                  <Label htmlFor="r3">Compact</Label>
-                </div>
-              </RadioGroup>
+              <FormRadioGroup
+                data={suppliers}
+                currentSelected={supplierFilter}
+                setSelected={setSupplierFilter}
+                label_attr={"supplier_name"}
+                value_attr={"supplier_id"}
+              />
             </div>
           </div>
         </Sheet>
@@ -136,5 +136,3 @@ export function FilterBar() {
     </Sheet>
   );
 }
-
-export default FilterBar;

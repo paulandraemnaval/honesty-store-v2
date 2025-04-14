@@ -11,7 +11,7 @@ import { AdminProductMore, CustomerProductMore } from "./product-more";
 import ExpiryStatus from "./expiry-status";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useGlobalContext } from "@/contexts/global-context";
-import { categoriesGET, inventoryGET } from "@/lib/utils";
+import { categoriesGET, inventoryGET, supplierGET } from "@/lib/utils";
 import { Skeleton } from "./ui/skeleton";
 
 const ProductsList = ({ customer }) => {
@@ -19,13 +19,21 @@ const ProductsList = ({ customer }) => {
   const sentinelRef = useRef(null);
   const pathName = usePathname();
 
-  const { setSelectedProduct, setCategories, categories, setSuppliers } =
-    useGlobalContext();
+  const {
+    setSelectedProduct,
+    setCategories,
+    categories,
+    setSuppliers,
+    sortedProducts,
+    setCatLoading,
+    setSupLoading,
+    supLoading,
+    catLoading,
+  } = useGlobalContext();
 
-  // Categories query
   const {
     data: cats,
-    isLoading: catLoading,
+    isLoading: localCatLoading,
     isSuccess: catSuccess,
   } = useQuery({
     queryKey: ["categories"],
@@ -35,11 +43,11 @@ const ProductsList = ({ customer }) => {
 
   const {
     data: sups,
-    isLoading: supLoading,
+    isLoading: localSupLoading,
     isSuccess: supSuccess,
   } = useQuery({
     queryKey: ["suppliers"],
-    queryFn: () => categoriesGET("suppliers"),
+    queryFn: () => supplierGET(),
     staleTime: 30 * 60 * 1000,
   });
 
@@ -48,7 +56,7 @@ const ProductsList = ({ customer }) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading: productsLoading,
+    isFetching: productsLoading,
     isError,
   } = useInfiniteQuery({
     queryKey: [`products-${customer ? "customer" : "admin"}`],
@@ -66,18 +74,23 @@ const ProductsList = ({ customer }) => {
   const products = data?.pages.flatMap((page) => page.data) || [];
 
   useEffect(() => {
-    if (!supLoading && supSuccess) {
-      setSuppliers(sups.data);
-    }
-  }, [supSuccess, sups?.data, supLoading, setSuppliers]);
+    console.log("LOADING STATES", supLoading, catLoading);
+  }, [supLoading, catLoading]);
 
   useEffect(() => {
-    if (!catLoading && catSuccess) {
-      setCategories(cats.data);
+    if (!localSupLoading && supSuccess) {
+      setSupLoading(localSupLoading);
+      setSuppliers(sups.data);
     }
-  }, [catSuccess, cats?.data, catLoading, setCategories]);
+  }, [supSuccess, sups?.data, localSupLoading, setSuppliers]);
 
-  // Intersection observer for infinite scroll
+  useEffect(() => {
+    if (!localCatLoading && catSuccess) {
+      setCategories(cats.data);
+      setCatLoading(localCatLoading);
+    }
+  }, [catSuccess, cats?.data, localCatLoading, setCategories]);
+
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
@@ -89,7 +102,7 @@ const ProductsList = ({ customer }) => {
           fetchNextPage();
         }
       },
-      { rootMargin: "150px", threshold: 0.2 } // Load a bit earlier for smoother experience
+      { rootMargin: "150px", threshold: 0.2 }
     );
 
     observer.observe(sentinel);
@@ -129,7 +142,7 @@ const ProductsList = ({ customer }) => {
         {productsLoading && !products.length ? (
           <ProductListSkeleton />
         ) : (
-          products.map((prodwinv, index) => {
+          sortedProducts.map((prodwinv, index) => {
             if (!prodwinv.inventory && customer) return null;
 
             return (
