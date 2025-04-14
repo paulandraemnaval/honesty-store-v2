@@ -176,7 +176,7 @@ export async function POST(request) {
     console.log(error.message);
 
     return NextResponse.json(
-      { error: "Failed to create product" },
+      { error: "Failed to create product: " + error.message },
       { status: 400 }
     );
   }

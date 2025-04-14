@@ -65,7 +65,12 @@ export async function POST(request) {
     //storing account
     await setDoc(accountDoc, accountData);
 
-    const logData = await createLog(accountDoc.id, "Account", "N/A", "Sign-Up");
+    const logData = await createLog(
+      accountDoc.id,
+      "Account",
+      accountDoc.id,
+      "Sign-Up"
+    );
 
     return NextResponse.json(
       { message: "Account created successfully", accountData, logData },

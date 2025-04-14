@@ -30,7 +30,7 @@ export async function GET(request, { params }) {
 
 //-------------------------------------------DELETE----------------------------------
 export async function DELETE(request, { params }) {
-  const { id } = params;
+  const { id } = await params;
   try {
     const productRef = doc(db, "Product", id);
     await updateDoc(productRef, {
@@ -50,7 +50,7 @@ export async function DELETE(request, { params }) {
 
 //-----------------------------------------PATCH------------------------------------
 export async function PATCH(request, { params }) {
-  const { id } = params;
+  const { id } = await params;
   const productDoc = doc(db, "Product", id);
 
   try {

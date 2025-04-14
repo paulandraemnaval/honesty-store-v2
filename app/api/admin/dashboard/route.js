@@ -3,6 +3,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { NextResponse } from "next/server";
 import { report1 } from "@/utils/sheets";
 import { formatDate } from "@/utils/formatDate";
+import { roundToTwoDecimals } from "@/utils/calculations";
 import { getProfitData, getSalesData } from "@/utils/export";
 
 export const revalidate = 0;
@@ -36,13 +37,17 @@ export async function GET(request) {
     const profit = await getProfitData(report1);
     const sales = await getSalesData(report1);
 
-    const totalProfit = profit.reduce((acc, item) => {
-      return acc + item.total;
-    }, 0);
+    const totalProfit = roundToTwoDecimals(
+      profit.reduce((acc, item) => {
+        return acc + item.total;
+      }, 0)
+    );
 
-    const totalSales = sales.reduce((acc, item) => {
-      return acc + item.total;
-    }, 0);
+    const totalSales = roundToTwoDecimals(
+      sales.reduce((acc, item) => {
+        return acc + item.total;
+      }, 0)
+    );
 
     return NextResponse.json(
       {

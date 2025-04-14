@@ -76,10 +76,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "User not found" }, { status: 400 });
     }
 
-    const email_salt = user.docs[0].data().account_salt;
-
-    const password_hash = await bcryptjs.hash(password, email_salt);
-    const accountData = await signInUser(email, password_hash);
+    const accountData = await signInUser(email, password);
 
     if (accountData instanceof Error) {
       console.log("Error in user sign-up:", accountData.message);

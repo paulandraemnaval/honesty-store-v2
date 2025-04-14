@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getStorage } from "firebase/storage";
-import { getAuth } from "firebase/auth";
+import { getAuth, updateEmail, updatePassword } from "firebase/auth";
 import {
   getFirestore,
   collection,
@@ -189,5 +189,44 @@ export async function twoWeeksBeforeExpiration() {
   } catch (error) {
     console.log("Error fetching products expiring in two weeks,", error);
     return [];
+  }
+}
+
+export async function getUser() {
+  const user = auth.currentUser;
+  if (user) {
+    console.log(user.toJSON());
+    return user;
+  } else {
+    console.log("No user signed in");
+  }
+}
+
+export async function updateUserEmail(email) {
+  const user = getUser();
+  if (!user) {
+    console.log("No user is currently signed in.");
+    return;
+  }
+  try {
+    await updateEmail(user, email);
+    console.log("Email updated");
+  } catch (error) {
+    console.log("An error occurred updating email: ", error);
+  }
+}
+
+export async function updateUserPassword(password) {
+  const user = getUser();
+  if (!user) {
+    console.log("No user is currently signed in.");
+    return;
+  }
+  //expected password is hashed
+  try {
+    await updatePassword(user, password);
+    console.log("Password updated");
+  } catch (error) {
+    console.log("An error occurred updating password: ", error);
   }
 }
