@@ -38,8 +38,19 @@ export async function DELETE(request, { params }) {
       product_soft_deleted: true,
     });
 
+    const user = await getLoggedInUser();
+    const logData = await createLog(
+      user.account_id,
+      "Product",
+      id,
+      "SOFT-DELETE"
+    );
+
     return NextResponse.json(
-      { message: `Product with ID ${id} soft-deleted successfully.` },
+      {
+        message: `Product with ID ${id} soft-deleted successfully.`,
+        data: logData,
+      },
       { status: 200 }
     );
   } catch (error) {
