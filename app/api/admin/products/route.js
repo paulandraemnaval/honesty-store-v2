@@ -1,10 +1,4 @@
-import {
-  db,
-  createLog,
-  getLoggedInUser,
-  checkCollectionExists,
-  getLastReportEndDate,
-} from "@/utils/firebase";
+import { db, createLog, getLoggedInUser } from "@/utils/firebase";
 import {
   collection,
   getDocs,
@@ -13,7 +7,6 @@ import {
   setDoc,
   query,
   where,
-  updateDoc,
   startAfter,
   limit,
   getDoc,
@@ -96,8 +89,9 @@ export async function PATCH(request) {
     }
     const snapshot = await getDocs(productsQuery);
     const products = snapshot.docs.map((doc) => doc.data());
+
     return NextResponse.json(
-      { message: "Successfully fetched products", products },
+      { message: "Successfully fetched products", products, data: logData },
       { status: 200 }
     );
   } catch (error) {
@@ -162,12 +156,21 @@ export async function POST(request) {
       );
     }
 
+    const user = await getLoggedInUser();
+    const logData = await createLog(
+      user.account_id,
+      "Product",
+      productDoc.id,
+      "CREATE"
+    );
+
     return NextResponse.json(
       {
         message: "Product created successfully",
         data: {
           productId: productDoc.id,
           imageURL,
+          logData,
         },
       },
       { status: 200 }

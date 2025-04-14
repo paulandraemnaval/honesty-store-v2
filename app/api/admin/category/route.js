@@ -85,7 +85,7 @@ export async function POST(request) {
       user.account_id,
       "Category",
       categoryDoc.id,
-      "Added a new category"
+      "CREATE"
     );
 
     return NextResponse.json(

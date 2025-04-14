@@ -5,7 +5,7 @@ import getImageURL from "@/utils/imageURL";
 
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const categoryDoc = doc(db, "Category", id);
     const snapshot = await getDoc(categoryDoc);
     if (!snapshot.exists()) {
@@ -26,7 +26,7 @@ export async function GET(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  const { id } = params;
+  const { id } = await params;
 
   try {
     const categoryDoc = doc(db, "Category", id);
@@ -41,7 +41,7 @@ export async function DELETE(request, { params }) {
       user.account_id,
       "Category",
       id,
-      `Soft-deleted category with ID ${id}`
+      `SOFT-DELETE`
     );
 
     return NextResponse.json(
@@ -57,7 +57,7 @@ export async function DELETE(request, { params }) {
 }
 
 export async function PATCH(request, { params }) {
-  const { id } = params;
+  const { id } = await params;
 
   const categoryDoc = doc(db, "Category", id);
 
@@ -95,12 +95,7 @@ export async function PATCH(request, { params }) {
     });
 
     const user = await getLoggedInUser();
-    const logData = await createLog(
-      user.account_id,
-      "Category",
-      id,
-      `Updated category with ID ${id}`
-    );
+    const logData = await createLog(user.account_id, "Category", id, "UPDATE");
 
     return NextResponse.json(
       {

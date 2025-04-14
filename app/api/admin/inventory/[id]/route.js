@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const inventoryDoc = doc(db, "Inventory", id);
     const snapshot = await getDoc(inventoryDoc);
     if (!snapshot.exists()) {
@@ -25,7 +25,7 @@ export async function GET(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  const { id } = params;
+  const { id } = await params;
   try {
     const inventoryRef = doc(db, "Inventory", id);
     await updateDoc(inventoryRef, {
@@ -54,7 +54,7 @@ export async function DELETE(request, { params }) {
 }
 
 export async function PATCH(request, { params }) {
-  const { id } = params;
+  const { id } = await params;
   const inventoryDoc = doc(db, "Inventory", id);
   try {
     const reqFormData = await request.formData();

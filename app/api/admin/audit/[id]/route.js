@@ -3,7 +3,7 @@ import { Timestamp, updateDoc, doc, getDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
 
 export async function DELETE(request, { params }) {
-  const { id } = params;
+  const { id } = await params;
 
   try {
     const auditDoc = doc(db, "Audit", id);
@@ -68,7 +68,7 @@ export async function DELETE(request, { params }) {
 
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const auditDoc = doc(db, "Audit", id);
     const snapshot = await getDoc(auditDoc);
     if (!snapshot.exists()) {
