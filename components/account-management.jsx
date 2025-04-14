@@ -469,7 +469,7 @@ export default function AccountManagement() {
                     </div>
 
                     {/* Temporary Admin Privileges */}
-                    <div className="space-y-4 rounded-lg border p-4">
+                    <div className="space-y-4 rounded-lg border p-4 mb-4">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="flex items-center gap-2 font-medium">

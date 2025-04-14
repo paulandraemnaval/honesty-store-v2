@@ -19,7 +19,8 @@ const ProductsList = ({ customer }) => {
   const sentinelRef = useRef(null);
   const pathName = usePathname();
 
-  const { setSelectedProduct, setCategories, categories } = useGlobalContext();
+  const { setSelectedProduct, setCategories, categories, setSuppliers } =
+    useGlobalContext();
 
   // Categories query
   const {
@@ -29,10 +30,19 @@ const ProductsList = ({ customer }) => {
   } = useQuery({
     queryKey: ["categories"],
     queryFn: () => categoriesGET(),
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 30 * 60 * 1000,
   });
 
-  // Products infinite query
+  const {
+    data: sups,
+    isLoading: supLoading,
+    isSuccess: supSuccess,
+  } = useQuery({
+    queryKey: ["suppliers"],
+    queryFn: () => categoriesGET("suppliers"),
+    staleTime: 30 * 60 * 1000,
+  });
+
   const {
     data,
     fetchNextPage,
@@ -54,6 +64,12 @@ const ProductsList = ({ customer }) => {
   });
 
   const products = data?.pages.flatMap((page) => page.data) || [];
+
+  useEffect(() => {
+    if (!supLoading && supSuccess) {
+      setSuppliers(sups.data);
+    }
+  }, [supSuccess, sups?.data, supLoading, setSuppliers]);
 
   useEffect(() => {
     if (!catLoading && catSuccess) {

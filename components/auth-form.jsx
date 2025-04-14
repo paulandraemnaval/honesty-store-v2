@@ -141,7 +141,7 @@ function AuthForm() {
               disabled={isPending || user}
               type="submit"
             >
-              {isPending ? <Loader2 /> : null} Sign-in
+              {isPending ? <Loader2 className="animate-spin" /> : null} Sign-in
             </Button>
           </form>
         </Form>

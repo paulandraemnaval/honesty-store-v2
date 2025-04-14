@@ -52,7 +52,7 @@ export default function ProductForm({ mode }) {
         product_sku: selectedProduct?.product_sku,
         product_uom: selectedProduct?.product_uom,
         product_weight: selectedProduct?.product_weight,
-        product_dimension: selectedProduct?.product_dimension || "",
+        product_dimension: selectedProduct?.product_dimension,
         product_category: selectedProduct?.product_category,
       };
     } else {
@@ -64,13 +64,16 @@ export default function ProductForm({ mode }) {
     mutationKey: ["product"],
     mutationFn: (obj) => {
       if (mode === "edit") {
-        return productPATCH(obj);
+        return productPATCH({
+          ...obj,
+          product_id: selectedProduct?.product_id,
+        });
       } else if (mode === "add") {
         return productPOST(obj);
       }
     },
     onSuccess: () => {
-      toast.success("Product updated successfully", {});
+      toast.success("Product updated successfully");
     },
     onError: () => {
       toast.error("Failed to update product");
@@ -111,7 +114,6 @@ export default function ProductForm({ mode }) {
     console.log(values);
     mutateAsync({
       ...values,
-      product_id: selectedProduct?.product_id,
       product_category: selectedCategory,
     }).then(() => {
       if (mode === "add") {

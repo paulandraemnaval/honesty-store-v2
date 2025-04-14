@@ -18,3 +18,17 @@ export const inventoryDefaults = {
   inventory_profit_margin: 0,
   inventory_expiration_date: new Date(),
 };
+
+export const categoryDefaults = {
+  category_name: "",
+  category_description: "",
+  category_image: undefined,
+};
+
+export const supplierDefaults = {
+  supplier_name: "",
+  supplier_contact_person: "",
+  supplier_contact_number: "",
+  supplier_email_address: "",
+  supplier_notes: "",
+};

@@ -74,3 +74,41 @@ export const productSchema = z.object({
     z.string({ message: "Product category is required." })
   ),
 });
+
+export const categorySchema = z.object({
+  file: z
+    .union([
+      z.instanceof(File, { message: "Category image is required" }),
+      z.string().url({ message: "Category image is required" }),
+    ])
+    .refine((val) => val instanceof File || val.length > 0, {
+      message: "Category image is required.",
+    }),
+  category_name: z.string().min(2, {
+    message: "Category name must be at least 2 characters.",
+  }),
+  category_description: z.string().optional(),
+});
+
+export const supplierSchema = z.object({
+  supplier_name: z.string().min(2, {
+    message: "Supplier name must be at least 2 characters.",
+  }),
+  supplier_contact_person: z.string().min(1, {
+    message: "Contact person is required.",
+  }),
+  supplier_contact_number: z.string().refine(
+    (value) => {
+      const phNumberRegex = /^(09\d{9}|\+639\d{9})$/;
+      return phNumberRegex.test(value);
+    },
+    {
+      message:
+        "Must be a valid Philippine number (09XXXXXXXXX or +639XXXXXXXXX)",
+    }
+  ),
+  supplier_email_address: z.string().email({
+    message: "Invalid email address.",
+  }),
+  supplier_notes: z.string().optional(),
+});

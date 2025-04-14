@@ -9,6 +9,14 @@ const GlobalContext = createContext({
   setLastVisible: () => {},
   setCategories: () => {},
   categories: [],
+  setSelectedCategory: () => {},
+  selectedCategory: null,
+  selectedInventory: null,
+  setSelectedInventory: () => {},
+  suppliers: [],
+  setSuppliers: () => {},
+  selectedSupplier: null,
+  setSelectedSupplier: () => {},
 });
 
 export const useGlobalContext = () => useContext(GlobalContext);
@@ -23,6 +31,7 @@ export default function GlobalContextProvider({ children }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedInventory, setSelectedInventory] = useState();
   const [suppliers, setSuppliers] = useState(null);
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
 
   const value = {
     user,
@@ -43,6 +52,8 @@ export default function GlobalContextProvider({ children }) {
     setSelectedInventory,
     suppliers,
     setSuppliers,
+    selectedSupplier,
+    setSelectedSupplier,
   };
 
   return (

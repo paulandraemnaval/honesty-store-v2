@@ -179,9 +179,10 @@ export function AppSidebar() {
                     variant="outline"
                     className="w-fit justify-start text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
                     onClick={handleLogout}
+                    disabled={isPending}
                   >
                     {isPending ? (
-                      <Loader2 className="h-4 w-4" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <LogOut className="mr-2 h-4 w-4" />
                     )}

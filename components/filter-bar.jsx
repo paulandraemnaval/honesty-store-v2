@@ -12,17 +12,17 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Plus, Settings } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import CategoryForm from "@/components/category-form";
 import SupplierForm from "@/components/supplier-form";
 import { useState } from "react";
 
 export function FilterBar() {
   const [formType, setFormType] = useState("");
-  const [method, setMethod] = useState("");
+  const [mode, setMode] = useState("");
 
-  function handleClick(type, method) {
-    setMethod(method);
+  function handleClick(type, mode) {
+    setMode(mode);
     setFormType(type);
   }
 
@@ -53,19 +53,10 @@ export function FilterBar() {
                     variant="outline"
                     size="icon"
                     onClick={() => {
-                      handleClick("category", "Create");
+                      handleClick("Category", "Create");
                     }}
                   >
-                    <Plus />
-                  </Button>
-                </SheetTrigger>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleClick("category", "Edit")}
-                  >
-                    <Settings />
+                    <MoreHorizontal />
                   </Button>
                 </SheetTrigger>
               </div>
@@ -97,33 +88,24 @@ export function FilterBar() {
                     variant="outline"
                     size="icon"
                     onClick={() => {
-                      handleClick("supplier", "Create");
+                      handleClick("Supplier", "Create");
                     }}
                   >
-                    <Plus />
-                  </Button>
-                </SheetTrigger>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleClick("supplier", "Edit")}
-                  >
-                    <Settings />
+                    <MoreHorizontal />
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="px-4 py-4 gap-2">
                   <SheetHeader>
-                    <SheetTitle>{`${method} ${formType} `}</SheetTitle>
+                    <SheetTitle>{`${formType}`}</SheetTitle>
                     <SheetDescription>
-                      {`${method} the deatils of an ${formType}. Press save when
+                      {`View the deatils of ${formType}. Press save when
                       finshed editing to save your changes.`}
                     </SheetDescription>
                   </SheetHeader>
-                  {formType === "category" ? (
-                    <CategoryForm method={method} />
+                  {formType === "Category" ? (
+                    <CategoryForm />
                   ) : (
-                    <SupplierForm method={method} />
+                    <SupplierForm />
                   )}
                 </SheetContent>
               </div>

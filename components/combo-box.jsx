@@ -22,35 +22,66 @@ import {
 export default function ComboBox({
   data,
   datatype,
-  defaultValue,
+  value,
   setSelectedValue,
   disabled,
 }) {
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState("");
 
-  function getValue() {
-    const ret = data.find((item) => item.category_id === defaultValue);
-    if (ret) {
-      setValue(ret.category_name);
-      setSelectedValue(ret.category_id);
+  const selectedLabel = React.useMemo(() => {
+    if (!value) return "";
+    if (datatype === "Product Category" || datatype === "Category") {
+      return value.category_name;
     }
-  }
+    if (datatype === "Supplier") {
+      return value.supplier_name;
+    }
+    return "";
+  }, [value, datatype]);
 
   function getPlaceholder() {
-    if (datatype === "Product Category") {
+    if (datatype === "Product Category" || datatype === "Category") {
       return "Search Category";
     }
     if (datatype === "Supplier") {
       return "Search Supplier";
     }
+    return `Search ${datatype}`;
   }
 
-  React.useEffect(() => {
-    if (defaultValue) {
-      getValue();
+  function getCommandValue(item) {
+    if (datatype === "Product Category" || datatype === "Category") {
+      return item.category_name;
     }
-  }, []);
+    if (datatype === "Supplier") {
+      return item.supplier_name;
+    }
+    return item;
+  }
+
+  function getItemLabel(item) {
+    if (datatype === "Product Category" || datatype === "Category") {
+      return item.category_name;
+    }
+    if (datatype === "Supplier") {
+      return item.supplier_name;
+    }
+    return item;
+  }
+
+  function isItemSelected(item) {
+    if (!value) return false;
+
+    if (datatype === "Product Category" || datatype === "Category") {
+      return value.category_id === item.category_id;
+    }
+    if (datatype === "Supplier") {
+      return value.supplier_id === item.supplier_id;
+    }
+    return false;
+  }
+
+  const safeData = Array.isArray(data) ? data : [];
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -59,36 +90,35 @@ export default function ComboBox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className="flex-1 justify-between"
           disabled={disabled}
         >
-          {value ? value : `Select ${datatype}`}
+          {selectedLabel || `Select ${datatype}`}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent className="flex-1 p-0" align="start">
         <Command>
           <CommandInput placeholder={getPlaceholder()} />
           <CommandList className="w-full">
             <CommandEmpty>No {datatype} found.</CommandEmpty>
             <CommandGroup>
-              {data.map((data, index) => (
+              {safeData.map((item, index) => (
                 <CommandItem
                   key={index}
-                  value={data.category_name}
-                  onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue);
-                    setSelectedValue(data.category_id);
+                  value={getCommandValue(item)}
+                  onSelect={() => {
+                    setSelectedValue(item);
                     setOpen(false);
                   }}
                 >
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === data.value ? "opacity-100" : "opacity-0"
+                      isItemSelected(item) ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  {data.category_name}
+                  {getItemLabel(item)}
                 </CommandItem>
               ))}
             </CommandGroup>

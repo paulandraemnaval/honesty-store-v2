@@ -183,7 +183,7 @@
   }
 
   .form-scroll-area {
-    @apply h-[55vh] pr-4;
+    @apply min-h-[20dvh] max-h-[55dvh] pr-4 overflow-auto;
   }
 
   .form-checkbox {
