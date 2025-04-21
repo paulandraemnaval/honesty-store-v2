@@ -1,4 +1,4 @@
-import { db, getLoggedInUser, createLog } from "@utils/firebase";
+import { db, getLoggedInUser, createLog } from "@/utils/firebase";
 import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
 import { NextResponse } from "next/server";
 import getImageURL from "@/utils/imageURL";
