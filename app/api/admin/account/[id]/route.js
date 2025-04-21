@@ -1,9 +1,9 @@
 import { db, getLoggedInUser, createLog } from "@utils/firebase";
 import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
 import { NextResponse } from "next/server";
-import getImageURL from "@utils/imageURL";
+import getImageURL from "@/utils/imageURL";
 import bcryptjs from "bcryptjs";
-import { adminAuth } from "@utils/firebaseAdmin";
+import { adminAuth } from "@/utils/firebaseAdmin";
 
 export async function GET(request, { params }) {
   const { id } = params;
