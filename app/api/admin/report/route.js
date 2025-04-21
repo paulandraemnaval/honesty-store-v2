@@ -28,6 +28,12 @@ import { report1 } from "@/utils/sheets";
 export async function POST(request) {
   try {
     const reqFormData = await request.formData();
+    if (!reqFormData) {
+      return NextResponse.json(
+        { error: "Invalid or missing form data" },
+        { status: 400 }
+      );
+    }
     const report_cash_inflow = parseFloat(reqFormData.get("cash_inflow")) || 0;
     const report_cash_outflow =
       parseFloat(reqFormData.get("cash_outflow")) || 0;

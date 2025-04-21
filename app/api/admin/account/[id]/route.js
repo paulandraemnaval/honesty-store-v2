@@ -40,11 +40,18 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ message: "Account not found" }, { status: 404 });
   }
 
+  const formData = await request.formData();
+  if (!formData) {
+    return NextResponse.json(
+      { error: "Invalid or missing form data" },
+      { status: 400 }
+    );
+  }
+
   const account = accountDoc.data();
   try {
-    const { name, file, role, url, email, password } = Object.fromEntries(
-      await request.formData()
-    );
+    const { name, file, role, url, email, password } =
+      Object.fromEntries(formData);
 
     if (!email || !password || !name) {
       return NextResponse.json(

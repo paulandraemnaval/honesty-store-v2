@@ -63,7 +63,14 @@ const signInUser = async (email, password) => {
 //---------------------------------------------------------
 export async function POST(request) {
   try {
-    const { email, password } = Object.fromEntries(await request.formData());
+    const reqFormData = await request.formData();
+    if (!reqFormData) {
+      return NextResponse.json(
+        { error: "Invalid or missing form data" },
+        { status: 400 }
+      );
+    }
+    const { email, password } = Object.fromEntries(reqFormData);
     const query_string = query(
       collection(db, "Account"),
       where("account_email", "==", email)

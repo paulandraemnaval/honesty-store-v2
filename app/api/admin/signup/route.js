@@ -24,9 +24,15 @@ export async function POST(request) {
   const accountDoc = doc(accountRef);
 
   try {
-    const { name, email, password, file, role, salt } = Object.fromEntries(
-      await request.formData()
-    );
+    const reqFormData = await request.formData();
+    if (!reqFormData) {
+      return NextResponse.json(
+        { error: "Invalid or missing form data" },
+        { status: 400 }
+      );
+    }
+    const { name, email, password, file, role, salt } =
+      Object.fromEntries(reqFormData);
 
     const user = await signUpUser(email, password);
 

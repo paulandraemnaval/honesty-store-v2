@@ -46,6 +46,12 @@ export async function POST(request) {
   const categoryDoc = doc(categoryRef);
   try {
     const reqFormData = await request.formData();
+    if (!reqFormData) {
+      return NextResponse.json(
+        { error: "Invalid or missing form data" },
+        { status: 400 }
+      );
+    }
     const category_name = reqFormData.get("category_name");
     const file = reqFormData.get("file");
     const category_description = reqFormData.get("category_description");

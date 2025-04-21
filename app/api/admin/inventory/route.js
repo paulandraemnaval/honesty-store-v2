@@ -145,6 +145,12 @@ export async function POST(request) {
   const inventoryDoc = doc(inventoryRef);
   try {
     const reqFormData = await request.formData();
+    if (!reqFormData) {
+      return NextResponse.json(
+        { error: "Invalid or missing form data" },
+        { status: 400 }
+      );
+    }
 
     const wholesale_price = parseFloat(reqFormData.get("wholesale_price"));
     const inventory_product = reqFormData.get("inventory_product");

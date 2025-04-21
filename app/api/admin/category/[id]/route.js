@@ -63,6 +63,12 @@ export async function PATCH(request, { params }) {
 
   try {
     const reqFormData = await request.formData();
+    if (!reqFormData) {
+      return NextResponse.json(
+        { error: "Invalid or missing form data" },
+        { status: 400 }
+      );
+    }
     const category_name = reqFormData.get("category_name");
     const file = reqFormData.get("file");
     const category_description = reqFormData.get("category_description");

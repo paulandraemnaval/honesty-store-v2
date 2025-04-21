@@ -58,6 +58,12 @@ export async function PATCH(request, { params }) {
   const inventoryDoc = doc(db, "Inventory", id);
   try {
     const reqFormData = await request.formData();
+    if (!reqFormData) {
+      return NextResponse.json(
+        { error: "Invalid or missing form data" },
+        { status: 400 }
+      );
+    }
     const inventory_wholesale_price = parseFloat(
       reqFormData.get("inventory_wholesale_price")
     );
