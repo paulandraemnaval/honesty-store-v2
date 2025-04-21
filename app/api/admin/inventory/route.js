@@ -292,9 +292,10 @@ export async function PATCH(request) {
       );
       fullQuery = query(inventoryRef, orderBy("inventory_total_units", "desc"));
     }
+    const inventoryExist = await checkCollectionExists("Inventory");
 
     const snapshot = await getDocs(inventoryQuery);
-    if (snapshot.empty) {
+    if (snapshot.empty && inventoryExist) {
       return NextResponse.json(
         { message: "No inventories found since the last report." },
         { status: 404 }
@@ -349,8 +350,11 @@ export async function PATCH(request) {
     const invSnap = await getDocs(fullQuery);
     if (invSnap.empty) {
       return NextResponse.json(
-        { message: "No inventories found" },
-        { status: 404 }
+        {
+          message: "No inventories found; All products fetched",
+          data: products,
+        },
+        { status: 200 }
       );
     }
     const invents = invSnap.docs.map((doc) => doc.data());
