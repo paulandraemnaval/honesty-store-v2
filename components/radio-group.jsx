@@ -15,7 +15,7 @@ export default function FormRadioGroup({
       defaultValue="No Filter"
     >
       <div className="flex items-center space-x-2 w-full">
-        <RadioGroupItem value="No Filter" id={`radio-No Filter`} />
+        <RadioGroupItem value="radio-No Filter" id={`radio-No Filter`} />
         <Label htmlFor="radio-No Filter" className="mr-auto">
           No Filter
         </Label>

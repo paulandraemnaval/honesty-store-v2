@@ -152,11 +152,13 @@ export async function POST(request) {
       );
     }
 
-    const wholesale_price = parseFloat(reqFormData.get("wholesale_price"));
-    const inventory_product = reqFormData.get("inventory_product");
-    const inventory_supplier = reqFormData.get("inventory_supplier");
-    const total_units = parseInt(reqFormData.get("total_units"), 10);
-    const retail_price = parseFloat(reqFormData.get("retail_price"));
+    const wholesale_price = parseFloat(
+      reqFormData.get("inventory_wholesale_price")
+    );
+    const inventory_product = reqFormData.get("product_id");
+    const supplier_id = reqFormData.get("supplier_id");
+    const total_units = parseInt(reqFormData.get("inventory_total_units"), 10);
+    const retail_price = parseFloat(reqFormData.get("inventory_retail_price"));
     const inventory_description = reqFormData.get("inventory_description");
     let inventory_profit_margin = parseFloat(
       reqFormData.get("inventory_profit_margin")
@@ -171,7 +173,7 @@ export async function POST(request) {
     await setDoc(inventoryDoc, {
       inventory_id: inventoryDoc.id,
       product_id: inventory_product,
-      supplier_id: inventory_supplier,
+      supplier_id,
       inventory_wholesale_price: wholesale_price,
       inventory_total_units: total_units,
       inventory_retail_price: retail_price,

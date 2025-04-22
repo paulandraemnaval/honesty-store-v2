@@ -34,6 +34,7 @@ import {
 } from "./ui/dialog";
 import { Logout } from "@/lib/utils";
 import Link from "next/link";
+import { AvatarImage } from "@radix-ui/react-avatar";
 
 const items = [
   {
@@ -87,6 +88,7 @@ export function AppSidebar() {
   function handleLogout() {
     mutateAsync();
   }
+
   return (
     <Sidebar variant="sidebar" collapsible="icon">
       <SidebarHeader className="p-4">
@@ -143,16 +145,21 @@ export function AppSidebar() {
           <div className="p-4 space-y-4">
             <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted cursor-pointer transition-colors">
               <Avatar className="h-10 w-10 border-2 border-primary/10">
+                <AvatarImage
+                  src={user?.account_profile_url}
+                  alt="user_image"
+                  className="object-cover w-full h-full"
+                />
                 <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                  JD
+                  <Loader2 className="animate-spin" />
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 overflow-hidden">
                 <p className="text-sm font-medium leading-none truncate">
-                  John Doe
+                  {user ? user?.account_name : ""}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1 truncate">
-                  Administrator
+                  {user ? user?.account_role : ""}
                 </p>
               </div>
             </div>
@@ -193,7 +200,7 @@ export function AppSidebar() {
             </Dialog>
             <div className="pt-2 border-t">
               <p className="text-xs text-center text-muted-foreground">
-                &copy; {new Date().getFullYear()} Honesty Store IMS
+                &copy; 2025 Honesty Store IMS
               </p>
             </div>
           </div>

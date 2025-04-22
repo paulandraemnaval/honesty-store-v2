@@ -48,7 +48,7 @@ export default function GlobalContextProvider({ children }) {
 
         return ascendingPrice ? priceA - priceB : priceB - priceA;
       });
-  }, [products, ascendingPrice]);
+  }, [products, ascendingPrice, categoryFilter, supplierFilter]);
 
   const value = {
     user,

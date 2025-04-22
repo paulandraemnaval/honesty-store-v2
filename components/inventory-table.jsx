@@ -15,7 +15,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetClose,
 } from "@/components/ui/sheet";
 import {
   firebaseTimestampToYYYY_MM_DD,
@@ -23,17 +22,17 @@ import {
 } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useGlobalContext } from "@/contexts/global-context";
-import { Loader2 } from "lucide-react";
+import { Loader2, RotateCw } from "lucide-react";
 import { useState } from "react";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import InventoryForm from "./inventory-form";
-
+import { Button } from "./ui/button";
 export function InventoryTable() {
   const { selectedProduct, setSelectedInventory, selectedInventory } =
     useGlobalContext();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const { data, isFetching } = useQuery({
+  const { data, isFetching, refetch } = useQuery({
     queryKey: ["product_inventories", selectedProduct.product_id],
     queryFn: () => productInventoriesGET(selectedProduct.product_id),
     enabled: !!selectedProduct.product_id,
@@ -44,11 +43,20 @@ export function InventoryTable() {
     setIsSheetOpen(true);
   };
 
+  const handleRefresh = () => {
+    refetch();
+  };
+
   return (
     <>
       <ScrollArea className="h-[75vh] pr-2 w-full">
         <Table>
-          <TableCaption>Click on a row to view its details</TableCaption>
+          <TableCaption>
+            <Button variant="outline" onClick={handleRefresh}>
+              Refresh
+              <RotateCw className={`${isFetching ? "animate-spin" : ""}`} />
+            </Button>
+          </TableCaption>
           <TableHeader className="w-full">
             <TableRow>
               {isFetching ? null : (
