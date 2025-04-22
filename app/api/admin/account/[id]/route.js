@@ -32,24 +32,27 @@ export async function GET(request, { params }) {
 }
 
 export async function PATCH(request, { params }) {
-  const { id } = params;
-  const accountRef = doc(db, "Account", id);
-
-  const accountDoc = await getDoc(accountRef);
-  if (!accountDoc.exists()) {
-    return NextResponse.json({ message: "Account not found" }, { status: 404 });
-  }
-
-  const formData = await request.formData();
-  if (!formData) {
-    return NextResponse.json(
-      { error: "Invalid or missing form data" },
-      { status: 400 }
-    );
-  }
-
-  const account = accountDoc.data();
   try {
+    const { id } = params;
+    const accountRef = doc(db, "Account", id);
+
+    const accountDoc = await getDoc(accountRef);
+    if (!accountDoc.exists()) {
+      return NextResponse.json(
+        { message: "Account not found" },
+        { status: 404 }
+      );
+    }
+
+    const formData = await request.formData();
+    if (!formData) {
+      return NextResponse.json(
+        { error: "Invalid or missing form data" },
+        { status: 400 }
+      );
+    }
+
+    const account = accountDoc.data();
     const { name, file, role, url, email, password } =
       Object.fromEntries(formData);
 
