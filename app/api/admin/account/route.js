@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(request) {
   try {
+    //account
     const accountRef = collection(db, "Account");
     const accountSnapshot = await getDocs(accountRef);
     if (accountSnapshot.empty) {
