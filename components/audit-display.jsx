@@ -8,7 +8,16 @@ import { Button } from "@/components/ui/button";
 import AuditList from "./audit-list";
 import AuditDialog from "./audit-modal";
 import { Package } from "lucide-react";
+import { useGlobalContext } from "@/contexts/global-context";
 const AuditDisplay = () => {
+  const {
+    categoryFilter,
+    setCategoryFilter,
+    supplierFilter,
+    setSupplierFilter,
+    ascendingFilter,
+    setAscendingFilter,
+  } = useGlobalContext();
   return (
     <div className="flex flex-col gap-4">
       <div className="top-bar">

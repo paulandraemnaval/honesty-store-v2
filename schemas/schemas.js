@@ -4,14 +4,14 @@ export const inventorySchema = z
   .object({
     inventory_wholesale_price: z.preprocess(
       (val) => (val === "" ? undefined : val),
-      z.number({ invalid_type_error: "Wholesale price is required" }).min(0, {
+      z.number({ invalid_type_error: "Wholesale price is required" }).min(1, {
         message: "Wholesale price must be a positive number.",
       })
     ),
     inventory_total_units: z.preprocess(
       (val) => (val === "" ? undefined : val),
-      z.number({ invalid_type_error: "Total units is required" }).min(0, {
-        message: "Total units must be a positive number.",
+      z.number({ invalid_type_error: "Total units is required" }).min(1, {
+        message: "Total units must at least be 1.",
       })
     ),
     inventory_retail_price: z.preprocess(
@@ -29,6 +29,9 @@ export const inventorySchema = z
     ),
     inventory_expiration_date: z.date({
       message: "Expiration date is required",
+    }),
+    supplier_id: z.string({
+      required_error: "Please select a supplier",
     }),
   })
   .refine(

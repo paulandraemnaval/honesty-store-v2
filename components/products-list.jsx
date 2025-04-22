@@ -5,7 +5,13 @@ import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import Image from "next/image";
 import { Button } from "./ui/button";
 import { MoreHorizontal, PackagePlus } from "lucide-react";
-import { Sheet, SheetContent } from "./ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetHeader,
+  SheetDescription,
+} from "./ui/sheet";
 import { usePathname } from "next/navigation";
 import { AdminProductMore, CustomerProductMore } from "./product-more";
 import ExpiryStatus from "./expiry-status";
@@ -13,22 +19,24 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useGlobalContext } from "@/contexts/global-context";
 import { categoriesGET, inventoryGET, supplierGET } from "@/lib/utils";
 import { Skeleton } from "./ui/skeleton";
+import InventoryForm from "./inventory-form";
 
 const ProductsList = ({ customer }) => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [sheetType, setSheetType] = useState("details"); // "details" or "inventory"
   const sentinelRef = useRef(null);
   const pathName = usePathname();
 
   const {
     setSelectedProduct,
+    selectedProduct,
     setCategories,
     categories,
     setSuppliers,
-    sortedProducts,
     setCatLoading,
     setSupLoading,
-    supLoading,
-    catLoading,
+    setProducts,
+    products,
   } = useGlobalContext();
 
   const {
@@ -57,25 +65,25 @@ const ProductsList = ({ customer }) => {
     hasNextPage,
     isFetchingNextPage,
     isFetching: productsLoading,
-    isError,
+    isSuccess: prodSuccess,
   } = useInfiniteQuery({
     queryKey: [`products-${customer ? "customer" : "admin"}`],
     queryFn: ({ pageParam = "" }) => inventoryGET(pageParam),
     getNextPageParam: (lastPage) => {
       return lastPage.lastVisible || undefined;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
   });
 
-  const products = data?.pages.flatMap((page) => page.data) || [];
-
   useEffect(() => {
-    console.log("LOADING STATES", supLoading, catLoading);
-  }, [supLoading, catLoading]);
+    if (!productsLoading && prodSuccess) {
+      setProducts(data.pages.flatMap((page) => page.data));
+    }
+  }, [prodSuccess]);
 
   useEffect(() => {
     if (!localSupLoading && supSuccess) {
@@ -113,8 +121,20 @@ const ProductsList = ({ customer }) => {
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  useEffect(() => {
+    console.log("context", selectedProduct);
+  }, [selectedProduct]);
+
   function openProductSheet(product) {
     setSelectedProduct(product);
+    setSheetType("details");
+    setIsSheetOpen(true);
+  }
+
+  function openInventorySheet(product) {
+    console.log("CLICKED", product);
+    setSelectedProduct(product);
+    setSheetType("inventory");
     setIsSheetOpen(true);
   }
 
@@ -126,23 +146,15 @@ const ProductsList = ({ customer }) => {
     return "Unknown Category";
   }
 
-  if (isError) {
-    return (
-      <div className="p-8 text-center">
-        Error loading products. Please try again.
-      </div>
-    );
-  }
-
   return (
     <>
       <div
         className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full px-6 py-4`}
       >
-        {productsLoading && !products.length ? (
+        {productsLoading && !products?.length ? (
           <ProductListSkeleton />
         ) : (
-          sortedProducts.map((prodwinv, index) => {
+          products?.map((prodwinv, index) => {
             if (!prodwinv.inventory && customer) return null;
 
             return (
@@ -155,6 +167,9 @@ const ProductsList = ({ customer }) => {
                 onViewDetails={() =>
                   openProductSheet(prodwinv?.product || prodwinv)
                 }
+                onInventoryAction={() =>
+                  openInventorySheet(prodwinv?.product || prodwinv)
+                }
                 admin={pathName.includes("admin")}
                 category={getProductCategory(
                   prodwinv?.product?.product_category ||
@@ -166,7 +181,6 @@ const ProductsList = ({ customer }) => {
         )}
       </div>
 
-      {/* Always show sentinel unless explicitly determined there are no more pages */}
       {hasNextPage !== false && (
         <div className="w-full py-4 flex justify-center" ref={sentinelRef}>
           {isFetchingNextPage && (
@@ -178,11 +192,15 @@ const ProductsList = ({ customer }) => {
       )}
 
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="w-full p-4 bg-white shadow-md flex items-center">
-          {pathName.includes("admin") ? (
-            <AdminProductMore />
+        <SheetContent className="w-full p-4 bg-white shadow-md">
+          {sheetType === "details" ? (
+            pathName.includes("admin") ? (
+              <AdminProductMore />
+            ) : (
+              <CustomerProductMore />
+            )
           ) : (
-            <CustomerProductMore />
+            <InventoryForm mode="add" />
           )}
         </SheetContent>
       </Sheet>
@@ -210,7 +228,14 @@ function ProductListSkeleton() {
   );
 }
 
-const ProductCard = ({ prod, inv, onViewDetails, admin, category }) => {
+const ProductCard = ({
+  prod,
+  inv,
+  onViewDetails,
+  onInventoryAction,
+  admin,
+  category,
+}) => {
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-md py-0 gap-0">
       <CardHeader className="relative p-0">
@@ -226,7 +251,7 @@ const ProductCard = ({ prod, inv, onViewDetails, admin, category }) => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8  bg-white/80 backdrop-blur-sm"
+              className="h-8 w-8 bg-white/80 backdrop-blur-sm"
               onClick={onViewDetails}
             >
               <MoreHorizontal className="h-4 w-4" />
@@ -254,18 +279,25 @@ const ProductCard = ({ prod, inv, onViewDetails, admin, category }) => {
             : "No Inventory"}
         </p>
         {admin ? (
-          <AdminButtons expiryDate={inv?.inventory_expiration_date} />
+          <AdminButtons
+            expiryDate={inv?.inventory_expiration_date}
+            onInventoryAction={onInventoryAction}
+          />
         ) : null}
       </CardFooter>
     </Card>
   );
 };
 
-function AdminButtons({ expiryDate }) {
+function AdminButtons({ expiryDate, onInventoryAction }) {
   return (
     <div className="flex gap-2">
       {expiryDate ? <ExpiryStatus expiryDate={expiryDate} /> : null}
-      <Button variant="outline" className="icon-button">
+      <Button
+        variant="outline"
+        className="custom-form-button"
+        onClick={onInventoryAction}
+      >
         <PackagePlus stroke="white" />
       </Button>
     </div>

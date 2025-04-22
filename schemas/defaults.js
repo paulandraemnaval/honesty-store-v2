@@ -16,7 +16,8 @@ export const inventoryDefaults = {
   inventory_retail_price: 0,
   inventory_description: "",
   inventory_profit_margin: 0,
-  inventory_expiration_date: new Date(),
+  inventory_expiration_date: null,
+  supplier_id: "",
 };
 
 export const categoryDefaults = {

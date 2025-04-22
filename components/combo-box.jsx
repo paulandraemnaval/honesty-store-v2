@@ -18,19 +18,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
 export default function ComboBox({
   data,
   datatype,
   value,
-  setSelectedValue,
+  onChange, // Changed from setSelectedValue to match form field pattern
   disabled,
 }) {
   const [open, setOpen] = React.useState(false);
 
   const selectedLabel = React.useMemo(() => {
     if (!value) return "";
-    if (datatype === "Product Category" || datatype === "Category") {
+    if (datatype === "Category") {
       return value.category_name;
     }
     if (datatype === "Supplier") {
@@ -40,7 +39,7 @@ export default function ComboBox({
   }, [value, datatype]);
 
   function getPlaceholder() {
-    if (datatype === "Product Category" || datatype === "Category") {
+    if (datatype === "Category") {
       return "Search Category";
     }
     if (datatype === "Supplier") {
@@ -50,7 +49,7 @@ export default function ComboBox({
   }
 
   function getCommandValue(item) {
-    if (datatype === "Product Category" || datatype === "Category") {
+    if (datatype === "Category") {
       return item.category_name;
     }
     if (datatype === "Supplier") {
@@ -60,7 +59,7 @@ export default function ComboBox({
   }
 
   function getItemLabel(item) {
-    if (datatype === "Product Category" || datatype === "Category") {
+    if (datatype === "Category") {
       return item.category_name;
     }
     if (datatype === "Supplier") {
@@ -72,7 +71,7 @@ export default function ComboBox({
   function isItemSelected(item) {
     if (!value) return false;
 
-    if (datatype === "Product Category" || datatype === "Category") {
+    if (datatype === "Category") {
       return value.category_id === item.category_id;
     }
     if (datatype === "Supplier") {
@@ -90,17 +89,17 @@ export default function ComboBox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="flex-1 justify-between"
+          className="w-full justify-between"
           disabled={disabled}
         >
           {selectedLabel || `Select ${datatype}`}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="flex-1 p-0" align="start">
+      <PopoverContent className="w-[200px] p-0" align="start">
         <Command>
           <CommandInput placeholder={getPlaceholder()} />
-          <CommandList className="w-full">
+          <CommandList>
             <CommandEmpty>No {datatype} found.</CommandEmpty>
             <CommandGroup>
               {safeData.map((item, index) => (
@@ -108,7 +107,7 @@ export default function ComboBox({
                   key={index}
                   value={getCommandValue(item)}
                   onSelect={() => {
-                    setSelectedValue(item);
+                    onChange(item); // Use onChange instead of setSelectedValue
                     setOpen(false);
                   }}
                 >
