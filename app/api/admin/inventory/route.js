@@ -358,7 +358,7 @@ export async function PATCH(request) {
       return NextResponse.json(
         {
           message: "No inventories found; All products fetched",
-          data: products,
+          noInventory: products,
         },
         { status: 200 }
       );
