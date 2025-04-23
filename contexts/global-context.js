@@ -1,6 +1,5 @@
 "use client";
-import { set } from "date-fns";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useMemo } from "react";
 
 const GlobalContext = createContext({
   products: [],
@@ -20,7 +19,7 @@ const GlobalContext = createContext({
   setSelectedSupplier: () => {},
   ascendingPrice: false,
   setAscendingPrice: () => {},
-  filteredProducts: [], // Now a useState
+  filteredProducts: [],
   categoryFilter: null,
   setCategoryFilter: () => {},
   supplierFilter: null,
@@ -40,19 +39,42 @@ export default function GlobalContextProvider({ children }) {
   const [selectedInventory, setSelectedInventory] = useState();
   const [suppliers, setSuppliers] = useState(null);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
-  const [ascendingPrice, setAscendingPrice] = useState(false);
+  const [ascendingPrice, setAscendingPrice] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState(null);
   const [supplierFilter, setSupplierFilter] = useState(null);
   const [catLoading, setCatLoading] = useState(true);
   const [supLoading, setSupLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [ascendingUnits, setAscendingUnits] = useState(false);
+  const [ascendingUnits, setAscendingUnits] = useState(true);
 
-  useEffect(() => {
+  const togglePriceSort = () => {
+    setAscendingPrice((prev) => {
+      const newValue = prev === null ? true : prev === true ? false : null;
+
+      if (newValue !== null) {
+        setAscendingUnits(null);
+      }
+
+      return newValue;
+    });
+  };
+
+  const toggleUnitSort = () => {
+    setAscendingUnits((prev) => {
+      const newValue = prev === null ? true : prev === true ? false : null;
+
+      if (newValue !== null) {
+        setAscendingPrice(null);
+      }
+
+      return newValue;
+    });
+  };
+
+  const filteredAndSortedProducts = useMemo(() => {
     if (!Array.isArray(products)) {
-      setFilteredProducts([]);
-      return;
+      return [];
     }
 
     let fp = [...products].filter((p) => {
@@ -71,23 +93,27 @@ export default function GlobalContextProvider({ children }) {
 
     if (fp.length > 0) {
       const withoutInventory = fp.filter((p) => !p.inventory);
-      const withInventory = fp
-        .filter((p) => p.inventory)
-        .sort((a, b) => {
+      let withInventory = fp.filter((p) => p.inventory);
+
+      // Apply sorting if any sort is active
+      if (ascendingPrice !== null) {
+        withInventory = withInventory.sort((a, b) => {
           const aPrice = Number(a.inventory.inventory_retail_price) || 0;
           const bPrice = Number(b.inventory.inventory_retail_price) || 0;
           return !ascendingPrice ? aPrice - bPrice : bPrice - aPrice;
-        })
-        .sort((a, b) => {
+        });
+      } else if (ascendingUnits !== null) {
+        withInventory = withInventory.sort((a, b) => {
           const aUnits = Number(a.inventory.inventory_total_units) || 0;
           const bUnits = Number(b.inventory.inventory_total_units) || 0;
           return !ascendingUnits ? aUnits - bUnits : bUnits - aUnits;
         });
+      }
 
       fp = [...withInventory, ...withoutInventory];
     }
 
-    setFilteredProducts(fp);
+    return fp;
   }, [
     products,
     categoryFilter,
@@ -96,6 +122,9 @@ export default function GlobalContextProvider({ children }) {
     ascendingUnits,
   ]);
 
+  useEffect(() => {
+    setFilteredProducts(filteredAndSortedProducts);
+  }, [filteredAndSortedProducts]);
   useEffect(() => {
     if (!Array.isArray(products)) {
       setFilteredProducts([]);
@@ -135,7 +164,7 @@ export default function GlobalContextProvider({ children }) {
     selectedSupplier,
     setSelectedSupplier,
     ascendingPrice,
-    setAscendingPrice,
+    togglePriceSort,
     filteredProducts,
     categoryFilter,
     setCategoryFilter,
@@ -148,7 +177,7 @@ export default function GlobalContextProvider({ children }) {
     searchTerm,
     setSearchTerm,
     ascendingUnits,
-    setAscendingUnits,
+    toggleUnitSort,
   };
 
   return (
