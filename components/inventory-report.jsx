@@ -53,7 +53,7 @@ const InventoryReport = () => {
     to: addDays(new Date(), 20),
   });
 
-  const { isLoading, mutateAsync } = useMutation({
+  const { isPending, mutateAsync } = useMutation({
     mutationFn: () => inventoryReportGET(date.from, date.to),
     mutationKey: "inventoryReport",
     onSuccess: () => {
@@ -78,7 +78,7 @@ const InventoryReport = () => {
         <Button
           variant="ghost"
           className="custom-form-button"
-          disabled={isLoading}
+          disabled={isPending}
         >
           <Plus /> <Table />
         </Button>
@@ -139,12 +139,12 @@ const InventoryReport = () => {
           variant="outline"
           className="custom-form-button w-full mt-2"
           onClick={handleClick}
-          disabled={isLoading}
+          disabled={isPending}
         >
-          {isLoading ? (
-            <RotateCw className={`${isLoading ? "animate-spin" : ""}`} />
+          {isPending ? (
+            <RotateCw className={`${isPending ? "animate-spin" : ""}`} />
           ) : null}
-          {isLoading ? "Generating..." : "Generate Report"}
+          {isPending ? "Generating..." : "Generate Report"}
         </Button>
       </PopoverContent>
     </Popover>
