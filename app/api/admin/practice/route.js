@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import { sheetDesign } from "@/utils/reports";
+import { financialReportSheetDesign } from "@/utils/financialReport";
+import { inventoryReportSheetDesign } from "@/utils/inventoryReport";
 
 export async function GET(request) {
   try {
-    await sheetDesign();
+    await financialReportSheetDesign();
+    //await inventoryReportSheetDesign();
 
     return NextResponse.json(
       { message: "New report has been created" },
