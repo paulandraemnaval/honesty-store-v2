@@ -77,7 +77,7 @@ const InventoryReport = () => {
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
-          className="custom-form-button"
+          className="custom-form-button ml-auto"
           disabled={isPending}
         >
           <Plus /> <Table />

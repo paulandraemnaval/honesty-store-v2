@@ -35,6 +35,8 @@ const AuditDisplay = () => {
           ascendingFilter={ascendingFilter}
           setAscendingFilter={setAscendingFilter}
           icon={<Package size={20} />}
+          AscendTrueMessage={"Most units at the top"}
+          AscendFalseMessage={"Least units at the top"}
         />
         <AuditDialog />
       </div>

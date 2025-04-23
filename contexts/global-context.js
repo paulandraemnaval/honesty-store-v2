@@ -1,4 +1,5 @@
 "use client";
+import { set } from "date-fns";
 import { createContext, useContext, useEffect, useState } from "react";
 
 const GlobalContext = createContext({
@@ -46,6 +47,7 @@ export default function GlobalContextProvider({ children }) {
   const [catLoading, setCatLoading] = useState(true);
   const [supLoading, setSupLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [ascendingUnits, setAscendingUnits] = useState(false);
 
   useEffect(() => {
     if (!Array.isArray(products)) {
@@ -72,19 +74,27 @@ export default function GlobalContextProvider({ children }) {
       const withInventory = fp
         .filter((p) => p.inventory)
         .sort((a, b) => {
-          // Convert to numbers and provide fallbacks in case values are null/undefined
           const aPrice = Number(a.inventory.inventory_retail_price) || 0;
           const bPrice = Number(b.inventory.inventory_retail_price) || 0;
-          console.log(aPrice, bPrice, ascendingPrice);
           return !ascendingPrice ? aPrice - bPrice : bPrice - aPrice;
+        })
+        .sort((a, b) => {
+          const aUnits = Number(a.inventory.inventory_total_units) || 0;
+          const bUnits = Number(b.inventory.inventory_total_units) || 0;
+          return !ascendingUnits ? aUnits - bUnits : bUnits - aUnits;
         });
 
-      // Recombine the arrays, with inventory items first
       fp = [...withInventory, ...withoutInventory];
     }
 
     setFilteredProducts(fp);
-  }, [products, categoryFilter, supplierFilter, ascendingPrice]);
+  }, [
+    products,
+    categoryFilter,
+    supplierFilter,
+    ascendingPrice,
+    ascendingUnits,
+  ]);
 
   useEffect(() => {
     if (!Array.isArray(products)) {
@@ -137,6 +147,8 @@ export default function GlobalContextProvider({ children }) {
     setCatLoading,
     searchTerm,
     setSearchTerm,
+    ascendingUnits,
+    setAscendingUnits,
   };
 
   return (

@@ -5,7 +5,7 @@ import ProductsList from "@/components/products-list";
 import SearchInput from "@/components/search-input";
 import AscendFilter from "@/components/ascend-filter";
 import { SidebarTrigger } from "./ui/sidebar";
-import { PhilippinePeso } from "lucide-react";
+import { PackageIcon, PhilippinePeso } from "lucide-react";
 import InventoryReport from "./inventory-report";
 import Image from "next/image";
 import icons from "@/constants/icons";
@@ -14,7 +14,12 @@ import AddProduct from "./add-product";
 import { useGlobalContext } from "@/contexts/global-context";
 
 const ProductsDisplay = ({ customer }) => {
-  const { setAscendingPrice, ascendingPrice } = useGlobalContext();
+  const {
+    setAscendingPrice,
+    ascendingPrice,
+    setAscendingUnits,
+    ascendingUnits,
+  } = useGlobalContext();
   const pathName = usePathname();
   return (
     <div className="flex flex-col gap-4">
@@ -45,7 +50,17 @@ const ProductsDisplay = ({ customer }) => {
           ascendingFilter={ascendingPrice}
           setAscendingFilter={setAscendingPrice}
           icon={<PhilippinePeso size={20} />}
+          AscendTrueMessage={"Priciest at the top"}
+          AscendFalseMessage={"Cheapest at the top"}
         />
+        {pathName.includes("admin") ? (
+          <AscendFilter
+            ascendingFilter={ascendingUnits}
+            setAscendingFilter={setAscendingUnits}
+            icon={<PackageIcon size={20} />}
+            AscendTrueMessage={"Most units at the top"}
+          />
+        ) : null}
 
         {pathName.includes("admin") ? (
           <>

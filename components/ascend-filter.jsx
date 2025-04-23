@@ -6,16 +6,21 @@ import {
   PhilippinePeso,
 } from "lucide-react";
 import { HoverCard, HoverCardTrigger } from "./ui/hover-card";
-import { Card, CardContent } from "./ui/card";
 import { HoverCardContent } from "@radix-ui/react-hover-card";
-const AscendFilter = ({ icon, ascendingFilter, setAscendingFilter }) => {
+const AscendFilter = ({
+  icon,
+  ascendingFilter,
+  setAscendingFilter,
+  AscendFalseMessage,
+  AscendTrueMessage,
+}) => {
   function handleClick() {
     setAscendingFilter((prev) => !prev);
   }
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <Button onClick={handleClick} className="mr-auto" variant="outline">
+        <Button onClick={handleClick} variant="outline">
           {icon}
 
           {ascendingFilter ? (
@@ -27,7 +32,7 @@ const AscendFilter = ({ icon, ascendingFilter, setAscendingFilter }) => {
       </HoverCardTrigger>
       <HoverCardContent side="bottom" sideOffset={5} className="bg-white">
         <div className="p-2 border shadow-sm rounded-md">
-          {ascendingFilter ? "Priciest at top" : "Cheapest at top"}
+          {ascendingFilter ? AscendTrueMessage : AscendFalseMessage}
         </div>
       </HoverCardContent>
     </HoverCard>
