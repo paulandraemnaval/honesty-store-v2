@@ -5,13 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import Image from "next/image";
 import { Button } from "./ui/button";
 import { MoreHorizontal, PackagePlus } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetHeader,
-  SheetDescription,
-} from "./ui/sheet";
+import { Sheet, SheetContent } from "./ui/sheet";
 import { usePathname } from "next/navigation";
 import { AdminProductMore, CustomerProductMore } from "./product-more";
 import ExpiryStatus from "./expiry-status";
@@ -23,20 +17,21 @@ import InventoryForm from "./inventory-form";
 
 const ProductsList = ({ customer }) => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [sheetType, setSheetType] = useState("details"); // "details" or "inventory"
+  const [sheetType, setSheetType] = useState("details");
   const sentinelRef = useRef(null);
   const pathName = usePathname();
 
   const {
     setSelectedProduct,
-    selectedProduct,
     setCategories,
     categories,
     setSuppliers,
     setCatLoading,
     setSupLoading,
     setProducts,
-    products,
+    filteredProducts,
+    setSelectedCategory,
+    setSelectedSupplier,
   } = useGlobalContext();
 
   const {
@@ -100,6 +95,11 @@ const ProductsList = ({ customer }) => {
   }, [catSuccess, cats?.data, localCatLoading, setCategories]);
 
   useEffect(() => {
+    setSelectedCategory(null);
+    setSelectedSupplier(null);
+  }, [isSheetOpen]);
+
+  useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 
@@ -121,10 +121,6 @@ const ProductsList = ({ customer }) => {
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  useEffect(() => {
-    console.log("context", selectedProduct);
-  }, [selectedProduct]);
-
   function openProductSheet(product) {
     setSelectedProduct(product);
     setSheetType("details");
@@ -132,7 +128,6 @@ const ProductsList = ({ customer }) => {
   }
 
   function openInventorySheet(product) {
-    console.log("CLICKED", product);
     setSelectedProduct(product);
     setSheetType("inventory");
     setIsSheetOpen(true);
@@ -151,10 +146,10 @@ const ProductsList = ({ customer }) => {
       <div
         className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full px-6 py-4`}
       >
-        {productsLoading && !products?.length ? (
+        {productsLoading && !filteredProducts?.length ? (
           <ProductListSkeleton />
         ) : (
-          products?.map((prodwinv, index) => {
+          filteredProducts?.map((prodwinv, index) => {
             if (!prodwinv.inventory && customer) return null;
 
             return (

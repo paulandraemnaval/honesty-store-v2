@@ -1,11 +1,17 @@
 "use client";
 import React from "react";
-import { cn } from "@/lib/utils";
+import {
+  cn,
+  downloadInventoryReportResponse,
+  inventoryReportGET,
+} from "@/lib/utils";
 import { addDays, format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Plus, Table, CalendarIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Calendar } from "./ui/calendar";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const customClassNames = {
   months: "flex flex-col sm:flex-row space-x-2",
@@ -43,18 +49,36 @@ const customClassNames = {
 
 const InventoryReport = () => {
   const [date, setDate] = React.useState({
-    from: new Date(2022, 0, 20),
-    to: addDays(new Date(2022, 0, 20), 20),
+    from: new Date(),
+    to: addDays(new Date(), 20),
   });
+
+  const { isLoading, mutateAsync } = useMutation({
+    mutationFn: () => inventoryReportGET(date.from, date.to),
+    mutationKey: "inventoryReport",
+    onSuccess: () => {
+      toast.success("Inventory Report Generated");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  function handleClick() {
+    if (date.from && date.to) {
+      mutateAsync();
+    } else {
+      toast.error("Please select a date range");
+    }
+  }
+
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
           className="custom-form-button"
-          onClick={() => {
-            console.log("clicked");
-          }}
+          disabled={isLoading}
         >
           <Plus /> <Table />
         </Button>
@@ -111,8 +135,16 @@ const InventoryReport = () => {
             </PopoverContent>
           </Popover>
         </div>
-        <Button variant="outline" className="custom-form-button w-full mt-2">
-          Generate Inventory Report
+        <Button
+          variant="outline"
+          className="custom-form-button w-full mt-2"
+          onClick={handleClick}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <RotateCw className={`${isLoading ? "animate-spin" : ""}`} />
+          ) : null}
+          {isLoading ? "Generating..." : "Generate Report"}
         </Button>
       </PopoverContent>
     </Popover>

@@ -25,7 +25,7 @@ export default function AddProduct() {
         <SheetHeader className="sheet-header">
           <SheetTitle className="sheet-title">Add Product</SheetTitle>
           <SheetDescription className="sheet-description">
-            Add a new product to the inventory.
+            Add a new product to the honesty store
           </SheetDescription>
         </SheetHeader>
         <ProductForm mode={"add"} />

@@ -51,7 +51,7 @@ export default function ProductForm({ mode }) {
         product_description: selectedProduct?.product_description,
         product_sku: selectedProduct?.product_sku,
         product_uom: selectedProduct?.product_uom,
-        product_weight: selectedProduct?.product_weight,
+        product_weight: String(selectedProduct?.product_weight),
         product_dimension: selectedProduct?.product_dimension,
         product_category: selectedProduct?.product_category,
       };
@@ -111,7 +111,6 @@ export default function ProductForm({ mode }) {
   };
 
   function onSubmit(values) {
-    console.log(values);
     mutateAsync({
       ...values,
       product_category: selectedCategory,
@@ -124,18 +123,19 @@ export default function ProductForm({ mode }) {
     });
   }
 
+  useEffect(() => {
+    console.log("Selected product:", selectedProduct);
+    console.log("categories");
+  }, [selectedProduct]);
+
   return (
     <Card className="w-full mx-auto overflow-hidden pt-0">
       <CardContent className="pt-6">
-        <h2 className="form-title">
-          {mode === "edit"
-            ? `Edit ${selectedProduct?.product_name}`
-            : "Add New Product"}
-        </h2>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit, (errors) => {
               console.log("Validation errors", errors);
+              console.log("Form values", form.getValues());
             })}
             className="space-y-6"
           >
@@ -202,25 +202,23 @@ export default function ProductForm({ mode }) {
                   control={form.control}
                   name="product_category"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Product Category</FormLabel>
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Category*</FormLabel>
                       <FormControl>
                         <ComboBox
-                          datatype={"Product Category"}
-                          data={categories}
-                          defaultValue={
-                            mode === "edit" ? selectedCategory : null
-                          }
-                          setSelectedValue={setSelectedCategory}
+                          data={categories ?? []}
+                          datatype="Category"
+                          value={selectedCategory}
+                          onChange={(cid) => setSelectedCategory(cid)}
                           disabled={isPending}
-                          {...field}
+                          name_attr="category_name"
+                          id_attr="category_id"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
                 {/* Product Name */}
                 <FormField
                   control={form.control}
@@ -233,6 +231,7 @@ export default function ProductForm({ mode }) {
                           placeholder="Enter product name"
                           {...field}
                           disabled={isPending}
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage />
@@ -254,6 +253,7 @@ export default function ProductForm({ mode }) {
                           placeholder="0"
                           {...field}
                           disabled={isPending}
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormDescription>
@@ -283,6 +283,7 @@ export default function ProductForm({ mode }) {
                           placeholder="Enter product description"
                           className="resize-none"
                           disabled={isPending}
+                          value={field.value || ""}
                           {...field}
                         />
                       </FormControl>
@@ -303,6 +304,7 @@ export default function ProductForm({ mode }) {
                           placeholder="Enter product SKU"
                           {...field}
                           disabled={isPending}
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage />
@@ -322,6 +324,7 @@ export default function ProductForm({ mode }) {
                           placeholder="e.g., Each, Box, Kg"
                           {...field}
                           disabled={isPending}
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage />
@@ -341,6 +344,8 @@ export default function ProductForm({ mode }) {
                           placeholder="e.g., 1.5 kg"
                           {...field}
                           disabled={isPending}
+                          type={"string"}
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage />
@@ -360,6 +365,7 @@ export default function ProductForm({ mode }) {
                           placeholder="e.g., 10 x 5 x 3 cm"
                           {...field}
                           disabled={isPending}
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage />

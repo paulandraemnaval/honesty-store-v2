@@ -172,6 +172,14 @@ export default function SupplierForm() {
                   value={selectedSupplier}
                   setSelectedValue={handleSupplierSelect}
                   disabled={isPending}
+                  id_attr="supplier_id"
+                  name_attr="supplier_name"
+                  onChange={(supplierId) => {
+                    const supplier = suppliers.find(
+                      (s) => s.supplier_id === supplierId
+                    );
+                    setSelectedSupplier(supplier);
+                  }}
                 />
                 <Button
                   variant={"outline"}

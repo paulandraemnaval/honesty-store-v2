@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Calendar } from "lucide-react";
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,16 +43,13 @@ import { inventoryDefaults } from "@/schemas/defaults";
 import { SheetHeader, SheetTitle, SheetDescription } from "./ui/sheet";
 import ComboBox from "./combo-box";
 
-// TODO: MAKE THE COMBO BOX RESET WHEN SHEET CLOSES BY CREATING A FUNCTION IN THE GLOBAL CONTEXT
-
 export default function InventoryForm({ mode }) {
-  const {
-    selectedInventory,
-    selectedProduct,
-    selectedSupplier,
-    suppliers,
-    setSelectedSupplier,
-  } = useGlobalContext();
+  const { selectedInventory, selectedProduct, suppliers } = useGlobalContext();
+
+  const [selectedSupplier, setSelectedSupplier] = useState(
+    mode === "edit" ? selectedInventory?.supplier_id : null
+  );
+
   const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [expirationDate, setExpirationDate] = useState(
@@ -64,32 +61,15 @@ export default function InventoryForm({ mode }) {
 
   const defaults = inventoryDefaults;
 
-  // Find the supplier from the suppliers list when in edit mode
   useEffect(() => {
     if (
       mode === "edit" &&
       selectedInventory?.supplier_id &&
       suppliers?.length > 0
     ) {
-      const supplierFromInventory = suppliers.find(
-        (supplier) => supplier.supplier_id === selectedInventory.supplier_id
-      );
-
-      if (
-        supplierFromInventory &&
-        (!selectedSupplier ||
-          selectedSupplier.supplier_id !== supplierFromInventory.supplier_id)
-      ) {
-        setSelectedSupplier(supplierFromInventory);
-      }
+      setSelectedSupplier(selectedInventory.supplier_id);
     }
-  }, [
-    selectedInventory,
-    suppliers,
-    setSelectedSupplier,
-    selectedSupplier,
-    mode,
-  ]);
+  }, [selectedInventory, suppliers, mode]);
 
   function getDefaults() {
     if (mode === "edit") {
@@ -125,6 +105,15 @@ export default function InventoryForm({ mode }) {
         `Inventory ${mode === "edit" ? "edited" : "created"} successfully`,
         {}
       );
+
+      // Reset form if in add mode
+      if (mode === "add") {
+        form.reset(defaults);
+        setSelectedSupplier(null);
+        setExpirationDate(null);
+        setManualRetailPrice(false);
+        setManualProfitMargin(false);
+      }
     },
     onError: () => {
       toast.error("Failed to update inventory report");
@@ -136,7 +125,6 @@ export default function InventoryForm({ mode }) {
     defaultValues: getDefaults(),
   });
 
-  // Update form when selectedInventory changes in edit mode
   useEffect(() => {
     if (mode === "edit" && selectedInventory) {
       form.reset(getDefaults());
@@ -179,13 +167,11 @@ export default function InventoryForm({ mode }) {
     }
   };
 
-  // Handle checkbox toggle for manual profit margin
   const handleManualProfitMarginToggle = (checked) => {
     setManualProfitMargin(checked);
     if (checked) {
       setManualRetailPrice(false);
     } else if (!manualRetailPrice) {
-      // Reset to default if both are unchecked
       const wholesalePrice = parseFloat(watchWholesalePrice) || 0;
       form.setValue("inventory_profit_margin", 10);
       form.setValue(
@@ -218,10 +204,14 @@ export default function InventoryForm({ mode }) {
         parseFloat(values.inventory_profit_margin).toFixed(2)
       ),
       product_id: getProductId(),
-      supplier_id: selectedSupplier?.supplier_id,
     };
+
     mutateAsync(formattedValues);
   }
+
+  useEffect(() => {
+    console.log("Supplier changed to ", selectedSupplier);
+  }, [selectedSupplier]);
 
   return (
     <>
@@ -254,7 +244,7 @@ export default function InventoryForm({ mode }) {
                 >
                   <FormField
                     control={form.control}
-                    name="inventory_supplier"
+                    name="supplier_id"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel>Supplier*</FormLabel>
@@ -263,11 +253,13 @@ export default function InventoryForm({ mode }) {
                             data={suppliers ?? []}
                             datatype="Supplier"
                             value={selectedSupplier}
-                            onChange={(supplier) => {
-                              setSelectedSupplier(supplier);
-                              field.onChange(supplier?.supplier_id || "");
+                            onChange={(sid) => {
+                              form.setValue("supplier_id", sid);
+                              setSelectedSupplier(sid);
                             }}
                             disabled={isPending}
+                            name_attr="supplier_name"
+                            id_attr="supplier_id"
                           />
                         </FormControl>
                         <FormDescription>

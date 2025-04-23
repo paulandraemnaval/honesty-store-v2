@@ -10,9 +10,7 @@ import { Card, CardContent } from "./ui/card";
 import { HoverCardContent } from "@radix-ui/react-hover-card";
 const AscendFilter = ({ icon, ascendingFilter, setAscendingFilter }) => {
   function handleClick() {
-    setAscendingFilter((prev) =>
-      prev === "ascending" ? "descending" : "ascending"
-    );
+    setAscendingFilter((prev) => !prev);
   }
   return (
     <HoverCard>
@@ -20,7 +18,7 @@ const AscendFilter = ({ icon, ascendingFilter, setAscendingFilter }) => {
         <Button onClick={handleClick} className="mr-auto" variant="outline">
           {icon}
 
-          {ascendingFilter === "ascending" ? (
+          {ascendingFilter ? (
             <ArrowUpWideNarrow size={20} />
           ) : (
             <ArrowDownNarrowWide size={20} />
@@ -29,7 +27,7 @@ const AscendFilter = ({ icon, ascendingFilter, setAscendingFilter }) => {
       </HoverCardTrigger>
       <HoverCardContent side="bottom" sideOffset={5} className="bg-white">
         <div className="p-2 border shadow-sm rounded-md">
-          {ascendingFilter === "ascending" ? "ascending" : "descending"}
+          {ascendingFilter ? "Priciest at top" : "Cheapest at top"}
         </div>
       </HoverCardContent>
     </HoverCard>

@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const GlobalContext = createContext({
   products: [],
@@ -17,6 +17,13 @@ const GlobalContext = createContext({
   setSuppliers: () => {},
   selectedSupplier: null,
   setSelectedSupplier: () => {},
+  ascendingPrice: false,
+  setAscendingPrice: () => {},
+  filteredProducts: [], // Now a useState
+  categoryFilter: null,
+  setCategoryFilter: () => {},
+  supplierFilter: null,
+  setSupplierFilter: () => {},
 });
 
 export const useGlobalContext = () => useContext(GlobalContext);
@@ -32,23 +39,69 @@ export default function GlobalContextProvider({ children }) {
   const [selectedInventory, setSelectedInventory] = useState();
   const [suppliers, setSuppliers] = useState(null);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [ascendingPrice, setAscendingPrice] = useState(false);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState(null);
   const [supplierFilter, setSupplierFilter] = useState(null);
-  const [ascendingPrice, setAscendingPrice] = useState(false);
   const [catLoading, setCatLoading] = useState(true);
   const [supLoading, setSupLoading] = useState(true);
-  const sortedProducts = useMemo(() => {
-    if (!Array.isArray(products)) return [];
+  const [searchTerm, setSearchTerm] = useState("");
 
-    return products
-      .filter((item) => item.inventory?.inventory_retail_price != null)
-      .sort((a, b) => {
-        const priceA = a.inventory.inventory_retail_price;
-        const priceB = b.inventory.inventory_retail_price;
+  useEffect(() => {
+    if (!Array.isArray(products)) {
+      setFilteredProducts([]);
+      return;
+    }
 
-        return ascendingPrice ? priceA - priceB : priceB - priceA;
-      });
-  }, [products, ascendingPrice, categoryFilter, supplierFilter]);
+    let fp = [...products].filter((p) => {
+      const prod = p.product || p;
+      const inv = p.inventory || null;
+
+      if (categoryFilter && supplierFilter)
+        return (
+          prod.product_category === categoryFilter &&
+          inv?.supplier_id === supplierFilter
+        );
+      if (categoryFilter) return prod.product_category === categoryFilter;
+      if (supplierFilter) return inv?.supplier_id === supplierFilter;
+      return true;
+    });
+
+    if (fp.length > 0) {
+      const withoutInventory = fp.filter((p) => !p.inventory);
+      const withInventory = fp
+        .filter((p) => p.inventory)
+        .sort((a, b) => {
+          // Convert to numbers and provide fallbacks in case values are null/undefined
+          const aPrice = Number(a.inventory.inventory_retail_price) || 0;
+          const bPrice = Number(b.inventory.inventory_retail_price) || 0;
+          console.log(aPrice, bPrice, ascendingPrice);
+          return !ascendingPrice ? aPrice - bPrice : bPrice - aPrice;
+        });
+
+      // Recombine the arrays, with inventory items first
+      fp = [...withInventory, ...withoutInventory];
+    }
+
+    setFilteredProducts(fp);
+  }, [products, categoryFilter, supplierFilter, ascendingPrice]);
+
+  useEffect(() => {
+    if (!Array.isArray(products)) {
+      setFilteredProducts([]);
+      return;
+    }
+
+    const searchTermLower = searchTerm.toLowerCase();
+    const filtered = products.filter((product) => {
+      const prod = product.product || product;
+      return (
+        prod.product_name.toLowerCase().includes(searchTermLower) ||
+        prod.product_sku.toLowerCase().includes(searchTermLower)
+      );
+    });
+    setFilteredProducts(filtered);
+  }, [searchTerm]);
 
   const value = {
     user,
@@ -73,7 +126,7 @@ export default function GlobalContextProvider({ children }) {
     setSelectedSupplier,
     ascendingPrice,
     setAscendingPrice,
-    sortedProducts,
+    filteredProducts,
     categoryFilter,
     setCategoryFilter,
     supplierFilter,
@@ -82,6 +135,8 @@ export default function GlobalContextProvider({ children }) {
     setSupLoading,
     catLoading,
     setCatLoading,
+    searchTerm,
+    setSearchTerm,
   };
 
   return (

@@ -198,9 +198,16 @@ export default function CategoryForm() {
                 <ComboBox
                   datatype="Category"
                   data={categories ?? []}
-                  value={selectedCategory}
-                  setSelectedValue={handleCategorySelect}
+                  value={selectedCategory?.category_id}
                   disabled={isPending}
+                  id_attr="category_id"
+                  name_attr="category_name"
+                  onChange={(categoryId) => {
+                    const category = categories.find(
+                      (c) => c.category_id === categoryId
+                    );
+                    setSelectedCategory(category);
+                  }}
                 />
                 <Button
                   variant={"outline"}

@@ -12,15 +12,15 @@ export default function FormRadioGroup({
     <RadioGroup
       value={currentSelected}
       onValueChange={setSelected}
-      defaultValue="No Filter"
+      defaultValue={null}
     >
       <div className="flex items-center space-x-2 w-full">
-        <RadioGroupItem value="radio-No Filter" id={`radio-No Filter`} />
-        <Label htmlFor="radio-No Filter" className="mr-auto">
+        <RadioGroupItem value={null} id={`radio-${label_attr}-no-filter`} />
+        <Label htmlFor={`radio-${label_attr}-no-filter`} className="mr-auto">
           No Filter
         </Label>
       </div>
-      {data.map((item, index) => {
+      {data.map((item) => {
         const label = item[label_attr];
         const value = item[value_attr];
         return (

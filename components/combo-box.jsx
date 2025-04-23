@@ -18,69 +18,27 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+
 export default function ComboBox({
   data,
   datatype,
   value,
-  onChange, // Changed from setSelectedValue to match form field pattern
+  onChange,
   disabled,
+  name_attr,
+  id_attr,
 }) {
   const [open, setOpen] = React.useState(false);
-
-  const selectedLabel = React.useMemo(() => {
-    if (!value) return "";
-    if (datatype === "Category") {
-      return value.category_name;
-    }
-    if (datatype === "Supplier") {
-      return value.supplier_name;
-    }
-    return "";
-  }, [value, datatype]);
-
-  function getPlaceholder() {
-    if (datatype === "Category") {
-      return "Search Category";
-    }
-    if (datatype === "Supplier") {
-      return "Search Supplier";
-    }
-    return `Search ${datatype}`;
-  }
-
-  function getCommandValue(item) {
-    if (datatype === "Category") {
-      return item.category_name;
-    }
-    if (datatype === "Supplier") {
-      return item.supplier_name;
-    }
-    return item;
-  }
-
-  function getItemLabel(item) {
-    if (datatype === "Category") {
-      return item.category_name;
-    }
-    if (datatype === "Supplier") {
-      return item.supplier_name;
-    }
-    return item;
-  }
-
-  function isItemSelected(item) {
-    if (!value) return false;
-
-    if (datatype === "Category") {
-      return value.category_id === item.category_id;
-    }
-    if (datatype === "Supplier") {
-      return value.supplier_id === item.supplier_id;
-    }
-    return false;
-  }
+  const isItemSelected = (item) => {
+    return value === item[id_attr];
+  };
 
   const safeData = Array.isArray(data) ? data : [];
+
+  function getSelectedItem() {
+    const selectedItem = safeData.find((item) => item[id_attr] === value);
+    return selectedItem ? selectedItem[name_attr] : `Select ${datatype}`;
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -92,22 +50,22 @@ export default function ComboBox({
           className="w-full justify-between"
           disabled={disabled}
         >
-          {selectedLabel || `Select ${datatype}`}
+          {getSelectedItem()}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0" align="start">
+      <PopoverContent className="w-full p-0">
         <Command>
-          <CommandInput placeholder={getPlaceholder()} />
+          <CommandInput placeholder={`Search ${datatype}`} />
           <CommandList>
             <CommandEmpty>No {datatype} found.</CommandEmpty>
             <CommandGroup>
-              {safeData.map((item, index) => (
+              {safeData.map((item) => (
                 <CommandItem
-                  key={index}
-                  value={getCommandValue(item)}
+                  key={item[id_attr]}
+                  value={item[id_attr]}
                   onSelect={() => {
-                    onChange(item); // Use onChange instead of setSelectedValue
+                    onChange(item[id_attr]);
                     setOpen(false);
                   }}
                 >
@@ -117,7 +75,7 @@ export default function ComboBox({
                       isItemSelected(item) ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  {getItemLabel(item)}
+                  {item[name_attr]}
                 </CommandItem>
               ))}
             </CommandGroup>
