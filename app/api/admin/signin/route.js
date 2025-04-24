@@ -1,4 +1,4 @@
-import { auth, db, createLog } from "@/utils/firebase";
+import { auth, createLog, db } from "@/utils/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { NextResponse } from "next/server";
 import {
@@ -10,38 +10,71 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import bcryptjs from "bcryptjs";
 import { cookies } from "next/headers";
 import { encrypt } from "@/utils/session";
 
 async function createSession(userId, path) {
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 1000);
-  const sessionRef = collection(db, "Session");
-  const sessionDoc = doc(sessionRef);
+  try {
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 1000);
+    const sessionRef = collection(db, "Session");
+    const sessionDoc = doc(sessionRef);
 
-  const sessionData = {
-    session_id: sessionDoc.id,
-    account_auth_id: userId,
-    session_access_type: "authenticated",
-    session_accessed_url: path,
-    session_timestamp: Timestamp.now(),
-    session_expiration_date: expiresAt,
-  };
+    const sessionData = {
+      session_id: sessionDoc.id,
+      account_auth_id: userId,
+      session_access_type: "authenticated",
+      session_accessed_url: path,
+      session_timestamp: Timestamp.now(),
+      session_expiration_date: expiresAt,
+    };
 
-  await setDoc(sessionDoc, sessionData);
+    await setDoc(sessionDoc, sessionData);
 
-  const sessionId = sessionDoc.id;
-  const cookieStore = await cookies();
-  const encryptedSession = await encrypt({ sessionId, expiresAt });
-  cookieStore.set("session", encryptedSession, {
-    httpOnly: true,
-    secure: true,
-    expires: expiresAt,
-    sameSite: "lax",
-    path: "/",
-  });
+    const sessionId = sessionDoc.id;
+    const cookieStore = await cookies();
+    const encryptedSession = await encrypt({ sessionId, expiresAt });
+    cookieStore.set("session", encryptedSession, {
+      httpOnly: true,
+      secure: true,
+      expires: expiresAt,
+      sameSite: "lax",
+      path: "/",
+    });
 
-  return sessionData;
+    const accountRef = collection(db, "Account");
+    const q = query(accountRef, where("account_auth_id", "==", userId));
+    const accountDoc = await getDocs(q);
+    if (accountDoc.empty) {
+      return NextResponse.json(
+        { message: "Account not found" },
+        { status: 404 }
+      );
+    }
+    const account = accountDoc.docs[0].data();
+    const {
+      account_name = "User",
+      account_role = "Admin",
+      account_profile_url = "/default-profile.png",
+    } = account;
+    const userPayload = JSON.stringify({
+      account_name,
+      account_role,
+      account_profile_url,
+    });
+
+    cookieStore.set("user", userPayload, {
+      httpOnly: false,
+      secure: true,
+      expires: expiresAt,
+      sameSite: "lax",
+      path: "/",
+    });
+    console.log(userPayload);
+
+    return sessionData;
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 //--------------------------------------------------------
