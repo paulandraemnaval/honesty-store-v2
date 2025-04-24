@@ -52,17 +52,14 @@ const InventoryReport = () => {
   const { isPending, mutateAsync } = useMutation({
     mutationFn: () => inventoryReportGET(date.from, date.to),
     mutationKey: "inventoryReport",
-    onSuccess: ({ data }) => {
+    onSettled: ({ data }) => {
       if (!data) {
-        toast.error("An error occurred while generating the report.");
-      } else if (data?.status === 404) {
+        toast.error("Failed to generate report. Please try again.");
+      } else if (data.status === 404) {
         toast.error("No data found for the selected date range.");
       } else {
         toast.success("Report generated successfully.");
       }
-    },
-    onError: (error) => {
-      toast.error("An error occurred while generating the report.");
     },
   });
 
