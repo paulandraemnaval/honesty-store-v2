@@ -312,21 +312,39 @@ export async function PATCH(request) {
 
     const inventories = snapshot.docs.map((doc) => doc.data());
 
-    const oldInventories = inventories.reduce((acc, inventory) => {
-      const productId = inventory.product_id;
+    const inventoryMap = new Map();
 
-      if (
-        inventory.inventory_timestamp && // Ensure timestamp exists
-        (!acc[productId] ||
-          acc[productId].inventory_timestamp.toDate() >
-            inventory.inventory_timestamp.toDate())
-      ) {
-        acc[productId] = inventory;
+    // Group inventories per product and calculate total units
+    inventories.forEach((inv) => {
+      const productId = inv.product_id;
+
+      if (!inventoryMap.has(productId)) {
+        inventoryMap.set(productId, {
+          ...inv,
+          inventory_total_units: inv.inventory_total_units || 0,
+        });
+      } else {
+        const existing = inventoryMap.get(productId);
+        existing.inventory_total_units += inv.inventory_total_units || 0;
+
+        // Keep the oldest timestamped inventory
+        if (
+          inv.inventory_last_updated &&
+          (!existing.inventory_last_updated ||
+            existing.inventory_last_updated.toDate() >
+              inv.inventory_last_updated.toDate())
+        ) {
+          inventoryMap.set(productId, {
+            ...inv,
+            inventory_total_units: existing.inventory_total_units,
+          });
+        } else {
+          inventoryMap.set(productId, { ...existing });
+        }
       }
-      return acc;
-    }, {});
+    });
 
-    const result = Object.values(oldInventories);
+    const result = Array.from(inventoryMap.values());
 
     const invProds = [];
     const promises = result.map(async (item) => {
