@@ -1,30 +1,34 @@
 "use client";
 import React from "react";
-import FilterBar from "@/components/filter-bar";
 import SearchInput from "@/components/search-input";
-import AscendFilter from "@/components/ascend-filter";
 import { SidebarTrigger } from "./ui/sidebar";
-import { Button } from "@/components/ui/button";
 import AuditList from "./audit-list";
 import AuditDialog from "./audit-modal";
-import { Package } from "lucide-react";
-import { useGlobalContext } from "@/contexts/global-context";
-import { AuditProvider } from "@/contexts/audit-context";
+import { AuditProvider, useAudit } from "@/contexts/audit-context";
+
+const AuditDisplayContent = () => {
+  const { auditSearch } = useAudit();
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="top-bar">
+        <div className="flex">
+          <SidebarTrigger />
+          <span className="text-2xl font-bold ml-4">Audit</span>
+        </div>
+
+        <SearchInput searchFn={auditSearch} />
+        <AuditDialog />
+      </div>
+      <AuditList />
+    </div>
+  );
+};
+
 const AuditDisplay = () => {
   return (
     <AuditProvider>
-      <div className="flex flex-col gap-4">
-        <div className="top-bar">
-          <div className="flex">
-            <SidebarTrigger />
-            <span className="text-2xl font-bold ml-4">Audit</span>
-          </div>
-
-          <SearchInput />
-          <AuditDialog />
-        </div>
-        <AuditList />
-      </div>
+      <AuditDisplayContent />
     </AuditProvider>
   );
 };

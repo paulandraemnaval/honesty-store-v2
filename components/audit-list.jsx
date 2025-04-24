@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import { Card, CardContent } from "./ui/card";
 import { Minus, Plus } from "lucide-react";
@@ -35,7 +35,7 @@ const auditSchema = z.object({
 });
 
 const AuditList = () => {
-  const { prepareAuditChanges } = useAudit();
+  const { prepareAuditChanges, inventories, setInventories } = useAudit();
 
   const form = useForm({
     resolver: zodResolver(auditSchema),
@@ -47,10 +47,16 @@ const AuditList = () => {
   const { watch, setValue } = form;
   const quantities = watch("quantities");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isSuccess } = useQuery({
     queryKey: ["inventoryforaudit"],
     queryFn: () => inventoryGETforAudit(),
   });
+
+  useEffect(() => {
+    if (isSuccess) {
+      setInventories(data.data);
+    }
+  }, [isSuccess]);
 
   const incrementQuantity = (inventoryId, currentValue, maxValue) => {
     const current = currentValue ? parseInt(currentValue) : 0;
@@ -120,7 +126,7 @@ const AuditList = () => {
     <Form {...form}>
       <form onChange={handleFormChange} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full px-6 py-4">
-          {data.data?.map((product) => {
+          {inventories?.map((product) => {
             if (!product.inventory) return null;
             const inventoryId = product.inventory.inventory_id;
 

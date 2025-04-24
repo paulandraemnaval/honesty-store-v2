@@ -2,9 +2,7 @@
 import React from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { useGlobalContext } from "@/contexts/global-context";
-const SearchInput = () => {
-  const { setSearchTerm } = useGlobalContext();
+const SearchInput = ({ searchFn }) => {
   const [localSeachTerm, setLocalSearchTerm] = React.useState("");
   return (
     <>
@@ -18,7 +16,7 @@ const SearchInput = () => {
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
-            setSearchTerm(e.target.value);
+            searchFn(localSeachTerm);
           }
         }}
         value={localSeachTerm}
