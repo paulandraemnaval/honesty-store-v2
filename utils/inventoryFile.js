@@ -5,6 +5,7 @@ import { formatDate } from "./formatDate";
 
 export const createInventoryList = async (inventories, startDate, endDate) => {
   try {
+    const newRowValues = [];
     let ctr = 1;
     const promises = inventories.map(async (inventory) => {
       const productRef = doc(db, "Product", inventory.product_id);
