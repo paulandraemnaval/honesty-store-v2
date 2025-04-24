@@ -1,22 +1,12 @@
 import {
   db,
-  getLoggedInUser,
   expiredInventoriesToday,
   twoWeeksBeforeExpiration,
 } from "@/utils/firebase";
-import {
-  collection,
-  Timestamp,
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, Timestamp, doc, setDoc, getDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
 
-async function createNotificationForProducts(user, products, title, body) {
+async function createNotificationForProducts(products, title, body) {
   let expiredProducts = [];
   const notifRef = collection(db, "Notification");
   const notifDoc = doc(notifRef);
@@ -50,11 +40,11 @@ async function createNotificationForProducts(user, products, title, body) {
 
   await setDoc(notifDoc, {
     notification_id: notifDoc.id,
-    account_id: user.account_id,
+    account_id: "N/A",
     notification_title: title,
     notification_body,
     notification_type: 2,
-    notification_is_read: false,
+    notification_read_status: {},
     notification_timestamp: Timestamp.now(),
     notification_soft_deleted: false,
   });
@@ -75,10 +65,8 @@ export async function POST(request) {
       );
     }
 
-    const user = await getLoggedInUser();
     if (expiredToday.length > 0) {
       await createNotificationForProducts(
-        user,
         expiredToday,
         "Action Required: Products Expired Today!",
         `Important: ${expiredToday.length} product(s) have reached their expiration date today. Ensure to check your inventory and manage your stock accordingly.\n.`
@@ -87,7 +75,6 @@ export async function POST(request) {
 
     if (expiredTwoWeeksBefore.length > 0) {
       await createNotificationForProducts(
-        user,
         expiredTwoWeeksBefore,
         "Heads Up: Products Expiring in 2 Weeks!",
         `Notice: ${expiredTwoWeeksBefore.length} product(s) in your inventory are set to expire in exactly two weeks.`
@@ -105,49 +92,6 @@ export async function POST(request) {
     console.log(error);
     return NextResponse.json(
       { message: "Failed to create notification document", error: error },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(request) {
-  try {
-    const accountRef = collection(db, "Account");
-    const q = query(
-      accountRef,
-      where("account_soft_deleted", "==", false),
-      where("account_approval_expires_at", "<=", new Date())
-    );
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
-      console.log("No account found");
-      return NextResponse.json(
-        { message: "No account found" },
-        { status: 404 }
-      );
-    }
-
-    const accounts = snapshot.docs.map((doc) => doc.data());
-
-    const promises = accounts.map(async (account) => {
-      const accountDocRef = doc(db, "Account", account.account_id);
-      await updateDoc(accountDocRef, {
-        account_is_approved: false,
-        account_last_updated: Timestamp.now(),
-      });
-    });
-
-    await Promise.all(promises);
-
-    return NextResponse.json(
-      { message: "Account approval status updated" },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.log(error);
-    return NextResponse.json(
-      { message: "Error fetching accounts", error: error },
       { status: 500 }
     );
   }

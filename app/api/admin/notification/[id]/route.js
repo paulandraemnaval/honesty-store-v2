@@ -1,21 +1,30 @@
 import { db } from "@/utils/firebase";
-import { getDoc, doc } from "firebase/firestore";
+import { getDoc, doc, updateDoc, Timestamp } from "firebase/firestore";
 import { NextResponse } from "next/server";
+import { getLoggedInUser } from "@/utils/firebase";
 
-export async function GET(request, { params }) {
+export async function PATCH(request, { params }) {
   try {
     const { id } = params;
     const notifDoc = doc(db, "Notification", id);
-    const snapshot = await getDoc(categoryDoc);
+    const snapshot = await getDoc(notifDoc);
     if (!snapshot.exists()) {
       return NextResponse.json(
         { message: "No notification found with the given ID" },
         { status: 404 }
       );
     }
+    const user = await getLoggedInUser();
+
     const notif = snapshot.data();
+    await updateDoc(notifDoc, {
+      notification_read_status: {
+        [user.account_id]: true,
+      },
+    });
+
     return NextResponse.json(
-      { message: `Category found with the given ID: `, data: notif },
+      { message: `Notification found and marked as read `, data: notif },
       { status: 200 }
     );
   } catch (error) {

@@ -160,7 +160,7 @@ export async function POST(request) {
     if (restockItems.length > 0) {
       await setDoc(notificationDoc, {
         notification_id: notificationDoc.id,
-        account_id: user.account_id,
+        account_id: "N/A",
         notification_title: "Restock Alert: Inventory Reorder Point Reached",
         notification_body: `${restockItems.length} products have fallen below the reorder point. Please restock as soon as possible.`,
         notification_type: 0,
