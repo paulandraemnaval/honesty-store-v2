@@ -5,7 +5,6 @@ import { formatDate } from "./formatDate";
 
 export const createInventoryList = async (inventories, startDate, endDate) => {
   try {
-    const newRowValues = [];
     let ctr = 1;
     const promises = inventories.map(async (inventory) => {
       const productRef = doc(db, "Product", inventory.product_id);
@@ -38,7 +37,7 @@ export const createInventoryList = async (inventories, startDate, endDate) => {
     });
 
     await Promise.all(promises);
-    await inventoryReportSheetDesign(promises);
+    await inventoryReportSheetDesign(promises, startDate, endDate);
   } catch (error) {
     console.error("Error creating inventory list:", error);
   }

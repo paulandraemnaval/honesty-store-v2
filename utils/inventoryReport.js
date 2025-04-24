@@ -31,13 +31,13 @@ export async function inventoryReportSheetDesign(inventories, start, end) {
 
   await report2.loadInfo();
   const sheetCheck =
-    report2.sheetsByTitle[`${formatDate(startDate)} - ${formatDate(endDate)}`];
+    report2.sheetsByTitle[`${formatDate(start)} - ${formatDate(end)}`];
   if (sheetCheck) {
     return null;
   }
 
   const sheet = await report2.addSheet({
-    title: `${formatDate(startDate)} - ${formatDate(endDate)}`,
+    title: `${formatDate(start)} - ${formatDate(end)}`,
     headerRowIndex: 4,
     headerValues: [
       "INV ID",
