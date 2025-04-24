@@ -52,20 +52,18 @@ const InventoryReport = () => {
   const { isPending, mutateAsync } = useMutation({
     mutationFn: () => inventoryReportGET(date.from, date.to),
     mutationKey: "inventoryReport",
-    onSettled: ({ data }) => {
-      if (!data) {
-        toast.error("Failed to generate report. Please try again.");
-      } else if (data.status === 404) {
-        toast.error("No data found for the selected date range.");
-      } else {
-        toast.success("Report generated successfully.");
-      }
-    },
   });
 
-  function handleClick() {
+  async function handleClick() {
     if (date.from && date.to) {
-      mutateAsync();
+      const { status } = await mutateAsync();
+      if (status === 200) {
+        toast.success("Report generated successfully");
+      } else if (status === 404) {
+        toast.error("No data found for the selected date range");
+      } else {
+        toast.error("Failed to generate report");
+      }
     } else {
       toast.error("Please select a date range");
     }
