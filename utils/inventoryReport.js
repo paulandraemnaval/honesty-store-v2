@@ -1,5 +1,5 @@
 import { report2 } from "./sheets";
-import { formatDateToLong } from "./formatDate";
+import { formatDateToLong, formatDate } from "./formatDate";
 
 export async function inventoryReportSheetDesign(inventories, start, end) {
   const headerTextFormat = {
@@ -31,13 +31,13 @@ export async function inventoryReportSheetDesign(inventories, start, end) {
 
   await report2.loadInfo();
   const sheetCheck =
-    report2.sheetsByTitle[`${formatDate(startDate)} - ${formatDate(endDate)}`];
+    report2.sheetsByTitle[`${formatDate(start)} - ${formatDate(end)}`];
   if (sheetCheck) {
     return null;
   }
 
   const sheet = await report2.addSheet({
-    title: `${formatDate(startDate)} - ${formatDate(endDate)}`,
+    title: `${formatDate(start)} - ${formatDate(end)}`,
     headerRowIndex: 4,
     headerValues: [
       "INV ID",
@@ -89,9 +89,7 @@ export async function inventoryReportSheetDesign(inventories, start, end) {
   await sheet.saveUpdatedCells();
 
   const dateTitle = sheet.getCell(2, 0);
-  dateTitle.value = `${formatDateToLong(
-    report.report_start_date.toDate()
-  )} - ${formatDateToLong(report.report_end_date.toDate())}`;
+  dateTitle.value = `${formatDateToLong(start)} - ${formatDateToLong(end)}`;
   dateTitle.textFormat = {
     fontSize: 10,
     bold: true,

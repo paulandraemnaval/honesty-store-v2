@@ -38,7 +38,7 @@ export const createInventoryList = async (inventories, startDate, endDate) => {
     });
 
     await Promise.all(promises);
-    await inventoryReportSheetDesign(promises);
+    await inventoryReportSheetDesign(newRowValues, startDate, endDate);
   } catch (error) {
     console.error("Error creating inventory list:", error);
   }
