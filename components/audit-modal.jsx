@@ -1,3 +1,5 @@
+"use client";
+import React from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,78 +12,119 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useAudit } from "@/contexts/audit-context";
 
-const audits = [
-  { product_name: "Apple iPhone 15", oldqty: 120, newqty: 115 },
-  { product_name: "Samsung Galaxy S23", oldqty: 80, newqty: 75 },
-  { product_name: "Sony WH-1000XM5", oldqty: 45, newqty: 40 },
-  { product_name: "Dell XPS 13", oldqty: 30, newqty: 28 },
-  { product_name: "Apple MacBook Pro", oldqty: 50, newqty: 47 },
-  { product_name: "Google Pixel 8", oldqty: 60, newqty: 55 },
-  { product_name: "Logitech MX Master 3", oldqty: 75, newqty: 70 },
-  { product_name: "HP Envy 14", oldqty: 40, newqty: 38 },
-  { product_name: "Nintendo Switch", oldqty: 90, newqty: 85 },
-  { product_name: "Sony PlayStation 5", oldqty: 100, newqty: 95 },
-];
 export default function AuditDialog() {
-  function getDeficit(audit) {
-    return audit.oldqty - audit.newqty;
-  }
+  const { auditChanges, isSubmitting, hasAuditChanges, handleSubmitAudit } =
+    useAudit();
+
+  const totalDeficit = auditChanges.reduce(
+    (total, audit) => total + audit.deficit,
+    0
+  );
+
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="outline" className="custom-form-button">
+        <Button
+          variant="outline"
+          className="custom-form-button ml-auto"
+          disabled={!hasAuditChanges}
+        >
           Confirm Audit
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className="overflow-hidden flex flex-col">
         <AlertDialogHeader>
           <AlertDialogTitle>Confirm Audit</AlertDialogTitle>
-          <AlertDialogDescription>
-            The following products will have these new unit quantities. Please
-            confirm the audit.
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">Product</TableHead>
-                  <TableHead className="text-right">Old Unit Qty.</TableHead>
-                  <TableHead className="text-right">New Unit Qty.</TableHead>
-                  <TableHead className="text-right">Deficit</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {audits.map((audit) => (
-                  <TableRow key={audit.product_name}>
-                    <TableCell className="font-medium">
-                      {audit.product_name}
-                    </TableCell>
-                    <TableCell className="font-medium text-right">
-                      {audit.oldqty}
-                    </TableCell>
-                    <TableCell className="text-right">{audit.newqty}</TableCell>
-                    <TableCell className="text-right">
-                      {getDeficit(audit)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <AlertDialogDescription asChild>
+            <div>
+              <p className="mb-4">
+                The following products will have these new unit quantities.
+                Please confirm the audit.
+              </p>
+              <div className="max-h-[60vh] overflow-hidden ">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="">Product</TableHead>
+                      <TableHead className="text-right">Old Qty</TableHead>
+                      <TableHead className="text-right">New Qty</TableHead>
+                      <TableHead className="text-right">Deficit</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {auditChanges.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="text-center text-muted-foreground"
+                        >
+                          No changes to audit
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      auditChanges.map((audit) => (
+                        <TableRow key={audit.inventoryId}>
+                          <TableCell className="font-medium max-w-[100px] truncate overflow-hidden whitespace-nowrap">
+                            {audit.productName}
+                          </TableCell>
+                          <TableCell className="font-medium text-right">
+                            {audit.oldQuantity}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {audit.newQuantity}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {audit.deficit}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                  {auditChanges.length > 0 && (
+                    <TableFooter>
+                      <TableRow>
+                        <TableCell colSpan={3}>Total Deficit</TableCell>
+                        <TableCell className="text-right">
+                          {totalDeficit}
+                        </TableCell>
+                      </TableRow>
+                    </TableFooter>
+                  )}
+                </Table>
+              </div>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction className="custom-form-button">
-            Continue
+          <AlertDialogAction
+            className="custom-form-button"
+            onClick={(e) => {
+              e.preventDefault(); // Prevent the dialog from closing automatically
+              handleSubmitAudit();
+            }}
+            disabled={isSubmitting || !hasAuditChanges}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              "Confirm Audit"
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

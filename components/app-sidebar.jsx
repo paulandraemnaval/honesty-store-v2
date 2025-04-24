@@ -1,6 +1,6 @@
 "use client";
 import icons from "@/constants/icons";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut, RotateCw } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -21,7 +21,7 @@ import { Separator } from "./ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useGlobalContext } from "@/contexts/global-context";
-import React from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -30,7 +30,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "./ui/dialog";
 import { Logout } from "@/lib/utils";
 import Link from "next/link";
@@ -68,6 +67,8 @@ export function AppSidebar() {
   const router = useRouter();
   const { open, openMobile } = useSidebar();
   const { setUser, user } = useGlobalContext();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const { mutateAsync, isPending } = useMutation({
     mutationFn: () => Logout(),
     queryKey: ["logout"],
@@ -87,6 +88,11 @@ export function AppSidebar() {
 
   function handleLogout() {
     mutateAsync();
+    setIsDialogOpen(false);
+  }
+
+  function openLogoutDialog() {
+    setIsDialogOpen(true);
   }
 
   return (
@@ -140,6 +146,34 @@ export function AppSidebar() {
         </SidebarGroupContent>
       </SidebarContent>
 
+      {/* Logout Dialog - Shared between expanded and collapsed views */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="w-fit">
+          <DialogHeader>
+            <DialogTitle>Log out?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to log out? All unsaved changes will be
+              lost.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              className="w-fit justify-start text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
+              onClick={handleLogout}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <LogOut className="mr-2 h-4 w-4" />
+              )}
+              {isPending ? "Logging out..." : "Log out"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <SidebarFooter className="mt-auto border-t">
         {(open || openMobile) && (
           <div className="p-4 space-y-4">
@@ -164,40 +198,16 @@ export function AppSidebar() {
               </div>
             </div>
 
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
-                  disabled={isPending}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Log out
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="w-fit">
-                <DialogTitle>Log out?</DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to log out? All unsaved changes will be
-                  lost.
-                </DialogDescription>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    className="w-fit justify-start text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
-                    onClick={handleLogout}
-                    disabled={isPending}
-                  >
-                    {isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <LogOut className="mr-2 h-4 w-4" />
-                    )}
-                    {isPending ? "Logging out..." : "Log out"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
+              onClick={openLogoutDialog}
+              disabled={isPending}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Log Out
+            </Button>
+
             <div className="pt-2 border-t">
               <p className="text-xs text-center text-muted-foreground">
                 &copy; 2025 Honesty Store IMS
@@ -209,13 +219,13 @@ export function AppSidebar() {
           <div className="flex flex-col items-center justify-center gap-2">
             <Avatar className="h-8 w-8 border-2 border-primary/10">
               <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                JD
+                <Loader2 className="animate-spin" />
               </AvatarFallback>
             </Avatar>
             <Button
               variant="outline"
               className="flex items-center w-full justify-center text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
-              onClick={handleLogout}
+              onClick={openLogoutDialog}
               disabled={isPending}
             >
               {isPending ? (
@@ -223,7 +233,6 @@ export function AppSidebar() {
               ) : (
                 <LogOut className=" h-4 w-4" />
               )}
-              {isPending ? "Logging out..." : "Log out"}
             </Button>
           </div>
         )}

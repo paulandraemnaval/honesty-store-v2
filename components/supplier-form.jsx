@@ -39,7 +39,6 @@ export default function SupplierForm() {
     queryKey: ["suppliers"],
     queryFn: () => supplierGET(),
     onSuccess: (data) => {
-      console.log(data, "FROM ON SUCCESS");
       setSuppliers(data);
     },
     onError: (error) => {
