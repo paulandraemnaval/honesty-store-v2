@@ -9,7 +9,7 @@ const SearchInput = ({ searchFn }) => {
       <Input
         type="text"
         id="search_input"
-        placeholder="Lucky Me! Bulalo"
+        placeholder="search products..."
         className="w-sm bg-white/40 backdrop-blur-sm ml-2"
         onChange={(e) => {
           setLocalSearchTerm(e.target.value);

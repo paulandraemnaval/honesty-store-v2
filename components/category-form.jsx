@@ -37,24 +37,24 @@ export default function CategoryForm() {
 
   const defaults = categoryDefaults;
 
-  const { isFetching, refetch } = useQuery({
+  const { data, isFetching, refetch } = useQuery({
     queryKey: ["categories"],
-    queryFn: () => categoriesGET(),
-    onSuccess: (data) => {
-      setCategories(data);
-    },
-    onError: (error) => {
-      toast.error(`Error fetching categories: ${error.message}`);
-    },
-    enabled: false,
+    queryFn: categoriesGET,
   });
+
+  useEffect(() => {
+    if (data?.status === 200) {
+      setCategories(data?.data);
+    } else {
+      toast.error("Error fetching categories");
+    }
+  }, [isFetching]);
 
   const form = useForm({
     resolver: zodResolver(categorySchema),
     defaultValues: defaults,
   });
 
-  // Reset form when switching tabs or when selectedCategory changes
   useEffect(() => {
     if (activeTab === "add") {
       form.reset(defaults);
@@ -131,19 +131,14 @@ export default function CategoryForm() {
     }
   };
 
-  function onSubmit(values) {
+  async function onSubmit(values) {
     if (activeTab === "edit" && !selectedCategory) {
       toast.error("Please select a category to edit");
       return;
     }
 
-    console.log(values);
-    mutateAsync(values);
+    await mutateAsync(values);
   }
-
-  const handleCategorySelect = (category) => {
-    setSelectedCategory(category);
-  };
 
   const handleTabChange = (value) => {
     setActiveTab(value);
@@ -199,7 +194,7 @@ export default function CategoryForm() {
                   datatype="Category"
                   data={categories ?? []}
                   value={selectedCategory?.category_id}
-                  disabled={isPending}
+                  disabled={isPending || isFetching}
                   id_attr="category_id"
                   name_attr="category_name"
                   onChange={(categoryId) => {

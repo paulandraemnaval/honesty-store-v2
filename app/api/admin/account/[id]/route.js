@@ -56,6 +56,8 @@ export async function PATCH(request, { params }) {
     const { name, file, role, url, email, password } =
       Object.fromEntries(formData);
 
+    console.log(Object.fromEntries(formData));
+
     if (!email || !password || !name) {
       return NextResponse.json(
         { error: "Email, password, and name are required." },
