@@ -134,8 +134,8 @@ export default function SupplierForm() {
 
   return (
     <Form {...form}>
-      <Card className="w-full mx-auto overflow-auto pt-0">
-        <CardContent className="pt-6">
+      <Card className="w-full mx-auto overflow-hidden flex flex-col h-[calc(100vh-150px)] pt-0">
+        <CardContent className="flex-1 flex flex-col pt-6 overflow-hidden">
           <Tabs
             defaultValue="add"
             className="w-full"
@@ -164,7 +164,7 @@ export default function SupplierForm() {
                 Select Supplier to Edit
               </FormLabel>
 
-              <div className="mb-6 flex w-full gap-2">
+              <div className="mb-6 flex w-[80%] gap-2">
                 <ComboBox
                   datatype="Supplier"
                   data={suppliers ?? []}
@@ -223,7 +223,7 @@ function SupplierFormContent({
       })}
       className="space-y-6"
     >
-      <ScrollArea className="form-scroll-area">
+      <ScrollArea className="flex-1 h-74 px-1">
         {/* Required Fields Section */}
         <div className={`space-y-4 ${showOptionalFields ? "hidden" : "block"}`}>
           <FormField

@@ -49,14 +49,14 @@ export default function ComboBox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className="w-full max-w-full justify-between overflow-hidden"
           disabled={disabled}
         >
-          {getSelectedItem()}
+          <span className="truncate">{getSelectedItem()}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent className="w-full max-w-full p-0" align="start">
         <Command>
           <CommandInput placeholder={`Search ${datatype}`} />
           <CommandList>
@@ -77,7 +77,7 @@ export default function ComboBox({
                       isItemSelected(item) ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  {item[name_attr]}
+                  <span className="truncate">{item[name_attr]}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
