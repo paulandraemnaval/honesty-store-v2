@@ -24,6 +24,7 @@ const GlobalContext = createContext({
   setCategoryFilter: () => {},
   supplierFilter: null,
   setSupplierFilter: () => {},
+  
 });
 
 export const useGlobalContext = () => useContext(GlobalContext);

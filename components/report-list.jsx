@@ -52,7 +52,6 @@ const ReportsResponseSchema = z.object({
 });
 
 export default function ReportList() {
-  const [expandedStates, setExpandedStates] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [downloadingStates, setDownloadingStates] = useState({});
   const [dateFilter, setDateFilter] = useState("all");
@@ -83,13 +82,7 @@ export default function ReportList() {
 
   const reports = reportData?.reports || [];
 
-  const toggleExpand = (reportId) => {
-    setExpandedStates((prevStates) => ({
-      ...prevStates,
-      [reportId]: !prevStates[reportId],
-    }));
-  };
-
+  
   const handleExportPDF = async (reportID, startDate, lastUpdated) => {
     try {
       setDownloadingStates((prevStates) => ({
