@@ -5,14 +5,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 export function SectionCards({ ...props }) {
+  if (props.isLoading) {
+    return <CardsSkeleton />;
+  }
+
   return (
     <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:gap-6 lg:grid-cols-4 lg:gap-6">
       <Card className="@container/card">
         <CardHeader className="relative">
           <CardDescription>Total Profit</CardDescription>
           <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
-            ₱{props.totalProfit}
+            ₱{props?.totalProfit?.toFixed(2)}
           </CardTitle>
         </CardHeader>
       </Card>
@@ -20,7 +26,7 @@ export function SectionCards({ ...props }) {
         <CardHeader className="relative">
           <CardDescription>Total Sales</CardDescription>
           <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
-            ₱{props.totalSales}
+            ₱{props?.totalSales?.toFixed(2)}
           </CardTitle>
         </CardHeader>
       </Card>
@@ -40,6 +46,25 @@ export function SectionCards({ ...props }) {
           </CardTitle>
         </CardHeader>
       </Card>
+    </div>
+  );
+}
+
+function CardsSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:gap-6 lg:grid-cols-4 lg:gap-6">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Card key={i} className="@container/card">
+          <CardHeader className="relative">
+            <CardDescription>
+              <Skeleton className="h-4 w-20" />
+            </CardDescription>
+            <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
+              <Skeleton className="h-8 w-28 mt-1" />
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      ))}
     </div>
   );
 }
