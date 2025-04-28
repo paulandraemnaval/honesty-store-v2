@@ -1,12 +1,10 @@
 import "@/styles/globals.css";
 import { Toaster } from "@/components/ui/sonner";
 export const metadata = {
-  // Basic metadata
   title: "Honesty Store IMS | Inventory Management System",
   description:
     "A comprehensive inventory management system for tracking audits, reports, and user accounts.",
 
-  // Open Graph / Facebook metadata
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -25,7 +23,6 @@ export const metadata = {
     ],
   },
 
-  // Twitter metadata
   twitter: {
     card: "summary_large_image",
     title: "Honesty Store IMS | Inventory Management System",
@@ -70,7 +67,6 @@ export default function Layout({ children }) {
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Document</title>
       </head>
       <body className="h-[100vh] w-full font-inter">
         {children}
