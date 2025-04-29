@@ -22,7 +22,9 @@ export async function POST(request) {
     });
 
     console.log("Sign-out successful.");
-    return NextResponse.redirect(new URL("/", request.nextUrl));
+    return NextResponse.json({
+      redirect: "/admin",
+    });
   } catch (error) {
     console.error("An error happened during sign-out:", error);
     return NextResponse.json({ error: "Sign-out failed" }, { status: 500 });
