@@ -3,7 +3,15 @@
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Upload, Info, Loader2, CheckCircle2, X, RotateCw } from "lucide-react";
+import {
+  Upload,
+  Info,
+  Loader2,
+  X,
+  RotateCw,
+  AlertTriangle,
+  Trash2,
+} from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -20,6 +28,17 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -31,7 +50,12 @@ import ComboBox from "./combo-box";
 import { toast } from "sonner";
 import { userSchema } from "@/schemas/schemas";
 import { userDefaults } from "@/schemas/defaults";
-import { accountPATCH, accountPOST, accountsGET } from "@/lib/utils";
+import {
+  accountPATCH,
+  accountPOST,
+  accountsGET,
+  accountDELETE,
+} from "@/lib/utils";
 import { useGlobalContext } from "@/contexts/global-context";
 
 const userRoles = [
@@ -41,12 +65,16 @@ const userRoles = [
   { value: "Secretary", label: "Secretary" },
 ];
 
+import bcrypt from "bcryptjs";
+
 export default function AccountForm() {
   const [activeTab, setActiveTab] = useState("add");
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const fileInputRef = useRef(null);
 
-  const { selectedUser, users, setSelectedUser, setUsers } = useGlobalContext();
+  const { selectedUser, users, setSelectedUser, setUsers, user } =
+    useGlobalContext();
 
   const defaults = userDefaults;
 
@@ -57,7 +85,9 @@ export default function AccountForm() {
 
   useEffect(() => {
     if (!isFetching && data?.status === 200) {
-      setUsers(data?.data);
+      setUsers(
+        data?.data.filter((account) => account.account_soft_deleted === false)
+      );
     } else if (!isFetching && isError) {
       toast.error("Failed to fetch users. Please try again later.");
     }
@@ -92,14 +122,19 @@ export default function AccountForm() {
 
   const { mutateAsync, isPending } = useMutation({
     mutationKey: ["user"],
-    mutationFn: (userData) => {
+    mutationFn: async (userData) => {
+      const saltRounds = 10;
+      const salt = await bcrypt.genSalt(saltRounds);
+
       if (activeTab === "edit" && selectedUser) {
         return accountPATCH({
           ...userData,
-          account_id: selectedUser.account_id,
         });
       } else {
-        return accountPOST(userData);
+        return accountPOST({
+          ...userData,
+          salt: salt,
+        });
       }
     },
     onSuccess: () => {
@@ -122,6 +157,29 @@ export default function AccountForm() {
       );
     },
   });
+
+  // Delete user mutation
+  const { mutate: deleteUser, isPending: isDeleting } = useMutation({
+    mutationKey: ["deleteUser", selectedUser?.account_id],
+    mutationFn: () => accountDELETE(selectedUser?.account_id),
+    onSuccess: () => {
+      toast.success("User deleted successfully");
+      setDeleteDialogOpen(false);
+      setSelectedUser(null);
+      form.reset(defaults);
+      setPhotoPreview(null);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`Error deleting user: ${error.message}`);
+    },
+  });
+
+  // Handle dialog open state change
+  const handleDeleteDialogChange = (newOpen) => {
+    if (isDeleting) return; // Prevent closing during deletion
+    setDeleteDialogOpen(newOpen);
+  };
 
   const handlePhotoClick = () => {
     fileInputRef.current.click();
@@ -173,74 +231,33 @@ export default function AccountForm() {
 
   useEffect(() => {
     console.log("Selected User:", selectedUser);
+    console.log(user);
   }, [selectedUser]);
 
   return (
-    <Form {...form}>
-      <Card className="w-full mx-auto overflow-hidden pt-0 px-2 py-6">
-        <CardHeader>
-          <CardTitle>User Account Management</CardTitle>
-          <CardDescription>
-            Create or modify user accounts in the Honesty Store IMS system.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs
-            defaultValue="add"
-            className="w-full"
-            value={activeTab}
-            onValueChange={handleTabChange}
-          >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="add">Add User</TabsTrigger>
-              <TabsTrigger value="edit">Edit User</TabsTrigger>
-            </TabsList>
+    <>
+      <Form {...form}>
+        <Card className="w-full mx-auto overflow-hidden pt-0 px-2 py-6">
+          <CardHeader>
+            <CardTitle>User Account Management</CardTitle>
+            <CardDescription>
+              Create or modify user accounts in the Honesty Store IMS system.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs
+              defaultValue="add"
+              className="w-full"
+              value={activeTab}
+              onValueChange={handleTabChange}
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="add">Add User</TabsTrigger>
+                <TabsTrigger value="edit">Edit User</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="add" className="pt-4">
-              <h2 className="form-title mb-4">Add New User</h2>
-              <AccountFormContent
-                activeTab={activeTab}
-                form={form}
-                photoPreview={photoPreview}
-                fileInputRef={fileInputRef}
-                handlePhotoClick={handlePhotoClick}
-                handlePhotoChange={handlePhotoChange}
-                removePhoto={removePhoto}
-                onSubmit={onSubmit}
-                isPending={isPending}
-                setPhotoPreview={setPhotoPreview}
-                setSelectedUser={setSelectedUser}
-              />
-            </TabsContent>
-
-            <TabsContent value="edit" className="pt-4">
-              <h2 className="form-title mb-4">Edit User</h2>
-              <FormLabel className="block mb-2">Select User to Edit</FormLabel>
-
-              <div className="mb-6 flex w-fit gap-2">
-                <ComboBox
-                  datatype="User"
-                  data={users ?? []}
-                  value={selectedUser?.account_id}
-                  disabled={isPending || isFetching}
-                  id_attr="account_id"
-                  name_attr="account_name"
-                  onChange={(userId) => {
-                    const user = users.find((u) => u.account_id === userId);
-                    setSelectedUser(user);
-                  }}
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleRefresh}
-                  disabled={isPending}
-                >
-                  <RotateCw className={isFetching ? "animate-spin" : ""} />
-                </Button>
-              </div>
-
-              {selectedUser ? (
+              <TabsContent value="add" className="pt-4">
+                <h2 className="form-title mb-4">Add New User</h2>
                 <AccountFormContent
                   activeTab={activeTab}
                   form={form}
@@ -254,16 +271,128 @@ export default function AccountForm() {
                   setPhotoPreview={setPhotoPreview}
                   setSelectedUser={setSelectedUser}
                 />
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  Please select a user to edit
+              </TabsContent>
+
+              <TabsContent value="edit" className="pt-4">
+                <h2 className="form-title mb-4">Edit User</h2>
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <FormLabel className="block mb-2">
+                      Select User to Edit
+                    </FormLabel>
+                    <div className="flex w-fit gap-2">
+                      <ComboBox
+                        datatype="User"
+                        data={users ?? []}
+                        value={selectedUser?.account_id}
+                        disabled={isPending || isFetching}
+                        id_attr="account_id"
+                        name_attr="account_name"
+                        onChange={(userId) => {
+                          const user = users.find(
+                            (u) => u.account_id === userId
+                          );
+                          setSelectedUser(user);
+                        }}
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleRefresh}
+                        disabled={isPending}
+                      >
+                        <RotateCw
+                          className={isFetching ? "animate-spin" : ""}
+                        />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Delete User Button */}
+                  <AlertDialog
+                    open={deleteDialogOpen}
+                    onOpenChange={handleDeleteDialogChange}
+                  >
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={
+                          !selectedUser ||
+                          isPending ||
+                          isDeleting ||
+                          user?.account_id === selectedUser?.account_id
+                        }
+                        className="flex items-center gap-1"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete User
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                          <AlertTriangle className="h-5 w-5 text-destructive" />
+                          Confirm Deletion
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete user{" "}
+                          <strong>{selectedUser?.account_name}</strong>? This
+                          action cannot be undone and will permanently remove
+                          the user account.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={(e) => {
+                            e.preventDefault();
+                            deleteUser();
+                          }}
+                          disabled={isDeleting}
+                          className="bg-destructive hover:bg-destructive/90"
+                        >
+                          {isDeleting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Deleting...
+                            </>
+                          ) : (
+                            "Delete"
+                          )}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-    </Form>
+
+                {selectedUser ? (
+                  <AccountFormContent
+                    activeTab={activeTab}
+                    form={form}
+                    photoPreview={photoPreview}
+                    fileInputRef={fileInputRef}
+                    handlePhotoClick={handlePhotoClick}
+                    handlePhotoChange={handlePhotoChange}
+                    removePhoto={removePhoto}
+                    onSubmit={onSubmit}
+                    isPending={isPending}
+                    setPhotoPreview={setPhotoPreview}
+                    setSelectedUser={setSelectedUser}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Please select a user to edit
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </Form>
+    </>
   );
 }
 
@@ -391,7 +520,6 @@ function AccountFormContent({
         )}
       />
 
-      {/* Password - Optional in edit mode */}
       {/* Password - Always required */}
       <FormField
         control={form.control}
@@ -413,7 +541,7 @@ function AccountFormContent({
           </FormItem>
         )}
       />
-      {/* Confirm Password */}
+
       {/* Confirm Password - Always shown and required */}
       <FormField
         control={form.control}
@@ -435,6 +563,7 @@ function AccountFormContent({
           </FormItem>
         )}
       />
+
       {/* Role Selection */}
       <FormField
         control={form.control}
