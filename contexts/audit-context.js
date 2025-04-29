@@ -26,7 +26,7 @@ export function AuditProvider({ children }) {
     }
   }, [auditSearch]);
 
-  const { mutate: submitAudit, isPending: isSubmitting } = useMutation({
+  const { mutateAsync: submitAudit, isPending: isSubmitting } = useMutation({
     mutationFn: async (auditData) => {
       const response = await fetch("/api/admin/audit", {
         method: "POST",

@@ -50,17 +50,16 @@ export default function AccountForm() {
 
   const defaults = userDefaults;
 
-  const { data, isFetching, refetch } = useQuery({
+  const { data, isFetching, isError, refetch } = useQuery({
     queryKey: ["users"],
     queryFn: accountsGET,
   });
 
   useEffect(() => {
-    if (data?.status === 200) {
+    if (!isFetching && data?.status === 200) {
       setUsers(data?.data);
-    } else {
-      setUsers([]);
-      toast.error("Error fetching users. Please try again.");
+    } else if (!isFetching && isError) {
+      toast.error("Failed to fetch users. Please try again later.");
     }
   }, [isFetching]);
 
