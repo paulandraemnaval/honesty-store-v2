@@ -1,11 +1,11 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { Card, CardContent } from "./ui/card";
 import { Minus, Plus } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Skeleton } from "./ui/skeleton";
 import { inventoryGETforAudit } from "@/lib/utils";
 import { z } from "zod";
@@ -35,7 +35,14 @@ const auditSchema = z.object({
 });
 
 const AuditList = () => {
-  const { prepareAuditChanges, inventories, setInventories } = useAudit();
+  const {
+    prepareAuditChanges,
+    filteredInventories,
+    inventories,
+    setInventories,
+  } = useAudit();
+
+  const sentinelRef = useRef(null);
 
   const form = useForm({
     resolver: zodResolver(auditSchema),
@@ -47,16 +54,54 @@ const AuditList = () => {
   const { watch, setValue } = form;
   const quantities = watch("quantities");
 
-  const { data, isLoading, isSuccess } = useQuery({
-    queryKey: ["inventoryforaudit"],
-    queryFn: () => inventoryGETforAudit(),
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isSuccess,
+  } = useInfiniteQuery({
+    queryKey: ["products"],
+    queryFn: ({ pageParam = "" }) => inventoryGETforAudit(pageParam),
+    getNextPageParam: (lastPage) => {
+      return lastPage.lastVisible || undefined;
+    },
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   useEffect(() => {
-    if (isSuccess) {
-      setInventories(data.data);
+    if (isSuccess && data) {
+      const allInventories = data.pages.flatMap((page) => page.data);
+      setInventories(allInventories);
     }
-  }, [isSuccess]);
+  }, [isSuccess, data, setInventories]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          console.log("Loading more inventory items...");
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "150px", threshold: 0.2 }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.unobserve(sentinel);
+      observer.disconnect();
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const incrementQuantity = (inventoryId, currentValue, maxValue) => {
     const current = currentValue ? parseInt(currentValue) : 0;
@@ -83,9 +128,12 @@ const AuditList = () => {
     let valid = true;
     const errors = {};
 
-    if (!data || !data.data) return false;
+    if (!data) return false;
 
-    data.data.forEach((product) => {
+    // Get all inventories from all pages
+    const allInventories = data.pages.flatMap((page) => page.data);
+
+    allInventories.forEach((product) => {
       if (!product.inventory) return;
 
       const inventoryId = product.inventory.inventory_id;
@@ -122,11 +170,14 @@ const AuditList = () => {
     return <AuditSkeleton />;
   }
 
+  const displayItems =
+    filteredInventories?.length > 0 ? filteredInventories : inventories;
+
   return (
     <Form {...form}>
       <form onChange={handleFormChange} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full px-6 py-4">
-          {inventories?.map((product) => {
+          {displayItems?.map((product) => {
             if (!product.inventory) return null;
             const inventoryId = product.inventory.inventory_id;
 
@@ -167,6 +218,22 @@ const AuditList = () => {
             );
           })}
         </div>
+
+        {hasNextPage !== false && (
+          <div className="w-full py-4 flex justify-center" ref={sentinelRef}>
+            {isFetchingNextPage && (
+              <div className="loader text-sm text-muted-foreground">
+                Loading more...
+              </div>
+            )}
+          </div>
+        )}
+
+        {!isLoading && !displayItems?.length && (
+          <div className="col-span-full flex items-center justify-center h-48 text-muted-foreground text-lg font-semibold">
+            No inventory items found.
+          </div>
+        )}
       </form>
     </Form>
   );
@@ -211,6 +278,7 @@ const AuditItem = ({ product, field, onIncrement, onDecrement, onChange }) => {
                   type="text"
                   {...field}
                   onChange={onChange}
+                  value={field.value || ""}
                 />
               </FormControl>
               <Button
