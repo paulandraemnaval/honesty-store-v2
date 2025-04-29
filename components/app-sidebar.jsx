@@ -76,7 +76,6 @@ export function AppSidebar() {
       if (status === 200) {
         toast.success("Successfully logged out");
         setUser(null);
-        router.push("/admin");
       } else {
         toast.error("Failed to log out");
       }
