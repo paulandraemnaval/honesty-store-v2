@@ -7,15 +7,22 @@ export async function POST(request) {
   try {
     await signOut(auth);
 
-    await cookies().set("session", "", {
+    cookies().set("session", "", {
       httpOnly: true,
       secure: true,
       expires: new Date(0),
       path: "/",
     });
 
+    cookies().set("user", "", {
+      httpOnly: false,
+      secure: true,
+      expires: new Date(0),
+      path: "/",
+    });
+
     console.log("Sign-out successful.");
-    return NextResponse.redirect(new URL("/admin", request.nextUrl));
+    return NextResponse.redirect(new URL("/", request.nextUrl));
   } catch (error) {
     console.error("An error happened during sign-out:", error);
     return NextResponse.json({ error: "Sign-out failed" }, { status: 500 });

@@ -8,7 +8,7 @@ import { doc, getDoc } from "firebase/firestore";
 
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const reportDoc = doc(db, "Report", id);
     const reportSnap = await getDoc(reportDoc);
     if (!reportSnap.exists()) {
