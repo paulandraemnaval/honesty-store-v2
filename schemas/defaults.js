@@ -33,3 +33,11 @@ export const supplierDefaults = {
   supplier_email_address: "",
   supplier_notes: "",
 };
+
+export const userDefaults = {
+  name: "",
+  email: "",
+  password: "",
+  role: "",
+  photo: undefined,
+};

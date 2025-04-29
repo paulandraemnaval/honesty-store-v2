@@ -24,6 +24,7 @@ const GlobalContext = createContext({
   setCategoryFilter: () => {},
   supplierFilter: null,
   setSupplierFilter: () => {},
+  
 });
 
 export const useGlobalContext = () => useContext(GlobalContext);
@@ -47,6 +48,8 @@ export default function GlobalContextProvider({ children }) {
   const [supLoading, setSupLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [ascendingUnits, setAscendingUnits] = useState(true);
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const togglePriceSort = () => {
     setAscendingPrice((prev) => {
@@ -178,6 +181,10 @@ export default function GlobalContextProvider({ children }) {
     setSearchTerm,
     ascendingUnits,
     toggleUnitSort,
+    setSelectedUser,
+    selectedUser,
+    users,
+    setUsers,
   };
 
   return (

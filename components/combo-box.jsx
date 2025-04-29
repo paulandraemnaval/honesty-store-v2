@@ -40,6 +40,8 @@ export default function ComboBox({
     return selectedItem ? selectedItem[name_attr] : `Select ${datatype}`;
   }
 
+  console.log("ComboBox data", data);
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -47,18 +49,18 @@ export default function ComboBox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className="w-full max-w-full justify-between overflow-hidden"
           disabled={disabled}
         >
-          {getSelectedItem()}
+          <span className="truncate">{getSelectedItem()}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
+      <PopoverContent className="w-full max-w-full p-0" align="start">
         <Command>
           <CommandInput placeholder={`Search ${datatype}`} />
           <CommandList>
-            <CommandEmpty>No {datatype} found.</CommandEmpty>
+            <CommandEmpty>No {datatype}s found.</CommandEmpty>
             <CommandGroup>
               {safeData.map((item) => (
                 <CommandItem
@@ -75,7 +77,7 @@ export default function ComboBox({
                       isItemSelected(item) ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  {item[name_attr]}
+                  <span className="truncate">{item[name_attr]}</span>
                 </CommandItem>
               ))}
             </CommandGroup>

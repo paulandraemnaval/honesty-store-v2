@@ -2,23 +2,21 @@
 import React from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { useGlobalContext } from "@/contexts/global-context";
-const SearchInput = () => {
-  const { setSearchTerm } = useGlobalContext();
+const SearchInput = ({ searchFn }) => {
   const [localSeachTerm, setLocalSearchTerm] = React.useState("");
   return (
     <>
       <Input
         type="text"
         id="search_input"
-        placeholder="Lucky Me! Bulalo"
+        placeholder="search products..."
         className="w-sm bg-white/40 backdrop-blur-sm ml-2"
         onChange={(e) => {
           setLocalSearchTerm(e.target.value);
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
-            setSearchTerm(e.target.value);
+            searchFn(localSeachTerm);
           }
         }}
         value={localSeachTerm}

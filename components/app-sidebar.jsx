@@ -20,8 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "./ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useGlobalContext } from "@/contexts/global-context";
-import React, { useState } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -34,6 +33,7 @@ import {
 import { Logout } from "@/lib/utils";
 import Link from "next/link";
 import { AvatarImage } from "@radix-ui/react-avatar";
+import Cookies from "js-cookie";
 
 const items = [
   {
@@ -66,8 +66,8 @@ const items = [
 export function AppSidebar() {
   const router = useRouter();
   const { open, openMobile } = useSidebar();
-  const { setUser, user } = useGlobalContext();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [user, setUser] = useState({});
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: () => Logout(),
@@ -85,6 +85,40 @@ export function AppSidebar() {
       toast.error("An error occurred while logging out");
     },
   });
+
+  function getUserFromCookies() {
+    const rawUser = Cookies.get("user");
+    if (!rawUser) return null;
+
+    try {
+      const parsedUser = JSON.parse(decodeURIComponent(rawUser));
+      let { account_profile_url } = parsedUser;
+
+      account_profile_url = account_profile_url.replace(
+        /\/o\/profile\//,
+        "/o/profile%2F"
+      );
+
+      return {
+        account_name: parsedUser.account_name,
+        account_role: parsedUser.account_role,
+        account_profile_url,
+      };
+    } catch (error) {
+      console.error("Failed to parse user cookie:", error);
+      return null;
+    }
+  }
+
+  useEffect(() => {
+    const userFromCookies = getUserFromCookies();
+
+    if (!userFromCookies) return null;
+
+    console.log("userFromCookies", userFromCookies);
+
+    setUser(userFromCookies);
+  }, []);
 
   function handleLogout() {
     mutateAsync();
@@ -120,7 +154,7 @@ export function AppSidebar() {
             <SidebarGroup>
               <SidebarGroupContent>
                 {items.map((item, index) => (
-                  <React.Fragment key={item.title}>
+                  <Fragment key={item.title}>
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild>
                         <Link href={item.url}>
@@ -138,7 +172,7 @@ export function AppSidebar() {
                     {(index + 1) % 2 === 0 && index !== items.length - 1 ? (
                       <Separator className="my-2" />
                     ) : null}
-                  </React.Fragment>
+                  </Fragment>
                 ))}
               </SidebarGroupContent>
             </SidebarGroup>
@@ -184,8 +218,8 @@ export function AppSidebar() {
                   alt="user_image"
                   className="object-cover w-full h-full"
                 />
-                <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                  <Loader2 className="animate-spin" />
+                <AvatarFallback className="text-primary font-medium bg-mainButtonColor">
+                  <Loader2 className="animate-spin" stroke="white" />
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 overflow-hidden">

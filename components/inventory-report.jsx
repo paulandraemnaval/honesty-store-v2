@@ -1,13 +1,9 @@
 "use client";
 import React from "react";
-import {
-  cn,
-  downloadInventoryReportResponse,
-  inventoryReportGET,
-} from "@/lib/utils";
+import { cn, inventoryReportGET } from "@/lib/utils";
 import { addDays, format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Plus, Table, CalendarIcon } from "lucide-react";
+import { Plus, Table, CalendarIcon, Loader2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Calendar } from "./ui/calendar";
 import { useMutation } from "@tanstack/react-query";
@@ -56,17 +52,18 @@ const InventoryReport = () => {
   const { isPending, mutateAsync } = useMutation({
     mutationFn: () => inventoryReportGET(date.from, date.to),
     mutationKey: "inventoryReport",
-    onSuccess: () => {
-      toast.success("Inventory Report Generated");
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
   });
 
-  function handleClick() {
+  async function handleClick() {
     if (date.from && date.to) {
-      mutateAsync();
+      const { status } = await mutateAsync();
+      if (status === 200) {
+        toast.success("Report generated successfully");
+      } else if (status === 404) {
+        toast.error("No data found for the selected date range");
+      } else {
+        toast.error("Failed to generate report");
+      }
     } else {
       toast.error("Please select a date range");
     }
@@ -142,7 +139,7 @@ const InventoryReport = () => {
           disabled={isPending}
         >
           {isPending ? (
-            <RotateCw className={`${isPending ? "animate-spin" : ""}`} />
+            <Loader2 className={`${isPending ? "animate-spin" : ""}`} />
           ) : null}
           {isPending ? "Generating..." : "Generate Report"}
         </Button>

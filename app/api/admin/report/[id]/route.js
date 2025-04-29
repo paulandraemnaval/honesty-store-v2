@@ -4,7 +4,8 @@ import { NextResponse } from "next/server";
 
 export async function GET(request, { params }) {
   try {
-    const { id } = await params;
+    const p = await params;
+    const { id } = p;
     const reportDoc = doc(db, "Report", id);
     const snapshot = await getDoc(reportDoc);
     if (!snapshot.exists()) {
@@ -19,7 +20,7 @@ export async function GET(request, { params }) {
       { status: 200 }
     );
   } catch (error) {
-    console.log(error);
+    console.log(error);1
     return NextResponse.json({ message: error }, { status: 500 });
   }
 }

@@ -1,16 +1,17 @@
-import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import AccountManagement from "@/components/account-management";
+import AccountForm from "@/components/account-form";
 const page = () => {
   return (
     <div className="flex flex-col gap-4">
       <div className="top-bar">
         <div className="flex">
           <SidebarTrigger />
-          <span className="text-2xl font-bold ml-4">Edit Account</span>
+          <span className="text-2xl font-bold ml-4">Account Management</span>
         </div>
       </div>
-      <AccountManagement />
+      <div className="px-6 py-4">
+        <AccountForm />
+      </div>
     </div>
   );
 };

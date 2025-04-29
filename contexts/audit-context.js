@@ -1,17 +1,32 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 const AuditContext = createContext(null);
 
 export function AuditProvider({ children }) {
+  const [inventories, setInventories] = useState([]);
+  const [auditSearch, setAuditSearch] = useState("");
   const [auditChanges, setAuditChanges] = useState([]);
   const [formData, setFormData] = useState(null);
   const queryClient = useQueryClient();
 
-  const { mutate: submitAudit, isPending: isSubmitting } = useMutation({
+  useEffect(() => {
+    if (auditSearch) {
+      const filteredInventories = inventories.filter((inventory) =>
+        inventory.product.product_name
+          .toLowerCase()
+          .includes(auditSearch.toLowerCase())
+      );
+      setInventories(filteredInventories);
+    } else {
+      setInventories(inventories);
+    }
+  }, [auditSearch]);
+
+  const { mutateAsync: submitAudit, isPending: isSubmitting } = useMutation({
     mutationFn: async (auditData) => {
       const response = await fetch("/api/admin/audit", {
         method: "POST",
@@ -97,6 +112,10 @@ export function AuditProvider({ children }) {
       setAuditChanges([]);
       setFormData(null);
     },
+    setInventories,
+    inventories,
+    setAuditSearch,
+    auditSearch,
   };
 
   return (

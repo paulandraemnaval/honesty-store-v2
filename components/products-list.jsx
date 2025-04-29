@@ -174,6 +174,12 @@ const ProductsList = ({ customer }) => {
             );
           })
         )}
+
+        {!productsLoading && !filteredProducts?.length ? (
+          <div className="col-span-full flex items-center justify-center h-48 text-muted-foreground text-lg font-semibold">
+            No products found.
+          </div>
+        ) : null}
       </div>
 
       {hasNextPage !== false && (

@@ -2,21 +2,12 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import {
-  CalendarIcon,
-  DownloadIcon,
-  SearchIcon,
-  ChevronDownIcon,
-  FileTextIcon,
-  ClipboardListIcon,
-  Download,
-  Delete,
-  View,
-  Trash2,
-} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { z } from "zod";
+import { toast } from "sonner";
+import { CalendarIcon, Download, Trash2, FileTextIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -42,71 +33,121 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
-// Sample data for demonstration
-const reports = [
-  {
-    id: "REP-001",
-    creationDate: new Date(2025, 3, 10),
-    auditsCount: 24,
-    dateSpan: { start: new Date(2025, 3, 1), end: new Date(2025, 3, 7) },
-    status: "Completed",
-  },
-  {
-    id: "REP-002",
-    creationDate: new Date(2025, 3, 8),
-    auditsCount: 18,
-    dateSpan: { start: new Date(2025, 2, 25), end: new Date(2025, 3, 3) },
-    status: "Completed",
-  },
-  {
-    id: "REP-003",
-    creationDate: new Date(2025, 3, 5),
-    auditsCount: 32,
-    dateSpan: { start: new Date(2025, 2, 20), end: new Date(2025, 2, 28) },
-    status: "Completed",
-  },
-  {
-    id: "REP-004",
-    creationDate: new Date(2025, 3, 1),
-    auditsCount: 15,
-    dateSpan: { start: new Date(2025, 2, 15), end: new Date(2025, 2, 22) },
-    status: "Completed",
-  },
-  {
-    id: "REP-005",
-    creationDate: new Date(2025, 2, 25),
-    auditsCount: 27,
-    dateSpan: { start: new Date(2025, 2, 10), end: new Date(2025, 2, 17) },
-    status: "Completed",
-  },
-];
+// Zod schema for report validation
+const ReportSchema = z.object({
+  report_id: z.string(),
+  report_start_date: z.object({
+    seconds: z.number(),
+  }),
+  report_last_updated: z.object({
+    seconds: z.number(),
+  }),
+  report_cash_inflow: z.string().or(z.number()),
+  report_cash_outflow: z.string().or(z.number()),
+});
+
+const ReportsResponseSchema = z.object({
+  reports: z.array(ReportSchema),
+});
 
 export default function ReportList() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [downloadingStates, setDownloadingStates] = useState({});
+  const [dateFilter, setDateFilter] = useState("all");
 
-  // Stats for summary cards
-  const totalReports = reports.length;
-  const totalAudits = reports.reduce(
-    (sum, report) => sum + report.auditsCount,
-    0
+  const reportsPerPage = 5;
+
+  // Fetch reports using React Query
+  const { data: reportData, isLoading } = useQuery({
+    queryKey: ["reports"],
+    queryFn: async () => {
+      const response = await fetch("/api/admin/report", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lastVisible: null }),
+      });
+
+      const data = await response.json();
+
+      // Validate the data with Zod
+      try {
+        return ReportsResponseSchema.parse(data);
+      } catch (error) {
+        console.error("Data validation error:", error);
+        return { reports: [] };
+      }
+    },
+  });
+
+  const reports = reportData?.reports || [];
+
+  
+  const handleExportPDF = async (reportID, startDate, lastUpdated) => {
+    try {
+      setDownloadingStates((prevStates) => ({
+        ...prevStates,
+        [reportID]: true,
+      }));
+
+      console.log("Downloading report", reportID);
+      const response = await fetch(`/api/admin/sheets/${reportID}`);
+      const blob = await response.blob();
+
+      if (response.ok && blob.size > 0) {
+        const buffer = Buffer.from(await blob.arrayBuffer());
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(new Blob([buffer]));
+        link.download = `Financial Report from ${startDate} to ${lastUpdated}.pdf`;
+        link.click();
+      } else {
+        toast.error("Failed to download report");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDownloadingStates((prevStates) => ({
+        ...prevStates,
+        [reportID]: false,
+      }));
+    }
+  };
+
+  // Filter reports by date if needed
+  const filteredReports = reports;
+
+  // Calculate total reports
+  const totalReports = filteredReports.length;
+
+  // Find latest report
+  const latestReport =
+    filteredReports.length > 0
+      ? filteredReports.reduce((latest, report) => {
+          const currentDate = new Date(
+            report.report_last_updated.seconds * 1000
+          );
+          const latestDate = new Date(
+            latest.report_last_updated.seconds * 1000
+          );
+          return currentDate > latestDate ? report : latest;
+        }, filteredReports[0])
+      : null;
+
+  // Pagination logic
+  const indexOfLastReport = currentPage * reportsPerPage;
+  const indexOfFirstReport = indexOfLastReport - reportsPerPage;
+  const currentReports = filteredReports.slice(
+    indexOfFirstReport,
+    indexOfLastReport
   );
-  const latestReport = reports.reduce(
-    (latest, report) =>
-      report.creationDate > latest.creationDate ? report : latest,
-    reports[0]
-  );
+  const totalPages = Math.ceil(filteredReports.length / reportsPerPage);
+
+  // Handle page change
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <div className="flex flex-col gap-6 px-6 py-4">
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
@@ -114,17 +155,9 @@ export default function ReportList() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalReports}</div>
-            <p className="text-xs text-muted-foreground">Last 30 days</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Audits</CardTitle>
-            <ClipboardListIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalAudits}</div>
-            <p className="text-xs text-muted-foreground">Across all reports</p>
+            <p className="text-xs text-muted-foreground">
+              All financial reports
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -134,19 +167,34 @@ export default function ReportList() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {format(latestReport.creationDate, "MMM d, yyyy")}
+              {latestReport
+                ? format(
+                    new Date(latestReport.report_last_updated.seconds * 1000),
+                    "MMM d, yyyy"
+                  )
+                : "No reports"}
             </div>
             <p className="text-xs text-muted-foreground">
-              {latestReport.auditsCount} audits included
+              {latestReport
+                ? `Cash flow: ${
+                    Number(latestReport.report_cash_inflow) -
+                    Number(latestReport.report_cash_outflow)
+                  }`
+                : "No data available"}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters and Search */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <Select defaultValue="all">
+          <Select
+            value={dateFilter}
+            onValueChange={(value) => {
+              setDateFilter(value);
+              setCurrentPage(1);
+            }}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filter by date" />
             </SelectTrigger>
@@ -161,73 +209,138 @@ export default function ReportList() {
         </div>
       </div>
 
-      {/* Reports Table */}
       <div className="rounded-md border mb-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[100px]">Report ID</TableHead>
-              <TableHead>Creation Date</TableHead>
-              <TableHead>No. of Audits</TableHead>
-              <TableHead>Date Span</TableHead>
-              <TableHead className="text-right  pr-6">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {reports.map((report) => (
-              <TableRow key={report.id}>
-                <TableCell className="font-medium">{report.id}</TableCell>
-                <TableCell>
-                  {format(report.creationDate, "MMM d, yyyy")}
-                </TableCell>
-                <TableCell>{report.auditsCount}</TableCell>
-                <TableCell>
-                  {format(report.dateSpan.start, "MMM d")} -{" "}
-                  {format(report.dateSpan.end, "MMM d, yyyy")}
-                </TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    className="bg-red-500"
-                  >
-                    <Trash2 />
-                  </Button>
-                  <Button variant="outline" size="icon">
-                    <Download />
-                  </Button>
-                </TableCell>
+        {isLoading ? (
+          <div className="py-8 text-center">Loading reports...</div>
+        ) : currentReports.length === 0 ? (
+          <div className="py-8 text-center">No reports found</div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[300px]">Report Date Range</TableHead>
+                <TableHead>Cash Inflow</TableHead>
+                <TableHead>Cash Outflow</TableHead>
+                <TableHead>Net Cashflow</TableHead>
+                <TableHead className="text-right pr-6">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {currentReports.map((report) => {
+                const startDate = new Date(
+                  report.report_start_date.seconds * 1000
+                );
+                const lastUpdatedDate = new Date(
+                  report.report_last_updated.seconds * 1000
+                );
+
+                const formattedStartDate = format(startDate, "MM/dd/yyyy");
+                const formattedLastUpdatedDate = format(
+                  lastUpdatedDate,
+                  "MM/dd/yyyy"
+                );
+
+                return (
+                  <TableRow key={report.report_id}>
+                    <TableCell className="font-medium">{`${formattedStartDate} to ${formattedLastUpdatedDate}`}</TableCell>
+                    <TableCell>₱{report.report_cash_inflow}</TableCell>
+                    <TableCell>₱{report.report_cash_outflow}</TableCell>
+                    <TableCell>
+                      ₱{report.report_cash_inflow - report.report_cash_outflow}
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="bg-red-500"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled={downloadingStates[report.report_id]}
+                        onClick={() =>
+                          handleExportPDF(
+                            report.report_id,
+                            formattedStartDate,
+                            formattedLastUpdatedDate
+                          )
+                        }
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
       </div>
 
       {/* Pagination */}
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious href="#" />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#" isActive>
-              1
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">2</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">3</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationEllipsis />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext href="#" />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => currentPage > 1 && paginate(currentPage - 1)}
+                className={
+                  currentPage === 1
+                    ? "cursor-not-allowed opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+
+            {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
+              let pageNumber;
+
+              // Logic to display page numbers around the current page
+              if (totalPages <= 5) {
+                pageNumber = idx + 1;
+              } else if (currentPage <= 3) {
+                pageNumber = idx + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNumber = totalPages - 4 + idx;
+              } else {
+                pageNumber = currentPage - 2 + idx;
+              }
+
+              return (
+                <PaginationItem key={idx}>
+                  <PaginationLink
+                    onClick={() => paginate(pageNumber)}
+                    isActive={currentPage === pageNumber}
+                  >
+                    {pageNumber}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
+
+            {totalPages > 5 && currentPage < totalPages - 2 && (
+              <PaginationItem>
+                <PaginationEllipsis />
+              </PaginationItem>
+            )}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() =>
+                  currentPage < totalPages && paginate(currentPage + 1)
+                }
+                className={
+                  currentPage === totalPages
+                    ? "cursor-not-allowed opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 }

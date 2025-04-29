@@ -9,15 +9,28 @@ import { useGlobalContext } from "@/contexts/global-context";
 import { toast } from "sonner";
 
 export default function Dashboard() {
-  const { dashboard, setDashboard } = useGlobalContext();
-  const { isLoading } = useQuery({
+  const { setDashboard } = useGlobalContext();
+  const { data, isLoading, isSuccess } = useQuery({
     queryKey: ["dashboard"],
     queryFn: () => dashboardGET(),
-    select: ({ data }) => setDashboard(data),
     onError: (error) => {
       toast.error("Failed to fetch dashboard data");
     },
   });
+
+  useEffect(() => {
+    if (isSuccess) {
+      setDashboard((prev) => ({
+        ...prev,
+        categories: data?.data?.categories,
+        products: data?.data?.products,
+        profit: data?.data?.profit,
+        sales: data?.data?.sales,
+        totalProfit: data?.data?.totalProfit,
+        totalSales: data?.data?.totalSales,
+      }));
+    }
+  }, [isSuccess]);
 
   const {
     categories,
@@ -26,7 +39,7 @@ export default function Dashboard() {
     sales: salesHist,
     totalProfit,
     totalSales,
-  } = dashboard || {};
+  } = data?.data || {};
 
   return (
     <div className="flex flex-col gap-4 w-full px-6 py-4">

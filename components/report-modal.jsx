@@ -1,78 +1,164 @@
+"use client";
+
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-const audits = [
-  { date: "2024-05-12" },
-  { date: "2024-07-28" },
-  { date: "2024-09-03" },
-  { date: "2024-10-19" },
-  { date: "2024-12-01" },
-  { date: "2025-01-10" },
-  { date: "2025-02-22" },
-  { date: "2025-03-15" },
-  { date: "2024-08-06" },
-  { date: "2024-11-17" },
-];
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
+import { reportPOST } from "@/lib/utils";
+import { reportFormSchema } from "@/schemas/schemas";
 
 export default function ReportDialog() {
-  function getDeficit(audit) {
-    return audit.oldqty - audit.newqty;
-  }
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const form = useForm({
+    resolver: zodResolver(reportFormSchema),
+    defaultValues: {
+      cash_inflow: "",
+      cash_outflow: "",
+    },
+  });
+
+  const { data, isPending, mutateAsync } = useMutation({
+    mutationFn: (values) => reportPOST(values),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+
+      toast.success("Report created successfully");
+      form.reset();
+      setIsDialogOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  // Form submission handler
+  const onSubmit = (values) => {
+    mutateAsync(values);
+  };
+
+  // Handler for decimal number input
+  const handleDecimalInput = (e, field) => {
+    const value = e.target.value;
+    const regex = /^\d*\.?\d{0,2}$/; // Allow numbers with up to 2 decimal places
+
+    if (regex.test(value) || value === "") {
+      field.onChange(value);
+    }
+  };
+
   return (
-    <AlertDialog>
+    <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="outline" className="custom-form-button ">
+        <Button variant="outline" className="custom-form-button">
           Create Report
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+
+      <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
-          <AlertDialogTitle>Confirm Report</AlertDialogTitle>
+          <AlertDialogTitle>Create Financial Report</AlertDialogTitle>
           <AlertDialogDescription>
-            The following audits will be used to create the report. Please
-            confirm the report
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">Audit Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {audits.map((audit) => (
-                  <TableRow key={audit.product_name}>
-                    <TableCell className="font-medium">{audit.date}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            Enter the financial details for this reporting period.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction className="custom-form-button">
-            Continue
-          </AlertDialogAction>
-        </AlertDialogFooter>
+
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4 py-2"
+          >
+            <FormField
+              control={form.control}
+              name="cash_inflow"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cash Inflow</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter cash inflow"
+                      {...field}
+                      onChange={(e) => handleDecimalInput(e, field)}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Total amount of cash received during this period.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="cash_outflow"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cash Outflow</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter cash outflow"
+                      {...field}
+                      onChange={(e) => handleDecimalInput(e, field)}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Total amount of cash spent during this period.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                disabled={isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="custom-form-button"
+                disabled={isPending}
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  "Submit Report"
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </AlertDialogContent>
     </AlertDialog>
   );

@@ -14,8 +14,13 @@ import AddProduct from "./add-product";
 import { useGlobalContext } from "@/contexts/global-context";
 
 const ProductsDisplay = ({ customer }) => {
-  const { togglePriceSort, ascendingPrice, toggleUnitSort, ascendingUnits } =
-    useGlobalContext();
+  const {
+    togglePriceSort,
+    ascendingPrice,
+    toggleUnitSort,
+    ascendingUnits,
+    setSearchTerm,
+  } = useGlobalContext();
   const pathName = usePathname();
   return (
     <div className="flex flex-col gap-4">
@@ -40,7 +45,7 @@ const ProductsDisplay = ({ customer }) => {
           )}
         </div>
 
-        <SearchInput />
+        <SearchInput searchFn={setSearchTerm} />
         {pathName.includes("admin") ? <FilterBar /> : null}
         <AscendFilter
           ascendingFilter={ascendingPrice}

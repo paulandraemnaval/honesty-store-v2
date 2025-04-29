@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import ComboBox from "./combo-box";
 import { categorySchema } from "@/schemas/schemas";
 import { categoryDefaults } from "@/schemas/defaults";
@@ -26,7 +27,6 @@ import { useGlobalContext } from "@/contexts/global-context";
 import Image from "next/image";
 import { toast } from "sonner";
 import { categoriesGET } from "@/lib/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function CategoryForm() {
   const { selectedCategory, categories, setSelectedCategory, setCategories } =
@@ -37,24 +37,24 @@ export default function CategoryForm() {
 
   const defaults = categoryDefaults;
 
-  const { isFetching, refetch } = useQuery({
+  const { data, isFetching, refetch } = useQuery({
     queryKey: ["categories"],
-    queryFn: () => categoriesGET(),
-    onSuccess: (data) => {
-      setCategories(data);
-    },
-    onError: (error) => {
-      toast.error(`Error fetching categories: ${error.message}`);
-    },
-    enabled: false,
+    queryFn: categoriesGET,
   });
+
+  useEffect(() => {
+    if (data?.status === 200) {
+      setCategories(data?.data);
+    } else {
+      toast.error("Error fetching categories");
+    }
+  }, [isFetching]);
 
   const form = useForm({
     resolver: zodResolver(categorySchema),
     defaultValues: defaults,
   });
 
-  // Reset form when switching tabs or when selectedCategory changes
   useEffect(() => {
     if (activeTab === "add") {
       form.reset(defaults);
@@ -131,19 +131,14 @@ export default function CategoryForm() {
     }
   };
 
-  function onSubmit(values) {
+  async function onSubmit(values) {
     if (activeTab === "edit" && !selectedCategory) {
       toast.error("Please select a category to edit");
       return;
     }
 
-    console.log(values);
-    mutateAsync(values);
+    await mutateAsync(values);
   }
-
-  const handleCategorySelect = (category) => {
-    setSelectedCategory(category);
-  };
 
   const handleTabChange = (value) => {
     setActiveTab(value);
@@ -161,7 +156,7 @@ export default function CategoryForm() {
 
   return (
     <Form {...form}>
-      <Card className="w-full mx-auto overflow-auto pt-0">
+      <Card className="w-full mx-auto overflow-hidden pt-0">
         <CardContent className="pt-6">
           <Tabs
             defaultValue="add"
@@ -176,30 +171,133 @@ export default function CategoryForm() {
 
             <TabsContent value="add" className="pt-4">
               <h2 className="form-title mb-4">Add New Category</h2>
-              <CategoryFormContent
-                form={form}
-                imagePreview={imagePreview}
-                fileInputRef={fileInputRef}
-                handleImageClick={handleImageClick}
-                handleImageChange={handleImageChange}
-                removeImage={removeImage}
-                onSubmit={onSubmit}
-                isPending={isPending}
-              />
+              <form
+                onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                  console.log("Validation errors", errors);
+                })}
+                className="space-y-6"
+              >
+                <ScrollArea className="form-scroll-area h-80">
+                  <div className="space-y-6 pr-4">
+                    <FormField
+                      control={form.control}
+                      name="file"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Category Image</FormLabel>
+                          <FormControl>
+                            <div
+                              onClick={handleImageClick}
+                              className={`border-2 border-dashed border-gray-300 rounded-lg h-28 flex items-center justify-center ${
+                                isPending
+                                  ? "cursor-not-allowed"
+                                  : "cursor-pointer"
+                              } bg-muted relative overflow-hidden`}
+                            >
+                              <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleImageChange}
+                                className="hidden"
+                                accept="image/*"
+                                disabled={isPending}
+                              />
+
+                              {imagePreview ? (
+                                <>
+                                  <Image
+                                    src={imagePreview}
+                                    alt="Category preview"
+                                    className="h-full w-full object-contain"
+                                    fill
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={removeImage}
+                                    className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-70"
+                                  >
+                                    <X size={16} />
+                                  </button>
+                                </>
+                              ) : (
+                                <div className="text-center">
+                                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                                  <p className="mt-2 text-sm text-gray-500">
+                                    Click to upload category image
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="category_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Category Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter category name"
+                              {...field}
+                              disabled={isPending}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="category_description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Enter category description"
+                              className="resize-none"
+                              disabled={isPending}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </ScrollArea>
+
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  className="custom-form-button"
+                >
+                  {isPending && (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  )}
+                  {isPending ? "Saving..." : "Save Category"}
+                </Button>
+              </form>
             </TabsContent>
 
-            <TabsContent value="edit" className="pt-4">
+            <TabsContent value="edit" className="pt-4 w-full">
               <h2 className="form-title mb-4">Edit Category</h2>
               <FormLabel className="block mb-2">
                 Select Category to Edit
               </FormLabel>
 
-              <div className="mb-6 flex w-full gap-2 ">
+              <div className="mb-6 flex gap-2 w-[80%] py-0">
                 <ComboBox
                   datatype="Category"
                   data={categories ?? []}
                   value={selectedCategory?.category_id}
-                  disabled={isPending}
+                  disabled={isPending || isFetching}
                   id_attr="category_id"
                   name_attr="category_name"
                   onChange={(categoryId) => {
@@ -209,25 +307,124 @@ export default function CategoryForm() {
                     setSelectedCategory(category);
                   }}
                 />
-                <Button
-                  variant={"outline"}
-                  size={"icon"}
-                  onClick={handleRefresh}
-                >
+                <Button variant="outline" size="icon" onClick={handleRefresh}>
                   <RotateCw className={isFetching ? "animate-spin" : ""} />
                 </Button>
               </div>
               {selectedCategory ? (
-                <CategoryFormContent
-                  form={form}
-                  imagePreview={imagePreview}
-                  fileInputRef={fileInputRef}
-                  handleImageClick={handleImageClick}
-                  handleImageChange={handleImageChange}
-                  removeImage={removeImage}
-                  onSubmit={onSubmit}
-                  isPending={isPending}
-                />
+                <form
+                  onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                    console.log("Validation errors", errors);
+                  })}
+                  className="space-y-6 "
+                >
+                  <ScrollArea className="form-scroll-area h-80">
+                    <div className="space-y-6 pr-4">
+                      <FormField
+                        control={form.control}
+                        name="file"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Category Image</FormLabel>
+                            <FormControl>
+                              <div
+                                onClick={handleImageClick}
+                                className={`border-2 border-dashed border-gray-300 rounded-lg h-28 flex items-center justify-center ${
+                                  isPending
+                                    ? "cursor-not-allowed"
+                                    : "cursor-pointer"
+                                } bg-muted relative overflow-hidden`}
+                              >
+                                <input
+                                  type="file"
+                                  ref={fileInputRef}
+                                  onChange={handleImageChange}
+                                  className="hidden"
+                                  accept="image/*"
+                                  disabled={isPending}
+                                />
+
+                                {imagePreview ? (
+                                  <>
+                                    <Image
+                                      src={imagePreview}
+                                      alt="Category preview"
+                                      className="h-full w-full object-contain"
+                                      fill
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={removeImage}
+                                      className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-70"
+                                    >
+                                      <X size={16} />
+                                    </button>
+                                  </>
+                                ) : (
+                                  <div className="text-center">
+                                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                                    <p className="mt-2 text-sm text-gray-500">
+                                      Click to upload category image
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="category_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Category Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter category name"
+                                {...field}
+                                disabled={isPending}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="category_description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Enter category description"
+                                className="resize-none"
+                                disabled={isPending}
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </ScrollArea>
+
+                  <Button
+                    type="submit"
+                    disabled={isPending}
+                    className="custom-form-button"
+                  >
+                    {isPending && (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    )}
+                    {isPending ? "Saving..." : "Save Category"}
+                  </Button>
+                </form>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   Please select a category to edit
@@ -238,120 +435,5 @@ export default function CategoryForm() {
         </CardContent>
       </Card>
     </Form>
-  );
-}
-
-function CategoryFormContent({
-  form,
-  imagePreview,
-  fileInputRef,
-  handleImageClick,
-  handleImageChange,
-  removeImage,
-  onSubmit,
-  isPending,
-}) {
-  return (
-    <form
-      onSubmit={form.handleSubmit(onSubmit, (errors) => {
-        console.log("Validation errors", errors);
-      })}
-      className="space-y-6"
-    >
-      <FormField
-        control={form.control}
-        name="file"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Category Image</FormLabel>
-            <FormControl>
-              <div
-                onClick={handleImageClick}
-                className={`border-2 border-dashed border-gray-300 rounded-lg h-28 flex items-center justify-center ${
-                  isPending ? "cursor-not-allowed" : "cursor-pointer"
-                } bg-muted relative overflow-hidden`}
-              >
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleImageChange}
-                  className="hidden"
-                  accept="image/*"
-                  disabled={isPending}
-                />
-
-                {imagePreview ? (
-                  <>
-                    <Image
-                      src={imagePreview}
-                      alt="Category preview"
-                      className="h-full w-full object-contain"
-                      fill
-                    />
-                    <button
-                      type="button"
-                      onClick={removeImage}
-                      className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-70"
-                    >
-                      <X size={16} />
-                    </button>
-                  </>
-                ) : (
-                  <div className="text-center">
-                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-500">
-                      Click to upload category image
-                    </p>
-                  </div>
-                )}
-              </div>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="category_name"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Category Name</FormLabel>
-            <FormControl>
-              <Input
-                placeholder="Enter category name"
-                {...field}
-                disabled={isPending}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="category_description"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Description</FormLabel>
-            <FormControl>
-              <Textarea
-                placeholder="Enter category description"
-                className="resize-none"
-                disabled={isPending}
-                {...field}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <Button type="submit" disabled={isPending} className="custom-form-button">
-        {isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-        {isPending ? "Saving..." : "Save Category"}
-      </Button>
-    </form>
   );
 }
