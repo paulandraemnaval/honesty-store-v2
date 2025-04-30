@@ -52,10 +52,7 @@ export default function InventoryForm({ mode }) {
 
   const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [expirationDate, setExpirationDate] = useState(
-    firebaseTimestampToLongDate(selectedInventory?.inventory_expiration_date) ||
-      null
-  );
+  const [expirationDate, setExpirationDate] = useState(null);
   const [manualRetailPrice, setManualRetailPrice] = useState(false);
   const [manualProfitMargin, setManualProfitMargin] = useState(false);
 
@@ -128,6 +125,13 @@ export default function InventoryForm({ mode }) {
   useEffect(() => {
     if (mode === "edit" && selectedInventory) {
       form.reset(getDefaults());
+
+      if (selectedInventory?.inventory_expiration_date) {
+        const date = convertTimestampToDate(
+          selectedInventory.inventory_expiration_date
+        );
+        setExpirationDate(date);
+      }
     }
   }, [selectedInventory, mode]);
 
@@ -213,6 +217,10 @@ export default function InventoryForm({ mode }) {
     console.log("Supplier changed to ", selectedSupplier);
   }, [selectedSupplier]);
 
+  useEffect(() => {
+    console.log(selectedInventory);
+  }, [selectedInventory]);
+
   return (
     <>
       {mode === "add" ? (
@@ -284,11 +292,10 @@ export default function InventoryForm({ mode }) {
                             <FormControl>
                               <Button
                                 variant="outline"
-                                className={`w-full pl-3 text-left font-normal `}
+                                className={`w-full pl-3 text-left font-normal`}
                                 disabled={isPending}
                               >
-                                {field.value &&
-                                !isNaN(new Date(field.value).getTime()) ? (
+                                {field.value ? (
                                   format(new Date(field.value), "PPP")
                                 ) : (
                                   <span>Select date</span>
@@ -301,10 +308,14 @@ export default function InventoryForm({ mode }) {
                             <div>
                               <CalendarComponent
                                 mode="single"
-                                selected={field.value}
+                                selected={
+                                  field.value
+                                    ? new Date(field.value)
+                                    : undefined
+                                }
                                 onSelect={(date) => {
-                                  setExpirationDate(date);
                                   field.onChange(date);
+                                  setExpirationDate(date);
                                   setCalendarOpen(false);
                                 }}
                                 disabled={(date) => date < new Date()}

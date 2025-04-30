@@ -87,6 +87,10 @@ export async function PATCH(request, { params }) {
       ? Timestamp.fromDate(new Date(inventory_expiration_date_raw))
       : null;
 
+    console.log("raw", JSON.stringify(inventory_expiration_date_raw));
+
+    console.log(inventory_expiration_date_raw, inventory_expiration_date);
+
     await updateDoc(inventoryDoc, {
       product_id,
       supplier_id,
