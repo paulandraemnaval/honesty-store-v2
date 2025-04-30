@@ -14,9 +14,11 @@ import { useGlobalContext } from "@/contexts/global-context";
 import { categoriesGET, inventoryGET, supplierGET } from "@/lib/utils";
 import { Skeleton } from "./ui/skeleton";
 import InventoryForm from "./inventory-form";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 const ProductsList = ({ customer }) => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [sheetType, setSheetType] = useState("details");
   const sentinelRef = useRef(null);
   const pathName = usePathname();
@@ -127,6 +129,11 @@ const ProductsList = ({ customer }) => {
     setIsSheetOpen(true);
   }
 
+  function openProductDialog(product) {
+    setSelectedProduct(product);
+    setIsDialogOpen(true);
+  }
+
   function openInventorySheet(product) {
     setSelectedProduct(product);
     setSheetType("inventory");
@@ -160,7 +167,9 @@ const ProductsList = ({ customer }) => {
                 prod={prodwinv?.product || prodwinv}
                 inv={prodwinv?.inventory}
                 onViewDetails={() =>
-                  openProductSheet(prodwinv?.product || prodwinv)
+                  pathName.includes("admin")
+                    ? openProductSheet(prodwinv?.product || prodwinv)
+                    : openProductDialog(prodwinv?.product || prodwinv)
                 }
                 onInventoryAction={() =>
                   openInventorySheet(prodwinv?.product || prodwinv)
@@ -192,19 +201,25 @@ const ProductsList = ({ customer }) => {
         </div>
       )}
 
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="w-full p-4 bg-white shadow-md">
-          {sheetType === "details" ? (
-            pathName.includes("admin") ? (
+      {pathName.includes("admin") ? (
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+          <SheetContent className="w-full p-4 bg-white shadow-md">
+            {sheetType === "details" ? (
               <AdminProductMore />
             ) : (
-              <CustomerProductMore />
-            )
-          ) : (
-            <InventoryForm mode="add" />
-          )}
-        </SheetContent>
-      </Sheet>
+              <InventoryForm mode="add" />
+            )}
+          </SheetContent>
+        </Sheet>
+      ) : null}
+
+      {!pathName.includes("admin") ? (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="w-full max-w-2xl p-4 bg-white shadow-md">
+            <CustomerProductMore />
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </>
   );
 };

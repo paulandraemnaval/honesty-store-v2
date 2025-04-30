@@ -7,7 +7,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import CustomerProductMoreContent from "./customer-product-more";
 const AdminProductMore = ({}) => {
   return (
     <div className="w-full">
@@ -38,15 +38,8 @@ const AdminProductMore = ({}) => {
 
 const CustomerProductMore = () => {
   return (
-    <div className="w-full">
-      <div className="flex justify-between items-start mb-4">
-        <SheetHeader className="sheet-header">
-          <SheetTitle className="sheet-title">Product Details</SheetTitle>
-          <SheetDescription className="sheet-description">
-            Description of the product
-          </SheetDescription>
-        </SheetHeader>
-      </div>
+    <div className="w-full p-4">
+      <CustomerProductMoreContent />
     </div>
   );
 };
