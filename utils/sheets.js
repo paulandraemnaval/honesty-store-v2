@@ -32,7 +32,6 @@ import {
 } from "firebase/firestore";
 import { formatDate } from "../utils/formatDate";
 import { financialReportSheetDesign } from "../utils/financialReport";
-import { initializeGoogleAuth } from "./googleSheets";
 
 // Fetch report data from Firestore
 export const fetchReportData = async (reportId) => {
@@ -220,10 +219,6 @@ export const generateReport = async (reportId) => {
     };
   }
 };
-
-// src/index.js or main entry point
-import { initializeGoogleAuth, getSpreadsheet } from "./services/googleSheets";
-import { generateReport } from "./services/reportService";
 
 // Initialize Google authentication
 export const serviceAccountAuth = initializeGoogleAuth();
