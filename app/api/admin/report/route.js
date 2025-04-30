@@ -153,9 +153,16 @@ export async function POST(request) {
 
       await Promise.all(updatePromises);
 
-      await generateReport(reportDoc.id);
+      try {
+        await generateReport(reportDoc.id);
+      } catch (error) {
+        throw new Error("Report generation not working");
+      }
 
-      const start = new Date(report_start_date);
+      const start =
+        report_start_date instanceof Timestamp
+          ? report_start_date.toDate()
+          : new Date(report_start_date);
       const end = new Date();
 
       let sheetTitle = `${formatDate(start)} - ${formatDate(end)}`;
