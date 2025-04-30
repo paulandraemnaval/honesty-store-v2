@@ -9,130 +9,162 @@ import {
   getDocs,
   query,
   where,
+  orderBy,
 } from "firebase/firestore";
 import { NextResponse } from "next/server";
 import { roundToTwoDecimals } from "@/utils/calculations";
 
 export async function POST(request) {
-  //create audit
+  //Initialize audit and notification documents
   const auditRef = collection(db, "Audit");
   const auditDoc = doc(auditRef);
-  let audit_gross_income = 0;
-  let audit_total_expense = 0;
-
-  //create notif if ever inventories become under its reorder point
   const notificationRef = collection(db, "Notification");
   const notificationDoc = doc(notificationRef);
 
-  const restockItems = []; //list of inventories need for restocking
+  let audit_gross_income = 0;
+  let audit_total_expense = 0;
+  const restockItems = [];
+
   try {
     const data = await request.json();
+    const user = await getLoggedInUser();
 
+    //Process each audited product
     const promises = data.map(async (item) => {
-      const cycleCountRef = collection(db, "CycleCount"); //every cycle count is linked to a specific inventory
-
-      const { inventoryId, remaining } = item;
+      const { productId, remaining } = item;
       const remainingUnits = parseInt(remaining, 10) || 0;
 
-      const cycleCountDoc = doc(cycleCountRef);
-
-      const inventoryRef = doc(db, "Inventory", inventoryId); //get inventory using the inventoryId
-      const inventorySnapshot = await getDoc(inventoryRef);
-
-      if (!inventorySnapshot.exists()) {
-        throw new Error(
-          `Inventory document with ID ${inventoryId} does not exist`
-        );
-      }
-
-      const inventoryDoc = inventorySnapshot.data();
-
-      //calculate the income and expense for each (inventory total units - remaining)
-      const income = roundToTwoDecimals(
-        (inventoryDoc.inventory_total_units - remainingUnits) *
-          inventoryDoc.inventory_retail_price
-      );
-      const expense = roundToTwoDecimals(
-        (inventoryDoc.inventory_total_units - remainingUnits) *
-          inventoryDoc.inventory_wholesale_price
-      );
-
-      //accumulate the income and expense for the audit properties
-      audit_gross_income += income;
-      audit_total_expense += expense;
-
-      await setDoc(cycleCountDoc, {
-        cycle_count_id: cycleCountDoc.id,
-        audit_id: auditDoc.id,
-        inventory_id: inventoryId,
-        cycle_count_remaining: remainingUnits,
-        cycle_count_income: income,
-        cycle_count_wholesale_price: inventoryDoc.inventory_wholesale_price,
-        cycle_count_profit:
-          income -
-          inventoryDoc.inventory_wholesale_price *
-            (inventoryDoc.inventory_total_units - remainingUnits),
-        cycle_count_timestamp: Timestamp.now(),
-        cycle_count_last_updated: Timestamp.now(),
-      });
-
-      await updateDoc(inventoryRef, {
-        inventory_total_units: remainingUnits,
-        inventory_last_updated: Timestamp.now(),
-      });
-
-      //for creation of notifs
-      //get the product connected to the inventoryId
-      const productRef = doc(db, "Product", inventoryDoc.product_id);
-      const productSnapshot = await getDoc(productRef);
-      if (!productSnapshot.exists()) {
-        throw new Error(`Product document does not exist`);
-      }
-
-      const productDoc = productSnapshot.data();
-
-      //get all inventories with the same productId
+      //get all non-expired inventories for this product, ordered by expiration date (oldest first)
       const inventoriesRef = collection(db, "Inventory");
       const inventoryQuery = query(
         inventoriesRef,
-        where("product_id", "==", inventoryDoc.product_id),
-        where("inventory_expiration_date", ">", Timestamp.now())
+        where("product_id", "==", productId),
+        where("inventory_soft_deleted", "==", false),
+        where("inventory_expiration_date", ">", Timestamp.now()),
+        orderBy("inventory_expiration_date", "asc")
       );
+
       const inventoriesSnapshot = await getDocs(inventoryQuery);
+      if (inventoriesSnapshot.empty) {
+        throw new Error(`No valid inventories found for product ${productId}`);
+      }
 
-      let inventoryData;
-      let totalUnits = 0;
-      let isLessThanReorderPoint = false;
+      //Track the total units before audit for financial calculations
+      let totalUnitsBefore = 0;
+      const inventories = [];
 
-      //Sum up the total units from all inventories with the same product_id
-      if (!inventoriesSnapshot.empty) {
-        inventoriesSnapshot.forEach((doc) => {
-          inventoryData = doc.data();
-          totalUnits += inventoryData.inventory_total_units;
+      inventoriesSnapshot.forEach((doc) => {
+        const inventoryData = doc.data();
+        totalUnitsBefore += inventoryData.inventory_total_units;
+        inventories.push({
+          id: doc.inventory_id,
+          ...inventoryData,
+        });
+      });
+
+      //Calculate units sold in this audit
+      const unitsSold = totalUnitsBefore - remainingUnits;
+      if (unitsSold < 0) {
+        throw new Error(
+          `Cannot add inventory during audit. Please use the inventory form to add new stock`
+        );
+      }
+
+      //Calculate financial impact for this product
+      let income = 0;
+      let expense = 0;
+
+      //Get product details for pricing and reorder point
+      const productRef = doc(db, "Product", productId);
+      const productSnapshot = await getDoc(productRef);
+      if (!productSnapshot.exists()) {
+        throw new Error(`Product with ID ${productId} does not exist`);
+      }
+
+      const productDoc = productSnapshot.data();
+      const retailPrice = productDoc.product_retail_price || 0;
+
+      //Create cycle count entries and update inventories
+      let remainingToDistribute = remainingUnits;
+      let remainingToSell = unitsSold;
+      const cycleCountRef = collection(db, "CycleCount");
+
+      //Update each inventory, starting with the oldest
+      for (const inventory of inventories) {
+        const inventoryRef = doc(db, "Inventory", inventory.inventory_id);
+        const initialUnits = inventory.inventory_total_units;
+        let finalUnits = initialUnits;
+        let unitsDeducted = 0;
+
+        if (remainingToSell > 0) {
+          //Deduct from this inventory
+          unitsDeducted = Math.min(initialUnits, remainingToSell);
+          finalUnits = initialUnits - unitsDeducted;
+          remainingToSell -= unitsDeducted;
+
+          //Calculate financial impact from this inventory
+          const inventoryIncome = roundToTwoDecimals(
+            unitsDeducted * retailPrice
+          );
+          const inventoryExpense = roundToTwoDecimals(
+            unitsDeducted * inventory.inventory_wholesale_price
+          );
+          income += inventoryIncome;
+          expense += inventoryExpense;
+
+          //Create cycle count record for this inventory
+          const cycleCountDoc = doc(cycleCountRef);
+          await setDoc(cycleCountDoc, {
+            cycle_count_id: cycleCountDoc.id,
+            audit_id: auditDoc.id,
+            inventory_id: inventory.inventory_id,
+            cycle_count_initial: initialUnits,
+            cycle_count_remaining: finalUnits,
+            cycle_count_units_sold: unitsDeducted,
+            cycle_count_income: inventoryIncome,
+            cycle_count_wholesale_price: inventory.inventory_wholesale_price,
+            cycle_count_profit: roundToTwoDecimals(
+              inventoryIncome - inventoryExpense
+            ),
+            cycle_count_timestamp: Timestamp.now(),
+            cycle_count_last_updated: Timestamp.now(),
+          });
+        }
+
+        //Update inventory record
+        await updateDoc(inventoryRef, {
+          inventory_total_units: finalUnits,
+          inventory_last_updated: Timestamp.now(),
+        });
+      }
+      // Add to audit totals
+      audit_gross_income += income;
+      audit_total_expense += expense;
+
+      // Check if we need to create restock notification
+      let totalRemainingUnits = remainingUnits;
+
+      if (totalRemainingUnits < productDoc.product_reorder_point) {
+        restockItems.push({
+          product_id: productId,
+          product_name: productDoc.product_name,
+          remaining_units: totalRemainingUnits,
+          reorder_point: productDoc.product_reorder_point,
         });
       }
 
-      //Check if totalUnits is less than the reorder point
-      if (totalUnits < productDoc.product_reorder_point) {
-        isLessThanReorderPoint = true;
-      }
-
-      if (isLessThanReorderPoint) {
-        restockItems.push(inventoryDoc);
-        //Create a notification
-        const invNotifRef = collection(db, "InventoryNotification");
-        const invNotifDoc = doc(invNotifRef);
-        await setDoc(invNotifDoc, {
-          inventory_notification_id: invNotifDoc.id,
-          inventory_id: inventoryId,
-          notification_id: notificationDoc.id,
-        });
-      }
+      // Create inventory notification link
+      const invNotifRef = collection(db, "InventoryNotification");
+      const invNotifDoc = doc(invNotifRef);
+      await setDoc(invNotifDoc, {
+        inventory_notification_id: invNotifDoc.id,
+        product_id: productId,
+        notification_id: notificationDoc.id,
+      });
     });
-
     await Promise.all(promises);
 
-    const user = await getLoggedInUser();
+    // Create the log entry
     const logData = await createLog(
       user.account_id,
       "Audit",
@@ -140,12 +172,14 @@ export async function POST(request) {
       "CREATE"
     );
 
+    // Calculate audit totals
     audit_gross_income = roundToTwoDecimals(audit_gross_income);
     audit_total_expense = roundToTwoDecimals(audit_total_expense);
     const audit_net_profit = roundToTwoDecimals(
       audit_gross_income - audit_total_expense
     );
 
+    // Create the audit document
     await setDoc(auditDoc, {
       audit_id: auditDoc.id,
       account_id: user.account_id,
@@ -157,26 +191,31 @@ export async function POST(request) {
       audit_soft_deleted: false,
     });
 
+    // Create restock notification if needed
     if (restockItems.length > 0) {
       await setDoc(notificationDoc, {
         notification_id: notificationDoc.id,
-        account_id: "N/A",
+        account_id: user.account_id,
         notification_title: "Restock Alert: Inventory Reorder Point Reached",
-        notification_body: `${restockItems.length} products have fallen below the reorder point. Please restock as soon as possible.`,
+        notification_body: `${restockItems.length} product(s) have fallen below the reorder point. Please restock as soon as possible.`,
         notification_type: 0,
         notification_is_read: false,
         notification_timestamp: Timestamp.now(),
         notification_soft_deleted: false,
       });
     }
-
     return NextResponse.json(
-      { message: "Audit successfully created.", logData },
+      {
+        message: "Audit successfully created.",
+        audit_id: auditDoc.id,
+        logData,
+        restock_needed: restockItems.length > 0,
+      },
       { status: 200 }
     );
   } catch (error) {
     return NextResponse.json(
-      { message: "Error creating audit." + error.message },
+      { message: "Error creating audit: " + error.message },
       { status: 500 }
     );
   }
