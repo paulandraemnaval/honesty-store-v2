@@ -177,11 +177,11 @@ export async function financialReportSheetDesign(report, audits, inventories) {
         pattern: "₱#,##0.00",
       };
       if (i === 3) {
-        contentCell.formula = `SUM(D5:D${4 + audits.length})`;
+        contentCell.formula = `=SUM(D5:D${4 + audits.length})`;
       } else if (i === 4) {
-        contentCell.formula = `SUM(E5:E${4 + audits.length})`;
+        contentCell.formula = `=SUM(E5:E${4 + audits.length})`;
       } else {
-        contentCell.formula = `SUM(F5:F${4 + audits.length})`;
+        contentCell.formula = `=SUM(F5:F${4 + audits.length})`;
       }
     }
     await sheet.saveUpdatedCells();
