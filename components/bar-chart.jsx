@@ -75,7 +75,7 @@ export function RevenueChart({ salesHist, isLoading }) {
       <CardHeader>
         <CardTitle>Revenue Chart</CardTitle>
       </CardHeader>
-      <CardContent className="h-80">
+      <CardContent className="sm:h-80 h-fit">
         <ChartContainer config={chartConfig}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart

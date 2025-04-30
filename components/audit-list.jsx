@@ -20,6 +20,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAudit } from "@/contexts/audit-context";
+import { inventoryGET } from "../lib/utils";
 
 const auditSchema = z.object({
   quantities: z.record(
@@ -63,7 +64,7 @@ const AuditList = () => {
     isSuccess,
   } = useInfiniteQuery({
     queryKey: ["products"],
-    queryFn: ({ pageParam = "" }) => inventoryGETforAudit(pageParam),
+    queryFn: ({ pageParam = "" }) => inventoryGET(pageParam),
     getNextPageParam: (lastPage) => {
       return lastPage.lastVisible || undefined;
     },

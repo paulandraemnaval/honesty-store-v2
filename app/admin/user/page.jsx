@@ -7,7 +7,7 @@ const index = () => {
       <div className="top-bar">
         <div className="flex">
           <SidebarTrigger />
-          <span className="text-2xl font-bold ml-4">Reports</span>
+          <span className="text-2xl font-bold ml-4">Dashboard</span>
         </div>
       </div>
       <DashBoard />
