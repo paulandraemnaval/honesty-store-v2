@@ -1,217 +1,222 @@
-import {
-  db,
-  createLog,
-  getLoggedInUser,
-  checkCollectionExists,
-} from "@/utils/firebase";
+import { db, createLog, getLoggedInUser } from "@/utils/firebase";
 import {
   collection,
-  getDocs,
+  getDoc,
   Timestamp,
   doc,
   setDoc,
+  updateDoc,
+  getDocs,
   query,
   where,
   orderBy,
-  getDoc,
-  startAfter,
-  limit,
 } from "firebase/firestore";
-import { DevBundlerService } from "next/dist/server/lib/dev-bundler-service";
 import { NextResponse } from "next/server";
-import { promise } from "zod";
+import { roundToTwoDecimals } from "@/utils/calculations";
 
-export async function PATCH(request) {
-  const { lastVisible } = await request.json();
+export async function POST(request) {
+  //Initialize audit and notification documents
+  const auditRef = collection(db, "Audit");
+  const auditDoc = doc(auditRef);
+  const notificationRef = collection(db, "Notification");
+  const notificationDoc = doc(notificationRef);
+
+  let audit_gross_income = 0;
+  let audit_total_expense = 0;
+  const restockItems = [];
 
   try {
-    // Check if inventory collection exists
-    const inventoryExists = await checkCollectionExists("Inventory");
+    const data = await request.json();
+    const user = await getLoggedInUser();
 
-    // If no inventory collection exists, just return all products
-    if (inventoryExists === false) {
-      const products = await fetchAllProducts();
+    //Process each audited product
+    const promises = data.map(async (item) => {
+      const { productId, remaining } = item;
+      const remainingUnits = parseInt(remaining, 10) || 0;
 
-      return NextResponse.json(
-        {
-          message: "No inventory collection exists, returning all products",
-          inventories: [],
-          noInventory: products,
-        },
-        { status: 200 }
+      //get all non-expired inventories for this product, ordered by expiration date (oldest first)
+      const inventoriesRef = collection(db, "Inventory");
+      const inventoryQuery = query(
+        inventoriesRef,
+        where("product_id", "==", productId),
+        where("inventory_soft_deleted", "==", false),
+        where("inventory_expiration_date", ">", Timestamp.now()),
+        orderBy("inventory_expiration_date", "asc")
       );
-    }
 
-    // Build query using helper function
-    const { inventoryQuery, fullQuery } = await buildInventoryQuery(
-      lastVisible
+      const inventoriesSnapshot = await getDocs(inventoryQuery);
+      if (inventoriesSnapshot.empty) {
+        throw new Error(`No valid inventories found for product ${productId}`);
+      }
+
+      //Track the total units before audit for financial calculations
+      let totalUnitsBefore = 0;
+      const inventories = [];
+
+      inventoriesSnapshot.forEach((doc) => {
+        const inventoryData = doc.data();
+        totalUnitsBefore += inventoryData.inventory_total_units;
+        inventories.push({
+          id: doc.inventory_id,
+          ...inventoryData,
+        });
+      });
+
+      //Calculate units sold in this audit
+      const unitsSold = totalUnitsBefore - remainingUnits;
+      if (unitsSold < 0) {
+        throw new Error(
+          `Cannot add inventory during audit. Please use the inventory form to add new stock`
+        );
+      }
+
+      //Calculate financial impact for this product
+      let income = 0;
+      let expense = 0;
+
+      //Get product details for pricing and reorder point
+      const productRef = doc(db, "Product", productId);
+      const productSnapshot = await getDoc(productRef);
+      if (!productSnapshot.exists()) {
+        throw new Error(`Product with ID ${productId} does not exist`);
+      }
+
+      const productDoc = productSnapshot.data();
+      const retailPrice = productDoc.product_retail_price || 0;
+
+      //Create cycle count entries and update inventories
+      let remainingToDistribute = remainingUnits;
+      let remainingToSell = unitsSold;
+      const cycleCountRef = collection(db, "CycleCount");
+
+      //Update each inventory, starting with the oldest
+      for (const inventory of inventories) {
+        const inventoryRef = doc(db, "Inventory", inventory.inventory_id);
+        const initialUnits = inventory.inventory_total_units;
+        let finalUnits = initialUnits;
+        let unitsDeducted = 0;
+
+        if (remainingToSell > 0) {
+          //Deduct from this inventory
+          unitsDeducted = Math.min(initialUnits, remainingToSell);
+          finalUnits = initialUnits - unitsDeducted;
+          remainingToSell -= unitsDeducted;
+
+          //Calculate financial impact from this inventory
+          const inventoryIncome = roundToTwoDecimals(
+            unitsDeducted * retailPrice
+          );
+          const inventoryExpense = roundToTwoDecimals(
+            unitsDeducted * inventory.inventory_wholesale_price
+          );
+          income += inventoryIncome;
+          expense += inventoryExpense;
+
+          //Create cycle count record for this inventory
+          const cycleCountDoc = doc(cycleCountRef);
+          await setDoc(cycleCountDoc, {
+            cycle_count_id: cycleCountDoc.id,
+            audit_id: auditDoc.id,
+            inventory_id: inventory.inventory_id,
+            cycle_count_initial: initialUnits,
+            cycle_count_remaining: finalUnits,
+            cycle_count_units_sold: unitsDeducted,
+            cycle_count_income: inventoryIncome,
+            cycle_count_wholesale_price: inventory.inventory_wholesale_price,
+            cycle_count_profit: roundToTwoDecimals(
+              inventoryIncome - inventoryExpense
+            ),
+            cycle_count_timestamp: Timestamp.now(),
+            cycle_count_last_updated: Timestamp.now(),
+          });
+        }
+
+        //Update inventory record
+        await updateDoc(inventoryRef, {
+          inventory_total_units: finalUnits,
+          inventory_last_updated: Timestamp.now(),
+        });
+      }
+      // Add to audit totals
+      audit_gross_income += income;
+      audit_total_expense += expense;
+
+      // Check if we need to create restock notification
+      let totalRemainingUnits = remainingUnits;
+
+      if (totalRemainingUnits < productDoc.product_reorder_point) {
+        restockItems.push({
+          product_id: productId,
+          product_name: productDoc.product_name,
+          remaining_units: totalRemainingUnits,
+          reorder_point: productDoc.product_reorder_point,
+        });
+      }
+
+      // Create inventory notification link
+      const invNotifRef = collection(db, "InventoryNotification");
+      const invNotifDoc = doc(invNotifRef);
+      await setDoc(invNotifDoc, {
+        inventory_notification_id: invNotifDoc.id,
+        product_id: productId,
+        notification_id: notificationDoc.id,
+      });
+    });
+    await Promise.all(promises);
+
+    // Create the log entry
+    const logData = await createLog(
+      user.account_id,
+      "Audit",
+      auditDoc.id,
+      "CREATE"
     );
 
-    // Execute main query with pagination
-    const snapshot = await getDocs(inventoryQuery);
+    // Calculate audit totals
+    audit_gross_income = roundToTwoDecimals(audit_gross_income);
+    audit_total_expense = roundToTwoDecimals(audit_total_expense);
+    const audit_net_profit = roundToTwoDecimals(
+      audit_gross_income - audit_total_expense
+    );
 
-    if (snapshot.empty) {
-      // No inventories found - fetch and return all products
-      const products = await fetchAllProducts();
+    // Create the audit document
+    await setDoc(auditDoc, {
+      audit_id: auditDoc.id,
+      account_id: user.account_id,
+      audit_gross_income,
+      audit_total_expense,
+      audit_net_profit,
+      audit_timestamp: Timestamp.now(),
+      audit_last_updated: Timestamp.now(),
+      audit_soft_deleted: false,
+    });
 
-      return NextResponse.json(
-        {
-          message: "No inventories found. Returning all products.",
-          inventories: [],
-          noInventory: products,
-        },
-        { status: 200 }
-      );
+    // Create restock notification if needed
+    if (restockItems.length > 0) {
+      await setDoc(notificationDoc, {
+        notification_id: notificationDoc.id,
+        account_id: user.account_id,
+        notification_title: "Restock Alert: Inventory Reorder Point Reached",
+        notification_body: `${restockItems.length} product(s) have fallen below the reorder point. Please restock as soon as possible.`,
+        notification_type: 0,
+        notification_is_read: false,
+        notification_timestamp: Timestamp.now(),
+        notification_soft_deleted: false,
+      });
     }
-
-    // Process results
-    const inventories = snapshot.docs.map((doc) => doc.data());
-    const groupedInventories = groupInventoriesByProduct(inventories);
-    const invProds = await enrichInventoriesWithProducts(groupedInventories);
-
-    // Handle products with no inventory
-    const noInventoryProducts = await fetchProductsWithNoInventory(fullQuery);
-
     return NextResponse.json(
       {
-        message: "All inventories",
-        inventories: invProds,
-        noInventory: noInventoryProducts,
+        message: "Audit successfully created.",
+        audit_id: auditDoc.id,
+        logData,
+        restock_needed: restockItems.length > 0,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Failed to fetch inventories:", error);
-
     return NextResponse.json(
-      { message: "Failed to fetch inventories: " + error.message },
+      { message: "Error creating audit: " + error.message },
       { status: 500 }
     );
   }
-}
-
-//Builds Firestore queries based on conditions
-async function buildInventoryQuery(lastVisible) {
-  const inventoryRef = collection(db, "Inventory");
-  const baseQueryConstraints = [
-    where("inventory_soft_deleted", "==", false),
-    orderBy("inventory_total_units", "desc"),
-  ];
-
-  let queryConstraints = [...baseQueryConstraints];
-
-  // Add cursor if lastVisible is provided
-  if (lastVisible) {
-    const lastDocSnapshot = await getDoc(doc(db, "Inventory", lastVisible));
-
-    if (!lastDocSnapshot.exists()) {
-      throw new Error("Invalid lastVisible document ID");
-    }
-
-    queryConstraints.push(startAfter(lastDocSnapshot));
-  }
-
-  // Create queries with and without limit
-  const inventoryQuery = query(inventoryRef, ...queryConstraints, limit(20));
-
-  const fullQuery = query(inventoryRef, ...queryConstraints);
-
-  return { inventoryQuery, fullQuery };
-}
-
-//Groups inventories by product ID and calculates totals
-function groupInventoriesByProduct(inventories) {
-  const inventoryMap = new Map();
-
-  inventories.forEach((inv) => {
-    const productId = inv.product_id;
-
-    if (!inventoryMap.has(productId)) {
-      inventoryMap.set(productId, {
-        ...inv,
-        inventory_total_units: inv.inventory_total_units || 0,
-      });
-    } else {
-      const existing = inventoryMap.get(productId);
-      existing.inventory_total_units += inv.inventory_total_units || 0;
-
-      // Keep the oldest timestamped inventory
-      if (
-        inv.inventory_last_updated &&
-        (!existing.inventory_last_updated ||
-          existing.inventory_last_updated.toDate() >
-            inv.inventory_last_updated.toDate())
-      ) {
-        inventoryMap.set(productId, {
-          ...inv,
-          inventory_total_units: existing.inventory_total_units,
-        });
-      } else {
-        inventoryMap.set(productId, { ...existing });
-      }
-    }
-  });
-
-  return Array.from(inventoryMap.values());
-}
-
-//Enriches inventory data with product details
-async function enrichInventoriesWithProducts(groupedInventories) {
-  const invProds = [];
-
-  const promises = groupedInventories.map(async (item) => {
-    const productRef = doc(db, "Product", item.product_id);
-    const snapshot = await getDoc(productRef);
-
-    if (snapshot.exists()) {
-      const product = snapshot.data();
-      invProds.push({ inventory: item, product });
-    } else {
-      console.log(
-        `No product found for inventory with product_id: ${item.product_id}`
-      );
-    }
-  });
-
-  await Promise.all(promises);
-  return invProds;
-}
-
-//Fetches all non-deleted products
-async function fetchAllProducts() {
-  const productRef = collection(db, "Product");
-  const productQuery = query(
-    productRef,
-    where("product_soft_deleted", "==", false)
-  );
-  const prodSnap = await getDocs(productQuery);
-
-  if (prodSnap.empty) {
-    return [];
-  }
-
-  return prodSnap.docs.map((doc) => doc.data());
-}
-
-//Fetches products that have no associated inventory
-async function fetchProductsWithNoInventory(fullQuery) {
-  // Get all products
-  const products = await fetchAllProducts();
-
-  if (products.length === 0) {
-    return [];
-  }
-
-  // Get all inventories to find products with no inventory
-  const invSnap = await getDocs(fullQuery);
-
-  if (invSnap.empty) {
-    return products; // All products have no inventory
-  }
-
-  // Filter products that don't have inventory
-  const invents = invSnap.docs.map((doc) => doc.data());
-  const invProdIds = new Set(invents.map((inv) => inv.product_id));
-
-  return products.filter((product) => !invProdIds.has(product.product_id));
 }
