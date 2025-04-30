@@ -7,7 +7,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Package, Clock, Scale, Ruler, Calendar } from "lucide-react";
+import {
+  Package,
+  Clock,
+  Scale,
+  Ruler,
+  Calendar,
+  PhilippinePeso,
+} from "lucide-react";
 import Image from "next/image";
 
 export default function CustomerProductMoreContent() {
@@ -47,7 +54,9 @@ export default function CustomerProductMoreContent() {
 
         {/* Product Price */}
         <div className="border border-textColor p-4 rounded-lg bg-gray-50 w-fit">
-          <p className="font-bold text-xl text-textColor">{`₱ ${price}`}</p>
+          <p className="font-semibold flex items-center justify-center gap-2 text-xl text-textColor">
+            <PhilippinePeso /> {price}
+          </p>
         </div>
 
         {/* Product Description */}
