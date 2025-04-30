@@ -62,7 +62,7 @@ const ProductsList = ({ customer }) => {
     isFetching: productsLoading,
     isSuccess: prodSuccess,
   } = useInfiniteQuery({
-    queryKey: [`products-${customer ? "customer" : "admin"}`],
+    queryKey: ["products"],
     queryFn: ({ pageParam = "" }) => inventoryGET(pageParam),
     getNextPageParam: (lastPage) => {
       return lastPage.lastVisible || undefined;

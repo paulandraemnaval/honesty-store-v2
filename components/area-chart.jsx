@@ -75,7 +75,7 @@ export function IncomeChart({ profitHist, isLoading }) {
         <CardTitle>Income</CardTitle>
         <CardDescription></CardDescription>
       </CardHeader>
-      <CardContent className="h-80">
+      <CardContent className="sm:h-80 h-fit">
         <ChartContainer config={chartConfig}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart

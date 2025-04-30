@@ -1,9 +1,8 @@
 import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Table } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import ReportDialog from "@/components/report-modal";
 import ReportList from "@/components/report-list";
+import SheetsButton from "@/components/sheets-button";
 const page = () => {
   return (
     <div className="flex flex-col gap-4">
@@ -12,9 +11,7 @@ const page = () => {
           <SidebarTrigger />
           <span className="text-2xl font-bold ml-4 mr-auto">Reports</span>
           <div className="flex gap-2">
-            <Button variant="outline" className="sheets-button">
-              <Table /> Report Sheets
-            </Button>
+            <SheetsButton />
             <ReportDialog />
           </div>
         </div>

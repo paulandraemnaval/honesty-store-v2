@@ -8,25 +8,27 @@ const AuditContext = createContext(null);
 
 export function AuditProvider({ children }) {
   const [inventories, setInventories] = useState([]);
+  const [filteredInventories, setFilteredInventories] = useState([]);
   const [auditSearch, setAuditSearch] = useState("");
   const [auditChanges, setAuditChanges] = useState([]);
   const [formData, setFormData] = useState(null);
   const queryClient = useQueryClient();
 
+  // Update filtered inventories whenever inventories or search term changes
   useEffect(() => {
-    if (auditSearch) {
-      const filteredInventories = inventories.filter((inventory) =>
+    if (auditSearch && inventories.length > 0) {
+      const filtered = inventories.filter((inventory) =>
         inventory.product.product_name
           .toLowerCase()
           .includes(auditSearch.toLowerCase())
       );
-      setInventories(filteredInventories);
+      setFilteredInventories(filtered);
     } else {
-      setInventories(inventories);
+      setFilteredInventories(inventories);
     }
-  }, [auditSearch]);
+  }, [auditSearch, inventories]);
 
-  const { mutateAsync: submitAudit, isPending: isSubmitting } = useMutation({
+  const { mutate: submitAudit, isPending: isSubmitting } = useMutation({
     mutationFn: async (auditData) => {
       const response = await fetch("/api/admin/audit", {
         method: "POST",
@@ -53,11 +55,14 @@ export function AuditProvider({ children }) {
   });
 
   const prepareAuditChanges = (formData, inventoryData) => {
-    if (!formData || !inventoryData || !inventoryData.data) return [];
+    if (!formData || !inventoryData) return [];
+
+    // Get all inventories from all pages
+    const allInventories = inventoryData.pages.flatMap((page) => page.data);
 
     const quantities = formData.quantities;
 
-    const changes = inventoryData.data
+    const changes = allInventories
       .filter((product) => {
         if (!product.inventory) return false;
 
@@ -83,6 +88,7 @@ export function AuditProvider({ children }) {
     setAuditChanges(changes);
     setFormData(formData);
 
+    console.log("Audit Changes:", changes);
     return changes;
   };
 
@@ -114,6 +120,7 @@ export function AuditProvider({ children }) {
     },
     setInventories,
     inventories,
+    filteredInventories,
     setAuditSearch,
     auditSearch,
   };
