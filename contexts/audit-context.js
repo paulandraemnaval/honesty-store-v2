@@ -99,7 +99,7 @@ export function AuditProvider({ children }) {
     }
 
     const auditData = auditChanges.map((change) => ({
-      inventoryId: change.inventoryId,
+      productId: change.productId,
       remaining: change.newQuantity,
     }));
 
