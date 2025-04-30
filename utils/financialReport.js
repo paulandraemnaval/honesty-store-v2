@@ -155,7 +155,6 @@ export async function financialReportSheetDesign(report, audits, inventories) {
     await sheet.saveUpdatedCells();
 
     row = audits.length + 4;
-    let totalProfit = 0;
     for (let i = 3; i < 6; i++) {
       const contentCell = sheet.getCell(row, i);
       contentCell.backgroundColor = {
@@ -183,9 +182,12 @@ export async function financialReportSheetDesign(report, audits, inventories) {
         contentCell.formula = `SUM(E5:E${4 + audits.length})`;
       } else {
         contentCell.formula = `SUM(F5:F${4 + audits.length})`;
-        totalProfit = contentCell.value;
       }
     }
+    await sheet.saveUpdatedCells();
+    await sheet.loadCells(`A${row + 1}:F${row + 1}`);
+    const totalProfitCell = sheet.getCell(row, 5); // Column F (index 5)
+    const totalProfit = totalProfitCell.value || 0;
 
     row = 5;
     const cashValue = [

@@ -53,7 +53,7 @@ export async function inventoryReportSheetDesign(inventories, start, end) {
   await sheet.loadCells("A1:J500");
 
   const titleCell = sheet.getCell(0, 0);
-  titleCell.value = "HONESTY STORE FINANCIAL REPORT";
+  titleCell.value = "HONESTY STORE INVENTORY REPORT";
   titleCell.textFormat = {
     fontSize: 13,
     foregroundColor: {
