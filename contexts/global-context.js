@@ -24,7 +24,6 @@ const GlobalContext = createContext({
   setCategoryFilter: () => {},
   supplierFilter: null,
   setSupplierFilter: () => {},
-  
 });
 
 export const useGlobalContext = () => useContext(GlobalContext);
@@ -80,7 +79,22 @@ export default function GlobalContextProvider({ children }) {
       return [];
     }
 
-    let fp = [...products].filter((p) => {
+    let fp = [...products];
+
+    // Apply search first
+    if (searchTerm.trim() !== "") {
+      const searchTermLower = searchTerm.toLowerCase();
+      fp = fp.filter((product) => {
+        const prod = product.product || product;
+        return (
+          prod.product_name.toLowerCase().includes(searchTermLower) ||
+          prod.product_sku.toLowerCase().includes(searchTermLower)
+        );
+      });
+    }
+
+    // Then filters
+    fp = fp.filter((p) => {
       const prod = p.product || p;
       const inv = p.inventory || null;
 
@@ -98,7 +112,6 @@ export default function GlobalContextProvider({ children }) {
       const withoutInventory = fp.filter((p) => !p.inventory);
       let withInventory = fp.filter((p) => p.inventory);
 
-      // Apply sorting if any sort is active
       if (ascendingPrice !== null) {
         withInventory = withInventory.sort((a, b) => {
           const aPrice = Number(a.inventory.inventory_retail_price) || 0;
@@ -123,27 +136,12 @@ export default function GlobalContextProvider({ children }) {
     supplierFilter,
     ascendingPrice,
     ascendingUnits,
+    searchTerm,
   ]);
 
   useEffect(() => {
     setFilteredProducts(filteredAndSortedProducts);
   }, [filteredAndSortedProducts]);
-  useEffect(() => {
-    if (!Array.isArray(products)) {
-      setFilteredProducts([]);
-      return;
-    }
-
-    const searchTermLower = searchTerm.toLowerCase();
-    const filtered = products.filter((product) => {
-      const prod = product.product || product;
-      return (
-        prod.product_name.toLowerCase().includes(searchTermLower) ||
-        prod.product_sku.toLowerCase().includes(searchTermLower)
-      );
-    });
-    setFilteredProducts(filtered);
-  }, [searchTerm]);
 
   const value = {
     user,
