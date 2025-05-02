@@ -1,12 +1,16 @@
 import { db } from "@/utils/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, where, query } from "firebase/firestore";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
   try {
     //account
     const accountRef = collection(db, "Account");
-    const accountSnapshot = await getDocs(accountRef);
+    const accountQuery = query(
+      accountRef,
+      where("account_soft_deleted", "==", false)
+    );
+    const accountSnapshot = await getDocs(accountQuery);
     if (accountSnapshot.empty) {
       return NextResponse.json(
         { message: "No accounts in the db" },
