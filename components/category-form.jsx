@@ -27,6 +27,7 @@ import { useGlobalContext } from "@/contexts/global-context";
 import Image from "next/image";
 import { toast } from "sonner";
 import { categoriesGET } from "@/lib/utils";
+import DeleteButton from "./delete-button";
 
 export default function CategoryForm() {
   const { selectedCategory, categories, setSelectedCategory, setCategories } =
@@ -287,7 +288,11 @@ export default function CategoryForm() {
             </TabsContent>
 
             <TabsContent value="edit" className="pt-4 w-full">
-              <h2 className="form-title mb-4">Edit Category</h2>
+              <h2 className="form-title mb-4 justify-between flex items-center">
+                Edit Category
+                <DeleteButton />
+              </h2>
+
               <FormLabel className="block mb-2">
                 Select Category to Edit
               </FormLabel>

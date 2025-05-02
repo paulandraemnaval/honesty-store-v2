@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CustomerProductMoreContent from "./customer-product-more";
-const AdminProductMore = ({}) => {
+const AdminProductMore = ({ setIsSheetOpen }) => {
   return (
     <div className="w-full">
       <div className="flex justify-between items-start mb-2">
@@ -26,7 +26,7 @@ const AdminProductMore = ({}) => {
           <TabsTrigger value="inventory">Browse Inventories</TabsTrigger>
         </TabsList>
         <TabsContent value="product" className="max-h-[75vh]">
-          <ProductForm mode={"edit"} />
+          <ProductForm mode={"edit"} setIsSheetOpen={setIsSheetOpen} />
         </TabsContent>
         <TabsContent value="inventory">
           <InventoryTable />

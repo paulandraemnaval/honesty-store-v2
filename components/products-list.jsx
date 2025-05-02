@@ -205,7 +205,7 @@ const ProductsList = ({ customer }) => {
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <SheetContent className="w-full p-4 bg-white shadow-md">
             {sheetType === "details" ? (
-              <AdminProductMore />
+              <AdminProductMore setIsSheetOpen={setIsSheetOpen} />
             ) : (
               <InventoryForm mode="add" />
             )}

@@ -113,7 +113,7 @@ export function InventoryTable() {
               </span>
             </SheetDescription>
           </SheetHeader>
-          <InventoryForm mode={"edit"} />
+          <InventoryForm mode={"edit"} setIsSheetOpen={setIsSheetOpen} />
         </SheetContent>
       </Sheet>
     </>

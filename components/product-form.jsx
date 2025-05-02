@@ -22,13 +22,15 @@ import ComboBox from "./combo-box";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
-import { productPATCH, productPOST } from "@/lib/utils";
+import { productDELETE, productPATCH, productPOST } from "@/lib/utils";
 import { ScrollArea } from "./ui/scroll-area";
 import { productSchema } from "@/schemas/schemas";
 import { productDefaults } from "@/schemas/defaults";
+import DeleteButton from "./delete-button";
 
-export default function ProductForm({ mode }) {
-  const { selectedProduct, categories } = useGlobalContext();
+export default function ProductForm({ mode, setIsSheetOpen }) {
+  const { selectedProduct, categories, setSelectedProduct } =
+    useGlobalContext();
   const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [imagePreview, setImagePreview] = useState(
     mode === "edit" ? selectedProduct?.product_image_url : null
@@ -80,6 +82,16 @@ export default function ProductForm({ mode }) {
     },
   });
 
+  const { mutateAsync: deleteProduct, isPending: deletePending } = useMutation({
+    mutationKey: ["deleteProduct"],
+    mutationFn: () => productDELETE(selectedProduct?.product_id),
+    onSuccess: () => {
+      toast.success("Product deleted successfully");
+    },
+    onError: () => {
+      toast.error("Failed to delete product");
+    },
+  });
   const form = useForm({
     resolver: zodResolver(productSchema),
     defaultValues: getDefualts(),
@@ -122,11 +134,15 @@ export default function ProductForm({ mode }) {
       }
     });
   }
-
-  useEffect(() => {
-    console.log("Selected product:", selectedProduct);
-    console.log("categories");
-  }, [selectedProduct]);
+  function handleDelete() {
+    deleteProduct().then(() => {
+      setIsSheetOpen(false);
+      setSelectedProduct(null);
+      setImagePreview(null);
+      setSelectedCategory(null);
+      form.reset();
+    });
+  }
 
   return (
     <Card className="w-full mx-auto overflow-hidden pt-0">
@@ -150,7 +166,14 @@ export default function ProductForm({ mode }) {
                   name="file"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Product Image</FormLabel>
+                      <FormLabel className="justify-between">
+                        Product Image
+                        <DeleteButton
+                          deleteFn={handleDelete}
+                          isLoading={deletePending}
+                          entityName="product"
+                        />
+                      </FormLabel>
                       <FormControl>
                         <div
                           onClick={handleImageClick}

@@ -10,7 +10,7 @@ export const inventorySchema = z
     ),
     inventory_total_units: z.preprocess(
       (val) => (val === "" ? undefined : val),
-      z.number({ invalid_type_error: "Total units is required" }).min(1, {
+      z.number({ invalid_type_error: "Total units is required" }).min(0, {
         message: "Total units must at least be 1.",
       })
     ),
