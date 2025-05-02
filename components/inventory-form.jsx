@@ -37,13 +37,16 @@ import {
   inventoryPATCH,
   pricesSideEffect,
   inventoryPOST,
+  inventoryDELETE,
+  firebaseTimestampToYYYY_MM_DD,
 } from "@/lib/utils";
 import { inventorySchema } from "@/schemas/schemas";
 import { inventoryDefaults } from "@/schemas/defaults";
 import { SheetHeader, SheetTitle, SheetDescription } from "./ui/sheet";
 import ComboBox from "./combo-box";
+import DeleteButton from "./delete-button";
 
-export default function InventoryForm({ mode }) {
+export default function InventoryForm({ mode, setIsSheetOpen }) {
   const { selectedInventory, selectedProduct, suppliers } = useGlobalContext();
 
   const [selectedSupplier, setSelectedSupplier] = useState(
@@ -52,7 +55,7 @@ export default function InventoryForm({ mode }) {
 
   const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [expirationDate, setExpirationDate] = useState(null);
+  const [expirationDate, setExpirationDate] = useState();
   const [manualRetailPrice, setManualRetailPrice] = useState(false);
   const [manualProfitMargin, setManualProfitMargin] = useState(false);
 
@@ -80,7 +83,9 @@ export default function InventoryForm({ mode }) {
         inventory_profit_margin:
           selectedInventory?.inventory_profit_margin || 10,
         inventory_expiration_date: selectedInventory?.inventory_expiration_date
-          ? convertTimestampToDate(selectedInventory.inventory_expiration_date)
+          ? firebaseTimestampToLongDate(
+              selectedInventory.inventory_expiration_date
+            )
           : null,
         supplier_id: selectedInventory?.supplier_id,
       };
@@ -214,13 +219,38 @@ export default function InventoryForm({ mode }) {
   }
 
   useEffect(() => {
-    console.log("Supplier changed to ", selectedSupplier);
-  }, [selectedSupplier]);
-
-  useEffect(() => {
-    console.log(selectedInventory);
+    console.log(
+      "Selected Inventory exp:",
+      selectedInventory?.inventory_expiration_date
+    );
+    console.log(
+      firebaseTimestampToLongDate(selectedInventory?.inventory_expiration_date)
+    );
   }, [selectedInventory]);
 
+  const { mutateAsync: deleteInventory, isPending: deleteLoading } =
+    useMutation({
+      mutationKey: ["delete-inventory"],
+      mutationFn: () => inventoryDELETE(selectedInventory?.inventory_id),
+      onSuccess: () => {
+        toast.success("Inventory deleted successfully", {});
+      },
+      onError: () => {
+        toast.error("Failed to delete inventory report");
+      },
+    });
+
+  function handleDelete() {
+    deleteInventory().then(() => {
+      setIsSheetOpen(false);
+      form.reset(defaults);
+      setSelectedSupplier(null);
+      setExpirationDate(null);
+      setManualRetailPrice(false);
+      setManualProfitMargin(false);
+      setShowOptionalFields(false);
+    });
+  }
   return (
     <>
       {mode === "add" ? (
@@ -255,7 +285,16 @@ export default function InventoryForm({ mode }) {
                     name="supplier_id"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Supplier*</FormLabel>
+                        <FormLabel className="justify-between">
+                          Supplier*
+                          {mode === "edit" && (
+                            <DeleteButton
+                              deleteFn={handleDelete}
+                              isLoading={deleteLoading}
+                              entityName="inventory"
+                            />
+                          )}
+                        </FormLabel>
                         <FormControl>
                           <ComboBox
                             data={suppliers ?? []}
