@@ -110,9 +110,11 @@ export const supplierSchema = z.object({
         "Must be a valid Philippine number (09XXXXXXXXX or +639XXXXXXXXX)",
     }
   ),
-  supplier_email_address: z.string().email({
-    message: "Invalid email address.",
-  }),
+  supplier_email_address: z
+    .string()
+    .email({ message: "Invalid email address." })
+    .or(z.literal(""))
+    .optional(),
   supplier_notes: z.string().optional(),
 });
 

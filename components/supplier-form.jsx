@@ -24,8 +24,14 @@ import { useGlobalContext } from "@/contexts/global-context";
 import { toast } from "sonner";
 import { supplierSchema } from "@/schemas/schemas";
 import { supplierDefaults } from "@/schemas/defaults";
-import { supplierGET, supplierPATCH, supplierPOST } from "@/lib/utils";
+import {
+  supplierDELETE,
+  supplierGET,
+  supplierPATCH,
+  supplierPOST,
+} from "@/lib/utils";
 import { ScrollArea } from "./ui/scroll-area";
+import DeleteButton from "./delete-button";
 
 export default function SupplierForm() {
   const { setSuppliers, suppliers, selectedSupplier, setSelectedSupplier } =
@@ -103,6 +109,27 @@ export default function SupplierForm() {
     },
   });
 
+  const { mutateAsync: supplierDelete, isPending: deletePending } = useMutation(
+    {
+      mutationKey: ["supplierDelete"],
+      mutationFn: () => supplierDELETE(selectedSupplier.supplier_id),
+      onSuccess: () => {
+        toast.success("Supplier deleted successfully!");
+      },
+      onError: (error) => {
+        toast.error(`Error deleting supplier: ${error.message}`);
+      },
+    }
+  );
+
+  function handleDelete() {
+    supplierDelete().then(() => {
+      setSelectedSupplier(null);
+      form.reset(defaults);
+      setShowOptionalFields(false);
+    });
+  }
+
   function onSubmit(values) {
     if (activeTab === "edit" && !selectedSupplier) {
       toast.error("Please select a supplier to edit");
@@ -134,7 +161,7 @@ export default function SupplierForm() {
 
   return (
     <Form {...form}>
-      <Card className="w-full mx-auto overflow-hidden flex flex-col h-[calc(100vh-150px)] pt-0">
+      <Card className="w-full mx-auto overflow-hidden flex flex-col h-fit pt-0">
         <CardContent className="flex-1 flex flex-col pt-6 overflow-hidden">
           <Tabs
             defaultValue="add"
@@ -159,7 +186,16 @@ export default function SupplierForm() {
             </TabsContent>
 
             <TabsContent value="edit" className="pt-4">
-              <h2 className="form-title mb-4">Edit Supplier</h2>
+              <h2 className="form-title mb-4 flex items-center justify-between">
+                Edit Supplier
+                {selectedSupplier && (
+                  <DeleteButton
+                    deleteFn={handleDelete}
+                    isLoading={deletePending}
+                    entityName="Supplier"
+                  />
+                )}
+              </h2>
               <FormLabel className="block mb-2">
                 Select Supplier to Edit
               </FormLabel>

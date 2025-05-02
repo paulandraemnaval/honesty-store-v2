@@ -22,7 +22,7 @@ import ComboBox from "./combo-box";
 import { categorySchema } from "@/schemas/schemas";
 import { categoryDefaults } from "@/schemas/defaults";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { categoryPATCH, categoryPOST } from "@/lib/utils";
+import { categoryDELETE, categoryPATCH, categoryPOST } from "@/lib/utils";
 import { useGlobalContext } from "@/contexts/global-context";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -106,6 +106,25 @@ export default function CategoryForm() {
       );
     },
   });
+
+  const { mutateAsync: deleteCategory, isPending: isDeleting } = useMutation({
+    mutationKey: ["delete-category"],
+    mutationFn: () => categoryDELETE(selectedCategory.category_id),
+    onSuccess: () => {
+      toast.success("Category deleted successfully!");
+    },
+    onError: (error) => {
+      toast.error(`Error deleting category: ${error.message}`);
+    },
+  });
+
+  function handleDelete() {
+    deleteCategory().then(() => {
+      setSelectedCategory(null);
+      form.reset(defaults);
+      setImagePreview(null);
+    });
+  }
 
   const handleImageClick = () => {
     fileInputRef.current.click();
@@ -290,7 +309,13 @@ export default function CategoryForm() {
             <TabsContent value="edit" className="pt-4 w-full">
               <h2 className="form-title mb-4 justify-between flex items-center">
                 Edit Category
-                <DeleteButton />
+                {selectedCategory && (
+                  <DeleteButton
+                    deleteFn={handleDelete}
+                    isLoading={isDeleting}
+                    entityName="category"
+                  />
+                )}
               </h2>
 
               <FormLabel className="block mb-2">
