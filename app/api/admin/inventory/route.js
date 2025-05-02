@@ -75,6 +75,7 @@ export async function GET(request) {
           inventoryRef,
           where("inventory_last_updated", ">=", lastReport),
           where("inventory_last_updated", "<=", currentDate),
+          where("inventory_expiration_date", ">", new Date()),
           where("inventory_total_units", ">", 0),
           where("inventory_soft_deleted", "==", false),
           orderBy("inventory_timestamp", "desc")
@@ -165,12 +166,20 @@ export async function POST(request) {
     let inventory_profit_margin = parseFloat(
       reqFormData.get("inventory_profit_margin")
     );
-    let inventory_expiration_date = reqFormData.get(
-      "inventory_expiration_date"
-    );
 
-    const date = new Date(inventory_expiration_date);
-    inventory_expiration_date = Timestamp.fromDate(date);
+    const expirationDateString = reqFormData.get("inventory_expiration_date");
+    let inventory_expiration_date = null;
+
+    if (expirationDateString && expirationDateString.trim() !== "") {
+      const date = new Date(expirationDateString);
+      if (isNan(date.getTime())) {
+        return NextResponse.json(
+          { message: "Invalid expiration date format" },
+          { status: 400 }
+        );
+      }
+      inventory_expiration_date = Timestamp.fromDate(date);
+    }
 
     await setDoc(inventoryDoc, {
       inventory_id: inventoryDoc.id,
@@ -182,8 +191,8 @@ export async function POST(request) {
       inventory_description,
       inventory_profit_margin,
       inventory_expiration_date,
-      inventory_timestamp: Timestamp.now().toDate(),
-      inventory_last_updated: Timestamp.now().toDate(),
+      inventory_timestamp: Timestamp.now(),
+      inventory_last_updated: Timestamp.now(),
       inventory_soft_deleted: false,
     });
 

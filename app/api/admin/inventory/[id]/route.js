@@ -30,7 +30,7 @@ export async function DELETE(request, { params }) {
     const inventoryRef = doc(db, "Inventory", id);
     await updateDoc(inventoryRef, {
       inventory_soft_deleted: true,
-      inventory_last_updated: Timestamp.now().toDate(),
+      inventory_last_updated: Timestamp.now(),
     });
 
     const user = await getLoggedInUser();
@@ -54,7 +54,7 @@ export async function DELETE(request, { params }) {
 }
 
 export async function PATCH(request, { params }) {
-  const { id } = await params;
+  const { id } = params;
   const inventoryDoc = doc(db, "Inventory", id);
   try {
     const reqFormData = await request.formData();
@@ -64,13 +64,15 @@ export async function PATCH(request, { params }) {
         { status: 400 }
       );
     }
+
     const inventory_wholesale_price = parseFloat(
       reqFormData.get("inventory_wholesale_price")
     );
     const product_id = reqFormData.get("product_id");
     const supplier_id = reqFormData.get("supplier_id");
     const inventory_total_units = parseInt(
-      reqFormData.get("inventory_total_units")
+      reqFormData.get("inventory_total_units"),
+      10
     );
     const inventory_retail_price = parseFloat(
       reqFormData.get("inventory_retail_price")
@@ -79,20 +81,53 @@ export async function PATCH(request, { params }) {
     const inventory_profit_margin = parseFloat(
       reqFormData.get("inventory_profit_margin")
     );
+
+    // Improved expiration date handling
     const inventory_expiration_date_raw = reqFormData.get(
       "inventory_expiration_date"
     );
 
-    const cleaned_raw =
-      typeof inventory_expiration_date_raw === "string"
-        ? JSON.parse(inventory_expiration_date_raw)
-        : inventory_expiration_date_raw;
+    let inventory_expiration_date = null;
 
-    const inventory_expiration_date = cleaned_raw
-      ? Timestamp.fromDate(new Date(cleaned_raw))
-      : null;
+    if (
+      inventory_expiration_date_raw &&
+      inventory_expiration_date_raw.trim() !== ""
+    ) {
+      let dateValue;
 
-    await updateDoc(inventoryDoc, {
+      try {
+        if (
+          typeof inventory_expiration_date_raw === "string" &&
+          (inventory_expiration_date_raw.startsWith("{") ||
+            inventory_expiration_date_raw.startsWith('"'))
+        ) {
+          dateValue = JSON.parse(inventory_expiration_date_raw);
+        } else {
+          dateValue = inventory_expiration_date_raw;
+        }
+
+        // Convert to Date object
+        const dateObj = new Date(dateValue);
+
+        // Validate date
+        if (isNaN(dateObj.getTime())) {
+          return NextResponse.json(
+            { error: "Invalid expiration date format" },
+            { status: 400 }
+          );
+        }
+        inventory_expiration_date = Timestamp.fromDate(dateObj);
+      } catch (error) {
+        console.error("Error parsing expiration date:", error);
+        return NextResponse.json(
+          { error: "Failed to parse expiration date: " + error.message },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Create update object with validated fields
+    const updateData = {
       product_id,
       supplier_id,
       inventory_wholesale_price,
@@ -100,9 +135,15 @@ export async function PATCH(request, { params }) {
       inventory_retail_price,
       inventory_description,
       inventory_profit_margin,
-      inventory_expiration_date,
       inventory_last_updated: Timestamp.now(),
-    });
+    };
+
+    // Only add expiration date if it exists
+    if (inventory_expiration_date !== null) {
+      updateData.inventory_expiration_date = inventory_expiration_date;
+    }
+
+    await updateDoc(inventoryDoc, updateData);
 
     const user = await getLoggedInUser();
     const logData = await createLog(
@@ -120,6 +161,10 @@ export async function PATCH(request, { params }) {
       { status: 200 }
     );
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Error updating inventory:", error);
+    return NextResponse.json(
+      { error: "Failed to update inventory: " + error.message },
+      { status: 500 }
+    );
   }
 }
