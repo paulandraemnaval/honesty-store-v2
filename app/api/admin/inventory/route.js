@@ -53,6 +53,7 @@ export async function GET(request) {
         const q = query(
           inventoryRef,
           where("inventory_total_units", ">", 0),
+          where("inventory_soft_deleted", "==", false),
           orderBy("inventory_total_units", "desc")
         );
         snapshot = await getDocs(q);
@@ -75,6 +76,7 @@ export async function GET(request) {
           where("inventory_last_updated", ">=", lastReport),
           where("inventory_last_updated", "<=", currentDate),
           where("inventory_total_units", ">", 0),
+          where("inventory_soft_deleted", "==", false),
           orderBy("inventory_timestamp", "desc")
         );
         snapshot = await getDocs(q);

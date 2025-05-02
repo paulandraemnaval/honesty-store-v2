@@ -5,6 +5,8 @@ import {
   Timestamp,
   doc,
   setDoc,
+  query,
+  where,
 } from "firebase/firestore";
 import { NextResponse } from "next/server";
 import getImageURL from "@/utils/imageURL";
@@ -13,9 +15,14 @@ import getImageURL from "@/utils/imageURL";
 export async function GET() {
   let categories = [];
   try {
-    const categoryQuery = await getDocs(collection(db, "Category"));
+    const categoryRef = collection(db, "Category");
+    const categoryQuery = query(
+      categoryRef,
+      where("category_soft_deleted", "==", false)
+    );
+    const categoryDoc = await getDocs(categoryQuery);
 
-    categories = categoryQuery.docs.map((doc) => doc.data());
+    categories = categoryDoc.docs.map((doc) => doc.data());
     if (categories.length === 0) {
       return NextResponse.json(
         {

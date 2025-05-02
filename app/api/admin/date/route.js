@@ -34,6 +34,7 @@ export async function GET(request) {
       inventoryRef,
       where("inventory_timestamp", ">=", start),
       where("inventory_timestamp", "<=", end),
+      where("inventory_soft_deleted", "==", false),
       orderBy("inventory_timestamp", "desc")
     );
 
