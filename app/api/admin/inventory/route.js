@@ -168,12 +168,47 @@ export async function POST(request) {
       reqFormData.get("inventory_profit_margin")
     );
 
-    const expirationDateString = reqFormData.get("inventory_expiration_date");
+    const inventory_expiration_date_raw = reqFormData.get(
+      "inventory_expiration_date"
+    );
+
     let inventory_expiration_date = null;
 
-    if (expirationDateString && expirationDateString.trim() !== "") {
-      const date = new Date(expirationDateString);
-      inventory_expiration_date = Timestamp.fromDate(date);
+    if (
+      inventory_expiration_date_raw &&
+      inventory_expiration_date_raw.trim() !== ""
+    ) {
+      let dateValue;
+
+      try {
+        if (
+          typeof inventory_expiration_date_raw === "string" &&
+          (inventory_expiration_date_raw.startsWith("{") ||
+            inventory_expiration_date_raw.startsWith('"'))
+        ) {
+          dateValue = JSON.parse(inventory_expiration_date_raw);
+        } else {
+          dateValue = inventory_expiration_date_raw;
+        }
+
+        // Convert to Date object
+        const dateObj = new Date(dateValue);
+
+        // Validate date
+        if (isNaN(dateObj.getTime())) {
+          return NextResponse.json(
+            { error: "Invalid expiration date format" },
+            { status: 400 }
+          );
+        }
+        inventory_expiration_date = Timestamp.fromDate(dateObj);
+      } catch (error) {
+        console.error("Error parsing expiration date:", error);
+        return NextResponse.json(
+          { error: "Failed to parse expiration date: " + error.message },
+          { status: 400 }
+        );
+      }
     }
 
     await setDoc(inventoryDoc, {
