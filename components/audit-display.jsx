@@ -11,8 +11,8 @@ const AuditDisplayContent = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="top-bar">
-        <div className="flex">
+      <div className="top-bar ">
+        <div className="flex mr-auto">
           <SidebarTrigger />
           <span className="text-2xl font-bold ml-4">Audit</span>
         </div>

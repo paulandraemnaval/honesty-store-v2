@@ -10,24 +10,20 @@ import {
 import { Button } from "./ui/button";
 import { Plus } from "lucide-react";
 import ProductForm from "./product-form";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function AddProduct() {
+  const isMobile = useIsMobile();
   return (
     <Sheet>
       <SheetTrigger asChild>
         <Button className="custom-form-button">
           <Plus />
-          Add Product
+          {isMobile ? "" : "Add Product"}
         </Button>
       </SheetTrigger>
 
       <SheetContent className="sheet-content">
-        <SheetHeader className="sheet-header">
-          <SheetTitle className="sheet-title">Add Product</SheetTitle>
-          <SheetDescription className="sheet-description">
-            Add a new product to the honesty store
-          </SheetDescription>
-        </SheetHeader>
         <ProductForm mode={"add"} />
       </SheetContent>
     </Sheet>

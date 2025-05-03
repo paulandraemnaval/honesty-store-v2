@@ -102,24 +102,6 @@ export default function InventoryForm({ mode, setIsSheetOpen }) {
     mutationFn: (obj) => {
       return mode === "edit" ? inventoryPATCH(obj) : inventoryPOST(obj);
     },
-    onSuccess: () => {
-      toast.success(
-        `Inventory ${mode === "edit" ? "edited" : "created"} successfully`,
-        {}
-      );
-
-      // Reset form if in add mode
-      if (mode === "add") {
-        form.reset(defaults);
-        setSelectedSupplier(null);
-        setExpirationDate(null);
-        setManualRetailPrice(false);
-        setManualProfitMargin(false);
-      }
-    },
-    onError: () => {
-      toast.error("Failed to update inventory report");
-    },
   });
 
   const form = useForm({
@@ -215,7 +197,26 @@ export default function InventoryForm({ mode, setIsSheetOpen }) {
       product_id: getProductId(),
     };
 
-    mutateAsync(formattedValues);
+    mutateAsync(formattedValues).then(({ status }) => {
+      if (status === 200) {
+        toast.success(
+          `Inventory ${mode === "edit" ? "edited" : "made"} successfully`,
+          {}
+        );
+        setIsSheetOpen(false);
+        form.reset(defaults);
+        setSelectedSupplier(null);
+        setExpirationDate(null);
+        setManualRetailPrice(false);
+        setManualProfitMargin(false);
+        setShowOptionalFields(false);
+      } else {
+        toast.error(
+          `Failed to ${mode === "edit" ? "edit" : "make"} inventory report`,
+          {}
+        );
+      }
+    });
   }
 
   useEffect(() => {

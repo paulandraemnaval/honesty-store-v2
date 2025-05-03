@@ -12,10 +12,10 @@ export default function FormRadioGroup({
     <RadioGroup
       value={currentSelected}
       onValueChange={setSelected}
-      defaultValue={null}
+      defaultValue="none"
     >
-      <div className="flex items-center space-x-2 w-full">
-        <RadioGroupItem value={null} id={`radio-${label_attr}-no-filter`} />
+      <div className="flex items-center space-x-2 w-full flex-1">
+        <RadioGroupItem value="none" id={`radio-${label_attr}-no-filter`} />
         <Label htmlFor={`radio-${label_attr}-no-filter`} className="mr-auto">
           No Filter
         </Label>

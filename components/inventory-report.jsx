@@ -3,7 +3,7 @@ import React from "react";
 import { cn, inventoryReportGET } from "@/lib/utils";
 import { addDays, format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Plus, Table, CalendarIcon, Loader2 } from "lucide-react";
+import { Plus, Table, CalendarIcon, Loader2, Download } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Calendar } from "./ui/calendar";
 import { useMutation } from "@tanstack/react-query";
@@ -77,7 +77,7 @@ const InventoryReport = () => {
           className="custom-form-button ml-auto"
           disabled={isPending}
         >
-          <Plus /> <Table />
+          <Download /> <Table />
         </Button>
       </PopoverTrigger>
       <PopoverContent

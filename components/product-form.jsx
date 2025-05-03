@@ -168,11 +168,13 @@ export default function ProductForm({ mode, setIsSheetOpen }) {
                     <FormItem>
                       <FormLabel className="justify-between">
                         Product Image
-                        <DeleteButton
-                          deleteFn={handleDelete}
-                          isLoading={deletePending}
-                          entityName="product"
-                        />
+                        {mode === "edit" && (
+                          <DeleteButton
+                            deleteFn={handleDelete}
+                            isLoading={deletePending}
+                            entityName="product"
+                          />
+                        )}
                       </FormLabel>
                       <FormControl>
                         <div

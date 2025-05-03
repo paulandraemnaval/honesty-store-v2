@@ -1,6 +1,6 @@
 "use client";
 import icons from "@/constants/icons";
-import { Loader2, LogOut, RotateCw } from "lucide-react";
+import { Loader2, LogOut, Bell, X } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -34,6 +34,67 @@ import { Logout } from "@/lib/utils";
 import Link from "next/link";
 import { AvatarImage } from "@radix-ui/react-avatar";
 import Cookies from "js-cookie";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { NotificationsContent } from "./notification-content";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+// Sample notification data
+const DUMMY_NOTIFICATIONS = [
+  {
+    id: 1,
+    title: "New product added",
+    message: "A new product 'Apple Watch SE' has been added to inventory.",
+    timestamp: new Date(),
+    read: false,
+  },
+  {
+    id: 2,
+    title: "Low stock alert",
+    message: "iPhone 14 Pro is running low on stock (5 remaining).",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
+    read: true,
+  },
+  {
+    id: 3,
+    title: "System maintenance",
+    message: "System will undergo maintenance on Saturday night.",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // Yesterday
+    read: false,
+  },
+  {
+    id: 4,
+    title: "New user registered",
+    message: "John Doe has registered as an admin user.",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
+    read: true,
+  },
+  {
+    id: 5,
+    title: "Sales report",
+    message: "Monthly sales report for April is now available.",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7), // 1 week ago
+    read: false,
+  },
+  {
+    id: 6,
+    title: "Audit completed",
+    message: "First quarter audit has been completed successfully.",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), // Last month
+    read: true,
+  },
+  {
+    id: 7,
+    title: "System update",
+    message: "System has been updated to version 2.3.0",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 45), // 45 days ago
+    read: true,
+  },
+];
 
 const items = [
   {
@@ -68,6 +129,15 @@ export function AppSidebar() {
   const { open, openMobile } = useSidebar();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [user, setUser] = useState({});
+  const [notifications, setNotifications] = useState(DUMMY_NOTIFICATIONS);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
+
+  // Check if device is mobile
+  const isMobile = useIsMobile();
+
+  // Count unread notifications
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: () => Logout(),
@@ -112,11 +182,7 @@ export function AppSidebar() {
 
   useEffect(() => {
     const userFromCookies = getUserFromCookies();
-
-    if (!userFromCookies) return null;
-
-    console.log("userFromCookies", userFromCookies);
-
+    if (!userFromCookies) return;
     setUser(userFromCookies);
   }, []);
 
@@ -127,6 +193,18 @@ export function AppSidebar() {
 
   function openLogoutDialog() {
     setIsDialogOpen(true);
+  }
+
+  // Mark notification as read
+  function markAsRead(id) {
+    setNotifications(
+      notifications.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  }
+
+  // Mark all notifications as read
+  function markAllAsRead() {
+    setNotifications(notifications.map((n) => ({ ...n, read: true })));
   }
 
   return (
@@ -180,7 +258,7 @@ export function AppSidebar() {
         </SidebarGroupContent>
       </SidebarContent>
 
-      {/* Logout Dialog - Shared between expanded and collapsed views */}
+      {/* Logout Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="w-fit">
           <DialogHeader>
@@ -208,9 +286,35 @@ export function AppSidebar() {
         </DialogContent>
       </Dialog>
 
+      {/* Notifications Dialog for Mobile */}
+      <Dialog
+        open={isMobile && notificationDialogOpen}
+        onOpenChange={setNotificationDialogOpen}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Notifications</DialogTitle>
+          </DialogHeader>
+          <NotificationsContent
+            notifications={notifications}
+            markAsRead={markAsRead}
+            markAllAsRead={markAllAsRead}
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setNotificationDialogOpen(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <SidebarFooter className="mt-auto border-t">
         {(open || openMobile) && (
           <div className="p-4 space-y-4">
+            {/* User Profile Section */}
             <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted cursor-pointer transition-colors">
               <Avatar className="h-10 w-10 border-2 border-primary/10">
                 <AvatarImage
@@ -232,6 +336,51 @@ export function AppSidebar() {
               </div>
             </div>
 
+            {/* Notifications Button for Expanded View */}
+            {isMobile ? (
+              <Button
+                variant="outline"
+                className="w-full justify-start cursor-pointer transition-colors"
+                onClick={() => setNotificationDialogOpen(true)}
+              >
+                <Bell className="mr-2 h-4 w-4" />
+                Notifications
+                {unreadCount > 0 && (
+                  <Badge variant="destructive" className="ml-2">
+                    {unreadCount}
+                  </Badge>
+                )}
+              </Button>
+            ) : (
+              <Popover
+                open={notificationsOpen}
+                onOpenChange={setNotificationsOpen}
+              >
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start cursor-pointer transition-colors"
+                  >
+                    <Bell className="mr-2 h-4 w-4" />
+                    Notifications
+                    {unreadCount > 0 && (
+                      <Badge variant="destructive" className="ml-2">
+                        {unreadCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="start">
+                  <NotificationsContent
+                    notifications={notifications}
+                    markAsRead={markAsRead}
+                    markAllAsRead={markAllAsRead}
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
+
+            {/* Logout Button */}
             <Button
               variant="outline"
               className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
@@ -250,22 +399,77 @@ export function AppSidebar() {
           </div>
         )}
         {!open && !openMobile && (
-          <div className="flex flex-col items-center justify-center gap-2">
+          <div className="flex flex-col items-center justify-center gap-2 p-2">
+            {/* Compact Avatar */}
             <Avatar className="h-8 w-8 border-2 border-primary/10">
+              <AvatarImage
+                src={user?.account_profile_url}
+                alt="user_image"
+                className="object-cover w-full h-full"
+              />
               <AvatarFallback className="bg-primary/10 text-primary font-medium">
                 <Loader2 className="animate-spin" />
               </AvatarFallback>
             </Avatar>
+
+            {/* Compact Notifications Button */}
+            {isMobile ? (
+              <Button
+                variant="outline"
+                size="icon"
+                className="relative"
+                onClick={() => setNotificationDialogOpen(true)}
+              >
+                <Bell className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
+                  >
+                    {unreadCount}
+                  </Badge>
+                )}
+              </Button>
+            ) : (
+              <Popover
+                open={notificationsOpen}
+                onOpenChange={setNotificationsOpen}
+              >
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="icon" className="relative">
+                    <Bell className="h-4 w-4" />
+                    {unreadCount > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
+                      >
+                        {unreadCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="start">
+                  <NotificationsContent
+                    notifications={notifications}
+                    markAsRead={markAsRead}
+                    markAllAsRead={markAllAsRead}
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
+
+            {/* Compact Logout Button */}
             <Button
               variant="outline"
-              className="flex items-center w-full justify-center text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
+              size="icon"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
               onClick={openLogoutDialog}
               disabled={isPending}
             >
               {isPending ? (
-                <Loader2 className="h-4 w-4" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <LogOut className=" h-4 w-4" />
+                <LogOut className="h-4 w-4" />
               )}
             </Button>
           </div>

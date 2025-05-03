@@ -39,7 +39,7 @@ export default function GlobalContextProvider({ children }) {
   const [selectedInventory, setSelectedInventory] = useState();
   const [suppliers, setSuppliers] = useState(null);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
-  const [ascendingPrice, setAscendingPrice] = useState(null);
+  const [ascendingPrice, setAscendingPrice] = useState("none");
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState(null);
   const [supplierFilter, setSupplierFilter] = useState(null);
@@ -52,10 +52,10 @@ export default function GlobalContextProvider({ children }) {
 
   const togglePriceSort = () => {
     setAscendingPrice((prev) => {
-      const newValue = prev === null ? true : prev === true ? false : null;
+      const newValue = prev === "none" ? true : prev === true ? false : "none";
 
-      if (newValue !== null) {
-        setAscendingUnits(null);
+      if (newValue !== "none") {
+        setAscendingUnits("none");
       }
 
       return newValue;
@@ -64,10 +64,10 @@ export default function GlobalContextProvider({ children }) {
 
   const toggleUnitSort = () => {
     setAscendingUnits((prev) => {
-      const newValue = prev === null ? true : prev === true ? false : null;
+      const newValue = prev === "none" ? true : prev === true ? false : "none";
 
-      if (newValue !== null) {
-        setAscendingPrice(null);
+      if (newValue !== "none") {
+        setAscendingPrice("none");
       }
 
       return newValue;
@@ -112,13 +112,13 @@ export default function GlobalContextProvider({ children }) {
       const withoutInventory = fp.filter((p) => !p.inventory);
       let withInventory = fp.filter((p) => p.inventory);
 
-      if (ascendingPrice !== null) {
+      if (ascendingPrice !== "none") {
         withInventory = withInventory.sort((a, b) => {
           const aPrice = Number(a.inventory.inventory_retail_price) || 0;
           const bPrice = Number(b.inventory.inventory_retail_price) || 0;
           return !ascendingPrice ? aPrice - bPrice : bPrice - aPrice;
         });
-      } else if (ascendingUnits !== null) {
+      } else if (ascendingUnits !== "none") {
         withInventory = withInventory.sort((a, b) => {
           const aUnits = Number(a.inventory.inventory_total_units) || 0;
           const bUnits = Number(b.inventory.inventory_total_units) || 0;
