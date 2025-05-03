@@ -141,79 +141,6 @@ export async function GET(request) {
   }
 }
 
-// export async function POST(request) {
-//   const inventoryRef = collection(db, "Inventory");
-//   const inventoryDoc = doc(inventoryRef);
-//   try {
-//     const reqFormData = await request.formData();
-//     if (!reqFormData) {
-//       return NextResponse.json(
-//         { error: "Invalid or missing form data" },
-//         { status: 400 }
-//       );
-//     }
-
-//     const wholesale_price = parseFloat(
-//       reqFormData.get("inventory_wholesale_price")
-//     );
-//     const inventory_product = reqFormData.get("product_id");
-//     const supplier_id = reqFormData.get("supplier_id");
-//     const total_units = parseInt(reqFormData.get("inventory_total_units"), 10);
-//     const retail_price = parseFloat(reqFormData.get("inventory_retail_price"));
-//     const inventory_description = reqFormData.get("inventory_description");
-//     let inventory_profit_margin = parseFloat(
-//       reqFormData.get("inventory_profit_margin")
-//     );
-//     let inventory_expiration_date = reqFormData.get(
-//       "inventory_expiration_date"
-//     );
-
-//     const date = new Date(inventory_expiration_date);
-//     inventory_expiration_date = Timestamp.fromDate(date);
-
-//     await setDoc(inventoryDoc, {
-//       inventory_id: inventoryDoc.id,
-//       product_id: inventory_product,
-//       supplier_id,
-//       inventory_wholesale_price: wholesale_price,
-//       inventory_total_units: total_units,
-//       inventory_retail_price: retail_price,
-//       inventory_description,
-//       inventory_profit_margin,
-//       inventory_expiration_date,
-//       inventory_timestamp: Timestamp.now().toDate(),
-//       inventory_last_updated: Timestamp.now().toDate(),
-//       inventory_soft_deleted: false,
-//     });
-
-//     const user = await getLoggedInUser();
-//     const logData = await createLog(
-//       user.account_id,
-//       "Inventory",
-//       inventoryDoc.id,
-//       "CREATE"
-//     );
-
-//     return NextResponse.json(
-//       {
-//         message: "inventory created successfully",
-//         data: {
-//           inventoryID: inventoryDoc.id,
-//           logData,
-//         },
-//       },
-//       { status: 200 }
-//     );
-//   } catch (error) {
-//     console.log(error.message);
-
-//     return NextResponse.json(
-//       { error: "Failed to create inventory" },
-//       { status: 500 }
-//     );
-//   }
-// }
-
 export async function POST(request) {
   const inventoryRef = collection(db, "Inventory");
   const inventoryDoc = doc(inventoryRef);
@@ -243,12 +170,6 @@ export async function POST(request) {
 
     if (expirationDateString && expirationDateString.trim() !== "") {
       const date = new Date(expirationDateString);
-      if (isNaN(date.getTime())) {
-        return NextResponse.json(
-          { message: "Invalid expiration date format" },
-          { status: 400 }
-        );
-      }
       inventory_expiration_date = Timestamp.fromDate(date);
     }
 
