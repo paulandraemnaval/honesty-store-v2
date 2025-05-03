@@ -14,6 +14,12 @@ export async function GET(request, { params }) {
       );
     }
     const inventory = snapshot.data();
+    if (inventory.inventory_soft_deleted === true) {
+      return NextResponse.json(
+        { message: `Inventory soft-deleted ` },
+        { status: 200 }
+      );
+    }
     return NextResponse.json(
       { message: `Inventory found with the given ID: `, data: inventory },
       { status: 200 }

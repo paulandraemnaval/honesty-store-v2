@@ -38,6 +38,9 @@ export async function GET(request) {
         );
       }
       inventories = productSnapshot.docs.map((doc) => doc.data());
+      inventories = inventories.filter(
+        (inv) => inv.inventory_soft_deleted === false
+      );
       return NextResponse.json(
         {
           message: `Inventories found with this product ID: ${productId}`,
