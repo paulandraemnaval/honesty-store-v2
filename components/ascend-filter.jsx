@@ -18,25 +18,16 @@ const AscendFilter = ({
     setAscendingFilter((prev) => !prev);
   }
   return (
-    <HoverCard>
-      <HoverCardTrigger asChild>
-        <Button onClick={handleClick} variant="outline">
-          {icon}
-          {ascendingFilter === null ? (
-            <AlignJustify size={20} />
-          ) : ascendingFilter ? (
-            <ArrowUpWideNarrow size={20} />
-          ) : (
-            <ArrowDownNarrowWide size={20} />
-          )}{" "}
-        </Button>
-      </HoverCardTrigger>
-      <HoverCardContent side="bottom" sideOffset={5} className="bg-white">
-        <div className="p-2 border shadow-sm rounded-md">
-          {ascendingFilter ? AscendTrueMessage : AscendFalseMessage}
-        </div>
-      </HoverCardContent>
-    </HoverCard>
+    <Button onClick={handleClick} variant="outline">
+      {icon}
+      {ascendingFilter === "none" ? (
+        <AlignJustify size={20} />
+      ) : ascendingFilter ? (
+        <ArrowUpWideNarrow size={20} />
+      ) : (
+        <ArrowDownNarrowWide size={20} />
+      )}{" "}
+    </Button>
   );
 };
 

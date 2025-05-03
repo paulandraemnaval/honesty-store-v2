@@ -38,7 +38,7 @@ export default function AuditDialog() {
       <AlertDialogTrigger asChild>
         <Button
           variant="outline"
-          className="custom-form-button ml-auto"
+          className="custom-form-button "
           disabled={!hasAuditChanges}
         >
           Confirm Audit

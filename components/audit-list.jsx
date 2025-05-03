@@ -177,7 +177,7 @@ const AuditList = () => {
   return (
     <Form {...form}>
       <form onChange={handleFormChange} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full px-6 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full px-6 py-4">
           {displayItems?.map((product) => {
             if (!product.inventory) return null;
             const inventoryId = product.inventory.inventory_id;
@@ -242,10 +242,10 @@ const AuditList = () => {
 
 const AuditItem = ({ product, field, onIncrement, onDecrement, onChange }) => {
   return (
-    <Card className="overflow-hidden p-0">
-      <CardContent className="px-4 h-full">
-        <div className="flex items-center h-full gap-6">
-          <div className="relative h-22 w-22 object-fit aspect-[4/3]">
+    <Card className="overflow-hidden ">
+      <CardContent>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+          <div className="relative h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0">
             <Image
               src={
                 product.product.product_image_url ||
@@ -253,43 +253,51 @@ const AuditItem = ({ product, field, onIncrement, onDecrement, onChange }) => {
               }
               alt="product_image"
               fill
-              className="rounded-md border shadow-2xs"
+              className="rounded-md border shadow-2xs object-contain"
             />
           </div>
-          <div className="flex flex-col pt-6 pb-4 w-full">
-            <FormLabel className="text-sm text-gray-500 max-w-[220px] overflow-hidden whitespace-nowrap text-ellipsis block">
+
+          <div className="flex flex-col w-full  truncate">
+            {/* Product details */}
+
+            <FormLabel className="text-sm text-gray-500 truncate block w-full">
               {product.product.product_name}
             </FormLabel>
-            <span className="font-semibold text-lg">
+            <span className="font-semibold text-base sm:text-lg block truncate">
               {product.inventory.inventory_total_units} units
             </span>
-            <div className="w-full flex justify-end items-center gap-2">
-              <span className="text-sm">New quantity:</span>
-              <Button
-                variant="outline"
-                size="icon"
-                type="button"
-                onClick={onIncrement}
-              >
-                <Plus />
-              </Button>
-              <FormControl>
-                <Input
-                  className="w-18"
-                  type="text"
-                  {...field}
-                  onChange={onChange}
-                  value={field.value || ""}
-                />
-              </FormControl>
-              <Button
-                variant="outline"
-                size="icon"
-                type="button"
-                onClick={onDecrement}
-              >
-                <Minus />
-              </Button>
+
+            <div className="w-full flex flex-wrap justify-between  items-center gap-2 mt-2">
+              <span className="text-sm ">New quantity:</span>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  type="button"
+                  onClick={onDecrement}
+                  className="h-8 w-8"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <FormControl>
+                  <Input
+                    className="w-14 sm:w-16 px-2 text-center"
+                    type="text"
+                    {...field}
+                    onChange={onChange}
+                    value={field.value || ""}
+                  />
+                </FormControl>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  type="button"
+                  onClick={onIncrement}
+                  className="h-8 w-8"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -302,21 +310,24 @@ const AuditSkeleton = () => {
   const skeletonItems = Array(6).fill(0);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full px-6 py-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full px-2 sm:px-4 md:px-6 py-4">
       {skeletonItems.map((_, index) => (
-        <Card key={index} className="overflow-hidden p-0">
-          <CardContent className="px-4 h-full">
-            <div className="flex items-center h-full gap-6">
-              <div className="relative h-22 w-22 object-fit aspect-[4/3]">
+        <Card key={index} className="overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+              <div className="relative h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0">
                 <Skeleton className="h-full w-full rounded-md" />
               </div>
-              <div className="flex flex-col pt-6 pb-4 w-full">
-                <Skeleton className="h-4 w-3/4 mb-2" />
-                <Skeleton className="h-6 w-1/2 mb-4" />
-                <div className="w-full flex justify-end items-center gap-2">
-                  <Skeleton className="h-8 w-8" />
-                  <Skeleton className="h-8 w-18" />
-                  <Skeleton className="h-8 w-8" />
+              <div className="flex flex-col w-full">
+                <Skeleton className="h-3 sm:h-4 w-3/4 mb-2" />
+                <Skeleton className="h-5 sm:h-6 w-1/2 mb-2 sm:mb-3" />
+                <div className="w-full flex flex-wrap justify-between sm:justify-end items-center gap-2">
+                  <Skeleton className="h-4 w-16" />
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <Skeleton className="h-8 w-8" />
+                    <Skeleton className="h-8 w-14 sm:w-16" />
+                    <Skeleton className="h-8 w-8" />
+                  </div>
                 </div>
               </div>
             </div>

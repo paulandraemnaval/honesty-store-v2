@@ -14,18 +14,12 @@ import AddProduct from "./add-product";
 import { useGlobalContext } from "@/contexts/global-context";
 
 const ProductsDisplay = ({ customer }) => {
-  const {
-    togglePriceSort,
-    ascendingPrice,
-    toggleUnitSort,
-    ascendingUnits,
-    setSearchTerm,
-  } = useGlobalContext();
+  const { togglePriceSort, ascendingPrice, setSearchTerm } = useGlobalContext();
   const pathName = usePathname();
   return (
     <div className="flex flex-col gap-4">
       <div className="top-bar">
-        <div className="flex">
+        <div className="flex mr-auto">
           {pathName.includes("admin") ? <SidebarTrigger /> : null}
           {pathName.includes("admin") ? (
             <span className="text-2xl font-bold ml-4">Products</span>
@@ -47,20 +41,13 @@ const ProductsDisplay = ({ customer }) => {
 
         <SearchInput searchFn={setSearchTerm} />
         {pathName.includes("admin") ? <FilterBar /> : null}
-        <AscendFilter
-          ascendingFilter={ascendingPrice}
-          setAscendingFilter={togglePriceSort}
-          icon={<PhilippinePeso size={20} />}
-          AscendTrueMessage={"Priciest at the top"}
-          AscendFalseMessage={"Cheapest at the top"}
-        />
-        {pathName.includes("admin") ? (
+        {!pathName.includes("admin") ? (
           <AscendFilter
-            ascendingFilter={ascendingUnits}
-            setAscendingFilter={toggleUnitSort}
-            icon={<PackageIcon size={20} />}
-            AscendTrueMessage={"Most units at the top"}
-            AscendFalseMessage={"Least units at the top"}
+            ascendingFilter={ascendingPrice}
+            setAscendingFilter={togglePriceSort}
+            icon={<PhilippinePeso size={20} />}
+            AscendTrueMessage={"Priciest at the top"}
+            AscendFalseMessage={"Cheapest at the top"}
           />
         ) : null}
 
