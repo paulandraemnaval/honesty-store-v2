@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { financialReportSheetDesign } from "@/utils/financialReport";
-import { inventoryReportSheetDesign } from "@/utils/inventoryReport";
 import resetPassword from "@/utils/resetPassword";
 
 export async function GET(request) {
   try {
-    resetPassword("beaerinangelramirez@gmail.com");
+    const url = new URL(request.url);
+    const email = url.searchParams.get("email");
+    resetPassword(email);
 
     return NextResponse.json(
-      { message: "New report has been created" },
+      { message: "Reset Password Successful" },
       { status: 200 }
     );
   } catch (error) {

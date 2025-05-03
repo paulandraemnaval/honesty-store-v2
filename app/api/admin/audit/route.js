@@ -82,7 +82,6 @@ export async function POST(request) {
       }
 
       const productDoc = productSnapshot.data();
-      const retailPrice = productDoc.product_retail_price || 0;
 
       //Create cycle count entries and update inventories
       let remainingToDistribute = remainingUnits;
@@ -104,7 +103,7 @@ export async function POST(request) {
 
           //Calculate financial impact from this inventory
           const inventoryIncome = roundToTwoDecimals(
-            unitsDeducted * retailPrice
+            unitsDeducted * inventory.inventory_retail_price
           );
           const inventoryExpense = roundToTwoDecimals(
             unitsDeducted * inventory.inventory_wholesale_price
