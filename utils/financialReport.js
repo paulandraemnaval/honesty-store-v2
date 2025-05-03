@@ -267,7 +267,7 @@ export async function financialReportSheetDesign(report, audits, inventories) {
             type: "NUMBER",
           };
         }
-        if (j > 4 || j < 10) {
+        if (j > 4 && j < 10) {
           contentCell.numberFormat = {
             type: "CURRENCY",
             pattern: "₱#,##0.00",

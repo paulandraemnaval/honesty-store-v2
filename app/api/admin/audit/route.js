@@ -57,7 +57,7 @@ export async function POST(request) {
         const inventoryData = doc.data();
         totalUnitsBefore += inventoryData.inventory_total_units;
         inventories.push({
-          id: doc.inventory_id,
+          id: doc.id,
           ...inventoryData,
         });
       });
