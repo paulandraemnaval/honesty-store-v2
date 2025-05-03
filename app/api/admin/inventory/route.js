@@ -337,7 +337,8 @@ function groupInventoriesByProduct(inventories) {
         inv.inventory_last_updated &&
         (!existing.inventory_last_updated ||
           existing.inventory_last_updated.toDate() >
-            inv.inventory_last_updated.toDate())
+            inv.inventory_last_updated.toDate()) &&
+        inv.inventory_total_units > 0
       ) {
         inventoryMap.set(productId, {
           ...inv,
