@@ -100,31 +100,33 @@ export async function POST(request) {
           finalUnits = initialUnits - unitsDeducted;
           remainingToSell -= unitsDeducted;
 
-          //Calculate financial impact from this inventory
-          const inventoryIncome = roundToTwoDecimals(
-            unitsDeducted * inventory.inventory_retail_price
-          );
-          const inventoryExpense = roundToTwoDecimals(
-            unitsDeducted * inventory.inventory_wholesale_price
-          );
-          income += inventoryIncome;
-          expense += inventoryExpense;
+          if (unitsDeducted > 0) {
+            //Calculate financial impact from this inventory
+            const inventoryIncome = roundToTwoDecimals(
+              unitsDeducted * inventory.inventory_retail_price
+            );
+            const inventoryExpense = roundToTwoDecimals(
+              unitsDeducted * inventory.inventory_wholesale_price
+            );
+            income += inventoryIncome;
+            expense += inventoryExpense;
 
-          //Create cycle count record for this inventory
-          const cycleCountDoc = doc(cycleCountRef);
-          await setDoc(cycleCountDoc, {
-            cycle_count_id: cycleCountDoc.id,
-            audit_id: auditDoc.id,
-            inventory_id: inventory.inventory_id,
-            cycle_count_remaining: finalUnits,
-            cycle_count_income: inventoryIncome,
-            cycle_count_wholesale_price: inventory.inventory_wholesale_price,
-            cycle_count_profit: roundToTwoDecimals(
-              inventoryIncome - inventoryExpense
-            ),
-            cycle_count_timestamp: Timestamp.now(),
-            cycle_count_last_updated: Timestamp.now(),
-          });
+            //Create cycle count record for this inventory
+            const cycleCountDoc = doc(cycleCountRef);
+            await setDoc(cycleCountDoc, {
+              cycle_count_id: cycleCountDoc.id,
+              audit_id: auditDoc.id,
+              inventory_id: inventory.inventory_id,
+              cycle_count_remaining: finalUnits,
+              cycle_count_income: inventoryIncome,
+              cycle_count_wholesale_price: inventory.inventory_wholesale_price,
+              cycle_count_profit: roundToTwoDecimals(
+                inventoryIncome - inventoryExpense
+              ),
+              cycle_count_timestamp: Timestamp.now(),
+              cycle_count_last_updated: Timestamp.now(),
+            });
+          }
         }
 
         //Update inventory record
