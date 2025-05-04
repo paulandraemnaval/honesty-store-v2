@@ -50,7 +50,7 @@ export default function Dashboard() {
         totalSales={totalSales}
         isLoading={isLoading}
       />
-      <div className="grid grid-rows-2 grid-cols-1 sm:grid-rows-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-rows-2 grid-cols-1 lg:grid-rows-1 lg:grid-cols-2 gap-4 w-full ">
         <IncomeChart profitHist={profitHist} isLoading={isLoading} />
         <RevenueChart salesHist={salesHist} isLoading={isLoading} />
       </div>

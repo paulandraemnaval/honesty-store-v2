@@ -61,7 +61,7 @@ export function IncomeChart({ profitHist, isLoading }) {
   const chartConfig = {
     profit: {
       label: "Profit",
-      color: "hsl(var(--chart-1))",
+      color: "#4285f4",
     },
   };
 
@@ -75,7 +75,7 @@ export function IncomeChart({ profitHist, isLoading }) {
         <CardTitle>Income</CardTitle>
         <CardDescription></CardDescription>
       </CardHeader>
-      <CardContent className="sm:h-80 h-fit">
+      <CardContent className="h-fit py-0">
         <ChartContainer config={chartConfig}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart

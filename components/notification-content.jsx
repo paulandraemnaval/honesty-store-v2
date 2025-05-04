@@ -85,7 +85,6 @@ export function NotificationsContent({
   userNotifications = [],
 }) {
   const {
-    data,
     isFetching,
     isFetchingNextPage,
     fetchNextPage,
@@ -120,9 +119,7 @@ export function NotificationsContent({
     };
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  const notifications = data?.pages.flatMap((page) => page.data);
-
-  const groupedNotifications = groupNotificationsByTime(notifications);
+  const groupedNotifications = groupNotificationsByTime(userNotifications);
 
   const hasNotifications = Object.keys(groupedNotifications).length > 0;
 
@@ -131,18 +128,16 @@ export function NotificationsContent({
   };
 
   function isNotifRead(id) {
-    const userNotifStatus = userNotifications.find(
-      (notif) => notif.notification_id === id
-    )?.notification_read_status;
-    if (userNotifStatus) {
-      return userNotifStatus[user.account_id] === true;
-    }
+    return userNotifications
+      .find((n) => n.notification_id === id)
+      ?.notification_read_status.includes(user.account_id);
   }
 
   return (
-    <div className="w-[500px]">
+    // Make the parent container full width on small screens, fixed width on larger screens
+    <div className="w-full lg:w-[500px] flex flex-col">
       <div className="flex items-center justify-between p-3 border-b">
-        <div className="flex items-center w-full">
+        <div className="flex items-center">
           <h4 className="font-medium">Notifications</h4>
           {unreadCount > 0 && (
             <Badge className="ml-2 bg-mainButtonColor">{unreadCount}</Badge>
@@ -160,7 +155,8 @@ export function NotificationsContent({
         )}
       </div>
 
-      <Command>
+      <Command className="w-full">
+        {/* Remove max-width from CommandList */}
         <CommandList className="w-full">
           {isFetching && !isFetchingNextPage && (
             <div className="flex justify-center p-4">
@@ -172,25 +168,24 @@ export function NotificationsContent({
             <CommandEmpty>No notifications to display</CommandEmpty>
           )}
 
-          <ScrollArea className="h-[300px]">
+          <ScrollArea className="h-fit w-full">
             {Object.entries(groupedNotifications).map(([timeLabel, items]) => (
-              <div key={timeLabel}>
-                <CommandGroup heading={timeLabel}>
+              <div key={timeLabel} className="w-full">
+                <CommandGroup heading={timeLabel} className="w-full">
                   {items.map((notification) => (
                     <CommandItem
                       key={notification?.notification_id}
                       onSelect={() =>
                         handleNotificationClick(notification?.notification_id)
                       }
-                      className={`cursor-pointer w-full max-w-full ${
-                        !isNotifRead(notification.notification_id)
-                          ? "bg-muted"
-                          : ""
+                      className={`cursor-pointer w-full border ${
+                        !isNotifRead(notification?.notification_id) &&
+                        "border-textColor"
                       }`}
                     >
-                      <div className="flex flex-col w-full max-w-full overflow-hidden">
-                        <div className="flex items-center justify-between w-full">
-                          <div className="font-medium flex items-center truncate mr-2 max-w-[80%]">
+                      <div className="flex flex-col ">
+                        <div className="flex items-center justify-between max-w-[70dvw] lg:max-w-full">
+                          <div className="font-medium flex items-center truncate">
                             <span className="truncate">
                               {notification?.notification_title}
                             </span>
@@ -202,7 +197,7 @@ export function NotificationsContent({
                             {formatTime(notification?.notification_timestamp)}
                           </div>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2 w-full">
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                           {notification?.notification_body}
                         </p>
                       </div>

@@ -16,32 +16,32 @@ export function SectionCards({ ...props }) {
     <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:gap-6 lg:grid-cols-4 lg:gap-6">
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>Total Profit</CardDescription>
-          <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
+          <CardDescription className="text-black">Total Profit</CardDescription>
+          <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums text-textColor">
             ₱{props?.totalProfit?.toFixed(2)}
           </CardTitle>
         </CardHeader>
       </Card>
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>Total Sales</CardDescription>
-          <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
+          <CardDescription className="text-black">Total Sales</CardDescription>
+          <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums text-textColor">
             ₱{props?.totalSales?.toFixed(2)}
           </CardTitle>
         </CardHeader>
       </Card>
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>Categories</CardDescription>
-          <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
+          <CardDescription className="text-black">Categories</CardDescription>
+          <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums text-textColor">
             {props.categories}
           </CardTitle>
         </CardHeader>
       </Card>
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>Products</CardDescription>
-          <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
+          <CardDescription className="text-black">Products</CardDescription>
+          <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums text-textColor">
             {props.products}
           </CardTitle>
         </CardHeader>

@@ -61,8 +61,8 @@ export function RevenueChart({ salesHist, isLoading }) {
 
   const chartConfig = {
     sales: {
-      label: "Sales",
-      color: "hsl(var(--chart-2))",
+      label: "Revenue",
+      color: "#4285f4",
     },
   };
 
@@ -73,9 +73,9 @@ export function RevenueChart({ salesHist, isLoading }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Revenue Chart</CardTitle>
+        <CardTitle>Revenue</CardTitle>
       </CardHeader>
-      <CardContent className="sm:h-80 h-fit">
+      <CardContent className="h-fit">
         <ChartContainer config={chartConfig}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -123,8 +123,8 @@ function RevenueSkeleton() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Revenue Chart</CardTitle>
-        <CardDescription>Loading sales data...</CardDescription>
+        <CardTitle>Revenue</CardTitle>
+        <CardDescription>Loading Revenue data...</CardDescription>
       </CardHeader>
       <CardContent className="h-80">
         {/* Bar chart skeleton */}

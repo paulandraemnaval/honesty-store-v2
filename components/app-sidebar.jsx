@@ -88,9 +88,7 @@ export function AppSidebar() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const isMobile = useIsMobile();
-  const queryClient = useQueryClient();
 
-  // Notifications infinite query
   const notificationsQuery = useInfiniteQuery({
     queryKey: ["notifications"],
     queryFn: ({ pageParam = "" }) => notificationPATCH(pageParam),
@@ -110,28 +108,22 @@ export function AppSidebar() {
       const notifications = notificationsQuery.data.pages.flatMap(
         (page) => page.data
       );
-      const userNotifs = notifications.filter((notification) => {
-        return Object.entries(notification?.notification_read_status).some(
-          ([key, value]) => {
-            return key === user?.account_id;
-          }
-        );
-      });
 
-      setUserNotifications(userNotifs);
+      setUserNotifications(notifications);
     }
   }, [notificationsQuery.data]);
 
   useEffect(() => {
-    if (userNotifications.length > 0) {
-      const unread = userNotifications.filter(
-        (notification) =>
-          notification?.notification_read_status[user?.account_id] === false
-      );
-      setUnreadCount(unread.length);
-    } else {
-      setUnreadCount(0);
-    }
+    const unreadCount = userNotifications.reduce(
+      (acc, notification) =>
+        notification.notification_read_status.includes(user?.account_id)
+          ? acc
+          : acc + 1,
+      0
+    );
+
+    setUnreadCount(unreadCount);
+    console.log("Unread Count:", unreadCount);
   }, [userNotifications]);
 
   const { mutateAsync, isPending } = useMutation({
@@ -199,38 +191,19 @@ export function AppSidebar() {
   }
 
   function markAsRead(id) {
-    setUserNotifications((prev) =>
-      prev.map((notification) => {
-        if (notification.notification_id === id) {
-          return {
-            ...notification,
-            notification_read_status: {
-              ...notification.notification_read_status,
-              [user.account_id]: true,
-            },
-          };
-        }
-        return notification;
-      })
-    );
+    userNotifications
+      .find((notif) => notif.notification_id === id)
+      .notification_read_status.push(user?.account_id);
+
+    setUnreadCount((prev) => prev - 1);
+
     seenNotification(id).catch(() => {
-      setUserNotifications((prev) => {
-        return prev.map((notification) => {
-          if (notification.notification_id === id) {
-            return {
-              ...notification,
-              notification_read_status: {
-                ...notification.notification_read_status,
-                [user.account_id]: false,
-              },
-            };
-          }
-          return notification;
-        });
-      });
+      userNotifications
+        .find((notif) => notif.notification_id === id)
+        .notification_read_status.pop(user?.account_id);
+      setUnreadCount((prev) => prev + 1);
     });
   }
-
   return (
     <Sidebar variant="sidebar" collapsible="icon">
       <SidebarHeader className="p-4">
@@ -315,10 +288,7 @@ export function AppSidebar() {
         open={isMobile && notificationDialogOpen}
         onOpenChange={setNotificationDialogOpen}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Notifications</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="w-fit overflow-hidden flex flex-col justify-center p-1">
           <NotificationsContent
             infiniteQuery={notificationsQuery}
             markAsRead={markAsRead}
@@ -387,6 +357,7 @@ export function AppSidebar() {
                   <Button
                     variant="outline"
                     className="w-full justify-start cursor-pointer transition-colors"
+                    disabled={notificationsQuery.isPending}
                   >
                     <Bell className="mr-2 h-4 w-4" />
                     Notifications
@@ -471,6 +442,7 @@ export function AppSidebar() {
                       <Badge
                         variant="destructive"
                         className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
+                        disabled={notificationsQuery.isPending}
                       >
                         {unreadCount}
                       </Badge>
