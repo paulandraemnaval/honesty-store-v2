@@ -196,7 +196,7 @@ export async function POST(request) {
         notification_title: "Restock Alert: Inventory Reorder Point Reached",
         notification_body: `${restockItems.length} product(s) have fallen below the reorder point. Please restock as soon as possible.`,
         notification_type: 0,
-        notification_read_status: {},
+        notification_read_status: [],
         notification_timestamp: Timestamp.now(),
         notification_soft_deleted: false,
       });

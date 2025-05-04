@@ -1,5 +1,11 @@
 import { db } from "@/utils/firebase";
-import { getDoc, doc, updateDoc, Timestamp } from "firebase/firestore";
+import {
+  getDoc,
+  doc,
+  updateDoc,
+  Timestamp,
+  arrayUnion,
+} from "firebase/firestore";
 import { NextResponse } from "next/server";
 import { getLoggedInUser } from "@/utils/firebase";
 
@@ -18,10 +24,7 @@ export async function PATCH(request, { params }) {
 
     const notif = snapshot.data();
     await updateDoc(notifDoc, {
-      notification_read_status: {
-        ...(notif.notification_read_status || {}),
-        [user.account_id]: true,
-      },
+      notification_read_status: arrayUnion(user.account_id),
       notification_last_updated: Timestamp.now(),
     });
 

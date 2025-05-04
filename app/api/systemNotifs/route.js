@@ -43,7 +43,7 @@ async function createNotificationForProducts(products, title, body) {
     notification_title: title,
     notification_body,
     notification_type: 2,
-    notification_read_status: {},
+    notification_read_status: [],
     notification_timestamp: Timestamp.now(),
     notification_soft_deleted: false,
   });
