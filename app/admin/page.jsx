@@ -6,7 +6,7 @@ import AuthForm from "@/components/auth-form";
 export function Page() {
   return (
     <div className="flex w-full h-full font-inter">
-      <div className="flex-1 flex-col  w-full h-full p-4 bg-gradient-to-b from-[#00D4FF] to-[#001BFF] flex">
+      <div className="flex-1 flex-col  w-full h-full p-4 bg-gradient-to-b from-[#00D4FF] to-[#001BFF] hidden sm:flex">
         <div className="flex w-fit p-2 rounded-md gap-4 items-center ">
           <Image
             src={icons.logo}

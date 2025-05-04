@@ -28,6 +28,8 @@ import { useGlobalContext } from "@/contexts/global-context";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Login } from "@/lib/utils";
+import Image from "next/image";
+import icons from "@/constants/icons";
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string(),
@@ -52,6 +54,7 @@ function AuthForm() {
       if (status === 200) {
         toast.success("Successfully logged in");
         setUser(user);
+        console.log(user);
         router.push("/admin/user/");
       } else {
         toast.error("Invalid email or password");
@@ -73,16 +76,28 @@ function AuthForm() {
   }
 
   return (
-    <Card className="w-[450px] border-none shadow-none">
-      <CardHeader>
+    <Card className="w-[450px] border-none shadow-none sm:p-0 p-4 h-full sm:h-fit">
+      <CardHeader className="mb-auto">
+        <div className="flex sm:hidden w-full p-2 rounded-md gap-4 items-center justify-between ">
+          <Image
+            src={icons?.logo}
+            alt="logo"
+            width={40}
+            height={40}
+            className="bg-[#0175fb] rounded-sm object-cover"
+          />
+          <span className="font-semibold text-2xl text-textColor">
+            Honesty Store IMS
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent className="mb-auto">
         <CardTitle className="flex w-full items-center justify-center flex-col">
           <span className="text-2xl">Welcome Back</span>
           <span className="text-sm font-thin text-slate-400">
             Sign in to your account
           </span>
         </CardTitle>
-      </CardHeader>
-      <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} method="PATCH">
             <div className="grid w-full items-center gap-4">

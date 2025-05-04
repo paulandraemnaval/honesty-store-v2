@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -10,11 +11,14 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
+import { firebaseTimestampToLongDate } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
+import { useGlobalContext } from "@/contexts/global-context";
 
-// Helper function to format relative time
 function getRelativeTimeLabel(date) {
   const now = new Date();
-  const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+  const notifDate = new Date(date);
+  const diffDays = Math.floor((now - notifDate) / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Yesterday";
@@ -28,8 +32,10 @@ function getRelativeTimeLabel(date) {
 function groupNotificationsByTime(notifications) {
   const groups = {};
 
-  notifications.forEach((notification) => {
-    const timeLabel = getRelativeTimeLabel(notification.timestamp);
+  notifications?.forEach((notification) => {
+    const timeLabel = getRelativeTimeLabel(
+      firebaseTimestampToLongDate(notification?.notification_timestamp)
+    );
     if (timeLabel) {
       if (!groups[timeLabel]) {
         groups[timeLabel] = [];
@@ -60,35 +66,86 @@ function groupNotificationsByTime(notifications) {
   return sortedGroups;
 }
 
-// Format time for display
 function formatTime(date) {
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const jsDate = new Date(firebaseTimestampToLongDate(date));
+
+  return jsDate.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
-export function NotificationsContent({
-  notifications,
-  markAsRead,
-  markAllAsRead,
-}) {
-  const groupedNotifications = groupNotificationsByTime(notifications);
-  const hasNotifications = Object.keys(groupedNotifications).length > 0;
-  const unreadCount = notifications.filter((n) => !n.read).length;
+// ------------ COMPONENT -------------//
 
-  // Handle notification click
+export function NotificationsContent({
+  infiniteQuery,
+  markAsRead = () => {},
+  markAllAsRead = () => {},
+  unreadCount = 0,
+  userNotifications = [],
+}) {
+  const {
+    data,
+    isFetching,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+    isSuccess,
+  } = infiniteQuery;
+
+  const { user } = useGlobalContext();
+
+  const observerRef = useRef(null);
+  const sentinelRef = useRef(null);
+
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    observerRef.current.observe(sentinelRef.current);
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  const notifications = data?.pages.flatMap((page) => page.data);
+
+  const groupedNotifications = groupNotificationsByTime(notifications);
+
+  const hasNotifications = Object.keys(groupedNotifications).length > 0;
+
   const handleNotificationClick = (id) => {
     markAsRead(id);
-    // Additional actions like navigation could be added here
   };
 
+  function isNotifRead(id) {
+    const userNotifStatus = userNotifications.find(
+      (notif) => notif.notification_id === id
+    )?.notification_read_status;
+    if (userNotifStatus) {
+      return userNotifStatus[user.account_id] === true;
+    }
+  }
+
   return (
-    <div className="w-full">
+    <div className="w-[500px]">
       <div className="flex items-center justify-between p-3 border-b">
-        <div className="flex items-center">
+        <div className="flex items-center w-full">
           <h4 className="font-medium">Notifications</h4>
           {unreadCount > 0 && (
-            <Badge variant="destructive" className="ml-2">
-              {unreadCount}
-            </Badge>
+            <Badge className="ml-2 bg-mainButtonColor">{unreadCount}</Badge>
           )}
         </div>
         {unreadCount > 0 && (
@@ -104,42 +161,66 @@ export function NotificationsContent({
       </div>
 
       <Command>
-        <CommandList>
-          {!hasNotifications && (
+        <CommandList className="w-full">
+          {isFetching && !isFetchingNextPage && (
+            <div className="flex justify-center p-4">
+              <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+            </div>
+          )}
+
+          {isSuccess && !hasNotifications && (
             <CommandEmpty>No notifications to display</CommandEmpty>
           )}
 
           <ScrollArea className="h-[300px]">
             {Object.entries(groupedNotifications).map(([timeLabel, items]) => (
-              <CommandGroup heading={timeLabel} key={timeLabel}>
-                {items.map((notification) => (
-                  <CommandItem
-                    key={notification.id}
-                    onSelect={() => handleNotificationClick(notification.id)}
-                    className={`cursor-pointer ${
-                      !notification.read ? "bg-muted/60" : ""
-                    }`}
-                  >
-                    <div className="flex flex-col w-full">
-                      <div className="flex items-center justify-between">
-                        <div className="font-medium flex items-center">
-                          {notification.title}
-                          {!notification.read && (
-                            <span className="ml-2 h-2 w-2 rounded-full bg-blue-500"></span>
-                          )}
+              <div key={timeLabel}>
+                <CommandGroup heading={timeLabel}>
+                  {items.map((notification) => (
+                    <CommandItem
+                      key={notification?.notification_id}
+                      onSelect={() =>
+                        handleNotificationClick(notification?.notification_id)
+                      }
+                      className={`cursor-pointer w-full max-w-full ${
+                        !isNotifRead(notification.notification_id)
+                          ? "bg-muted"
+                          : ""
+                      }`}
+                    >
+                      <div className="flex flex-col w-full max-w-full overflow-hidden">
+                        <div className="flex items-center justify-between w-full">
+                          <div className="font-medium flex items-center truncate mr-2 max-w-[80%]">
+                            <span className="truncate">
+                              {notification?.notification_title}
+                            </span>
+                            {!isNotifRead(notification.notification_id) && (
+                              <span className="ml-2 h-2 w-2 flex-shrink-0 rounded-full bg-blue-500"></span>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground flex-shrink-0">
+                            {formatTime(notification?.notification_timestamp)}
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {formatTime(notification.timestamp)}
-                        </div>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2 w-full">
+                          {notification?.notification_body}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                        {notification.message}
-                      </p>
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </div>
             ))}
+
+            {/* Sentinel element for infinite scrolling */}
+            {hasNextPage && (
+              <div
+                ref={sentinelRef}
+                className="h-10 flex items-center justify-center"
+              >
+                {isFetchingNextPage && <Loader2 className="animate-spin" />}
+              </div>
+            )}
           </ScrollArea>
         </CommandList>
       </Command>

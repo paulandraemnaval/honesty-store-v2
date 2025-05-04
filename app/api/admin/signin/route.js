@@ -52,11 +52,13 @@ async function createSession(userId, path) {
     }
     const account = accountDoc.docs[0].data();
     const {
+      account_id = "N/A",
       account_name = "User",
       account_role = "Admin",
       account_profile_url = "/default-profile.png",
     } = account;
     const userPayload = JSON.stringify({
+      account_id,
       account_name,
       account_role,
       account_profile_url,

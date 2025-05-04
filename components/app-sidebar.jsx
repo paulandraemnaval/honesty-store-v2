@@ -18,9 +18,13 @@ import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "./ui/separator";
-import { useMutation } from "@tanstack/react-query";
+import {
+  useMutation,
+  useInfiniteQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, Fragment, useMemo } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -30,7 +34,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { Logout } from "@/lib/utils";
+import { Logout, notificationPATCH, notificationSEEN } from "@/lib/utils";
 import Link from "next/link";
 import { AvatarImage } from "@radix-ui/react-avatar";
 import Cookies from "js-cookie";
@@ -42,59 +46,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { NotificationsContent } from "./notification-content";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-// Sample notification data
-const DUMMY_NOTIFICATIONS = [
-  {
-    id: 1,
-    title: "New product added",
-    message: "A new product 'Apple Watch SE' has been added to inventory.",
-    timestamp: new Date(),
-    read: false,
-  },
-  {
-    id: 2,
-    title: "Low stock alert",
-    message: "iPhone 14 Pro is running low on stock (5 remaining).",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
-    read: true,
-  },
-  {
-    id: 3,
-    title: "System maintenance",
-    message: "System will undergo maintenance on Saturday night.",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // Yesterday
-    read: false,
-  },
-  {
-    id: 4,
-    title: "New user registered",
-    message: "John Doe has registered as an admin user.",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-    read: true,
-  },
-  {
-    id: 5,
-    title: "Sales report",
-    message: "Monthly sales report for April is now available.",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7), // 1 week ago
-    read: false,
-  },
-  {
-    id: 6,
-    title: "Audit completed",
-    message: "First quarter audit has been completed successfully.",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), // Last month
-    read: true,
-  },
-  {
-    id: 7,
-    title: "System update",
-    message: "System has been updated to version 2.3.0",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 45), // 45 days ago
-    read: true,
-  },
-];
+import { useGlobalContext } from "@/contexts/global-context";
 
 const items = [
   {
@@ -127,17 +79,60 @@ const items = [
 export function AppSidebar() {
   const router = useRouter();
   const { open, openMobile } = useSidebar();
+  const { user, setUser } = useGlobalContext();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [user, setUser] = useState({});
-  const [notifications, setNotifications] = useState(DUMMY_NOTIFICATIONS);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
 
-  // Check if device is mobile
-  const isMobile = useIsMobile();
+  const [userNotifications, setUserNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  // Count unread notifications
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
+
+  // Notifications infinite query
+  const notificationsQuery = useInfiniteQuery({
+    queryKey: ["notifications"],
+    queryFn: ({ pageParam = "" }) => notificationPATCH(pageParam),
+    getNextPageParam: (lastPage) => {
+      return lastPage.lastVisible || undefined;
+    },
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    enabled: true,
+  });
+
+  useEffect(() => {
+    if (notificationsQuery.isSuccess) {
+      const notifications = notificationsQuery.data.pages.flatMap(
+        (page) => page.data
+      );
+      const userNotifs = notifications.filter((notification) => {
+        return Object.entries(notification?.notification_read_status).some(
+          ([key, value]) => {
+            return key === user?.account_id;
+          }
+        );
+      });
+
+      setUserNotifications(userNotifs);
+    }
+  }, [notificationsQuery.data]);
+
+  useEffect(() => {
+    if (userNotifications.length > 0) {
+      const unread = userNotifications.filter(
+        (notification) =>
+          notification?.notification_read_status[user?.account_id] === false
+      );
+      setUnreadCount(unread.length);
+    } else {
+      setUnreadCount(0);
+    }
+  }, [userNotifications]);
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: () => Logout(),
@@ -156,6 +151,14 @@ export function AppSidebar() {
     },
   });
 
+  const { mutateAsync: seenNotification, isPending: notificationPending } =
+    useMutation({
+      mutationFn: (id) => notificationSEEN(id),
+      onError: (error) => {
+        toast.error("Failed to mark notification as read");
+      },
+    });
+
   function getUserFromCookies() {
     const rawUser = Cookies.get("user");
     if (!rawUser) return null;
@@ -171,6 +174,7 @@ export function AppSidebar() {
 
       return {
         account_name: parsedUser.account_name,
+        account_id: parsedUser.account_id,
         account_role: parsedUser.account_role,
         account_profile_url,
       };
@@ -187,24 +191,44 @@ export function AppSidebar() {
   }, []);
 
   function handleLogout() {
-    mutateAsync();
-    setIsDialogOpen(false);
+    mutateAsync().then(() => setIsDialogOpen(false));
   }
 
   function openLogoutDialog() {
     setIsDialogOpen(true);
   }
 
-  // Mark notification as read
   function markAsRead(id) {
-    setNotifications(
-      notifications.map((n) => (n.id === id ? { ...n, read: true } : n))
+    setUserNotifications((prev) =>
+      prev.map((notification) => {
+        if (notification.notification_id === id) {
+          return {
+            ...notification,
+            notification_read_status: {
+              ...notification.notification_read_status,
+              [user.account_id]: true,
+            },
+          };
+        }
+        return notification;
+      })
     );
-  }
-
-  // Mark all notifications as read
-  function markAllAsRead() {
-    setNotifications(notifications.map((n) => ({ ...n, read: true })));
+    seenNotification(id).catch(() => {
+      setUserNotifications((prev) => {
+        return prev.map((notification) => {
+          if (notification.notification_id === id) {
+            return {
+              ...notification,
+              notification_read_status: {
+                ...notification.notification_read_status,
+                [user.account_id]: false,
+              },
+            };
+          }
+          return notification;
+        });
+      });
+    });
   }
 
   return (
@@ -296,9 +320,11 @@ export function AppSidebar() {
             <DialogTitle>Notifications</DialogTitle>
           </DialogHeader>
           <NotificationsContent
-            notifications={notifications}
+            infiniteQuery={notificationsQuery}
             markAsRead={markAsRead}
-            markAllAsRead={markAllAsRead}
+            //markAllAsRead={markAllAsRead}
+            unreadCount={unreadCount}
+            userNotifications={userNotifications}
           />
           <DialogFooter>
             <Button
@@ -342,11 +368,12 @@ export function AppSidebar() {
                 variant="outline"
                 className="w-full justify-start cursor-pointer transition-colors"
                 onClick={() => setNotificationDialogOpen(true)}
+                disabled={notificationsQuery.isPending}
               >
                 <Bell className="mr-2 h-4 w-4" />
                 Notifications
                 {unreadCount > 0 && (
-                  <Badge variant="destructive" className="ml-2">
+                  <Badge className="ml-2 bg-mainButtonColor">
                     {unreadCount}
                   </Badge>
                 )}
@@ -363,18 +390,20 @@ export function AppSidebar() {
                   >
                     <Bell className="mr-2 h-4 w-4" />
                     Notifications
-                    {unreadCount > 0 && (
+                    {unreadCount > 0 ? (
                       <Badge variant="destructive" className="ml-2">
                         {unreadCount}
                       </Badge>
-                    )}
+                    ) : null}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-0" align="start">
+                <PopoverContent className="w-fit p-0" align="start">
                   <NotificationsContent
-                    notifications={notifications}
+                    infiniteQuery={notificationsQuery}
                     markAsRead={markAsRead}
-                    markAllAsRead={markAllAsRead}
+                    //markAllAsRead={markAllAsRead}
+                    userNotifications={userNotifications}
+                    unreadCount={unreadCount}
                   />
                 </PopoverContent>
               </Popover>
@@ -450,9 +479,11 @@ export function AppSidebar() {
                 </PopoverTrigger>
                 <PopoverContent className="w-80 p-0" align="start">
                   <NotificationsContent
-                    notifications={notifications}
+                    infiniteQuery={notificationsQuery}
                     markAsRead={markAsRead}
-                    markAllAsRead={markAllAsRead}
+                    //markAllAsRead={markAllAsRead}
+                    userNotifications={userNotifications}
+                    unreadCount={unreadCount}
                   />
                 </PopoverContent>
               </Popover>
