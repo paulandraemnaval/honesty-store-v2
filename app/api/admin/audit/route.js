@@ -57,7 +57,6 @@ export async function POST(request) {
         const inventoryData = doc.data();
         totalUnitsBefore += inventoryData.inventory_total_units;
         inventories.push({
-          id: doc.inventory_id,
           ...inventoryData,
         });
       });
@@ -117,9 +116,7 @@ export async function POST(request) {
             cycle_count_id: cycleCountDoc.id,
             audit_id: auditDoc.id,
             inventory_id: inventory.inventory_id,
-            cycle_count_initial: initialUnits,
             cycle_count_remaining: finalUnits,
-            cycle_count_units_sold: unitsDeducted,
             cycle_count_income: inventoryIncome,
             cycle_count_wholesale_price: inventory.inventory_wholesale_price,
             cycle_count_profit: roundToTwoDecimals(
