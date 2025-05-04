@@ -1,5 +1,14 @@
 import { db } from "@/utils/firebase";
-import { collection, getDocs, doc, query } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  getDoc,
+  doc,
+  query,
+  limit,
+  orderBy,
+  startAfter,
+} from "firebase/firestore";
 import { NextResponse } from "next/server";
 
 //get notifs by 5
@@ -18,19 +27,28 @@ export async function PATCH(request) {
           { status: 400 }
         );
       }
-      notifQuery = query(notifRef, startAfter(lastDocSnapshot), limit(5));
+      notifQuery = query(
+        notifRef,
+        orderBy("notification_timestamp", "desc"),
+        startAfter(lastDocSnapshot),
+        limit(10)
+      );
     } else {
-      notifQuery = query(notifRef, limit(5));
+      notifQuery = query(
+        notifRef,
+        orderBy("notification_timestamp", "desc"),
+        limit(10)
+      );
     }
     const snapshot = await getDocs(notifQuery);
     const notifications = snapshot.docs.map((doc) => doc.data());
     return NextResponse.json(
-      { message: "Successfully fetched products", data: notifications },
+      { message: "Successfully fetched notifications", data: notifications },
       { status: 200 }
     );
   } catch (error) {
     return NextResponse.json(
-      { message: "Failed to fetch products: " + error.message },
+      { message: "Failed to fetch notifications: " + error.message },
       { status: 500 }
     );
   }

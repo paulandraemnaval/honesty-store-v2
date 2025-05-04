@@ -40,7 +40,6 @@ async function createNotificationForProducts(products, title, body) {
 
   await setDoc(notifDoc, {
     notification_id: notifDoc.id,
-    account_id: "N/A",
     notification_title: title,
     notification_body,
     notification_type: 2,

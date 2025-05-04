@@ -19,6 +19,7 @@ export async function PATCH(request, { params }) {
     const notif = snapshot.data();
     await updateDoc(notifDoc, {
       notification_read_status: {
+        ...(notif.notification_read_status || {}),
         [user.account_id]: true,
       },
       notification_last_updated: Timestamp.now(),

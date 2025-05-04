@@ -16,18 +16,14 @@ export async function GET(request) {
     const url = new URL(request.url);
     const notifId = url.searchParams.get("notifId");
     if (!notifId) {
-      return new NextResponse.json(
+      return NextResponse.json(
         { message: "Notification ID is required" },
         { status: 400 }
       );
     }
 
     const invNotifRef = collection(db, "InventoryNotification");
-    const q = query(
-      invNotifRef,
-      where("notification_id", "==", notifId),
-      orderBy("inventory_notification_timestamp")
-    );
+    const q = query(invNotifRef, where("notification_id", "==", notifId));
 
     const snapshot = await getDocs(q);
     const inventoryNotifications = snapshot.docs.map((doc) => doc.data());
@@ -40,7 +36,10 @@ export async function GET(request) {
     );
   } catch (error) {
     return NextResponse.json(
-      { message: "Error fetching inventory notifications" },
+      {
+        message: "Error fetching inventory notifications",
+        error: error.message,
+      },
       { status: 500 }
     );
   }
