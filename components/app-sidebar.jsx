@@ -477,7 +477,7 @@ export function AppSidebar() {
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-0" align="start">
+                <PopoverContent className="w-fit p-0" align="start">
                   <NotificationsContent
                     infiniteQuery={notificationsQuery}
                     markAsRead={markAsRead}
