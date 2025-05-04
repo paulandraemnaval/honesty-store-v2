@@ -5,7 +5,7 @@ import { getLoggedInUser } from "@/utils/firebase";
 
 export async function PATCH(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const notifDoc = doc(db, "Notification", id);
     const snapshot = await getDoc(notifDoc);
     if (!snapshot.exists()) {
@@ -21,6 +21,7 @@ export async function PATCH(request, { params }) {
       notification_read_status: {
         [user.account_id]: true,
       },
+      notification_last_updated: Timestamp.now(),
     });
 
     return NextResponse.json(
