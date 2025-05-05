@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -11,9 +11,22 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
-import { firebaseTimestampToLongDate } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import {
+  firebaseTimestampToLongDate,
+  notificationProductsGET,
+} from "@/lib/utils";
+import { Loader2, X, Info } from "lucide-react";
 import { useGlobalContext } from "@/contexts/global-context";
+import {
+  DialogHeader,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogFooter,
+} from "./ui/dialog";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import Image from "next/image";
 
 function getRelativeTimeLabel(date) {
   const now = new Date();
@@ -94,8 +107,22 @@ export function NotificationsContent({
 
   const { user } = useGlobalContext();
 
+  const [productPopupOpen, setProductPopupOpen] = useState(false);
+  const [notifID, setNotifID] = useState("");
   const observerRef = useRef(null);
   const sentinelRef = useRef(null);
+
+  const {
+    mutateAsync,
+    data: products,
+    isPending: isProductsLoading,
+  } = useMutation({
+    queryKey: [`notificationProducts-${notifID}`],
+    mutationFn: (notifId) => notificationProductsGET(notifId),
+    onError: (error) => {
+      toast.error(`Error fetching products: ${error.message}`);
+    },
+  });
 
   useEffect(() => {
     if (!sentinelRef.current) return;
@@ -124,6 +151,9 @@ export function NotificationsContent({
   const hasNotifications = Object.keys(groupedNotifications).length > 0;
 
   const handleNotificationClick = (id) => {
+    mutateAsync(id);
+    setNotifID(id);
+    setProductPopupOpen(true);
     markAsRead(id);
   };
 
@@ -167,56 +197,130 @@ export function NotificationsContent({
           {isSuccess && !hasNotifications && (
             <CommandEmpty>No notifications to display</CommandEmpty>
           )}
+          <Dialog open={productPopupOpen} onOpenChange={setProductPopupOpen}>
+            <DialogContent className="max-w-3xl w-full">
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <DialogTitle className="text-xl ">Notification</DialogTitle>
+                </div>
+              </DialogHeader>
 
-          <ScrollArea className="h-fit w-full">
-            {Object.entries(groupedNotifications).map(([timeLabel, items]) => (
-              <div key={timeLabel} className="w-full">
-                <CommandGroup heading={timeLabel} className="w-full">
-                  {items.map((notification) => (
-                    <CommandItem
-                      key={notification?.notification_id}
-                      onSelect={() =>
-                        handleNotificationClick(notification?.notification_id)
-                      }
-                      className={`cursor-pointer w-full border ${
-                        !isNotifRead(notification?.notification_id) &&
-                        "border-textColor"
-                      }`}
-                    >
-                      <div className="flex flex-col ">
-                        <div className="flex items-center justify-between max-w-[70dvw] lg:max-w-full">
-                          <div className="font-medium flex items-center truncate">
-                            <span className="truncate">
-                              {notification?.notification_title}
-                            </span>
-                            {!isNotifRead(notification.notification_id) && (
-                              <span className="ml-2 h-2 w-2 flex-shrink-0 rounded-full bg-blue-500"></span>
+              <div className="py-4">
+                {isProductsLoading ? (
+                  <div className="flex items-center justify-center h-48">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                  </div>
+                ) : products?.data && products?.data.length > 0 ? (
+                  <ScrollArea className="h-fit pr-4">
+                    <div className="grid grid-cols-1 gap-4">
+                      {products?.data.map((product, index) => (
+                        <div
+                          key={product.product_sku || index}
+                          className="flex p-2 bg-white rounded-lg overflow-hidden border shadow-sm hover:shadow-md transition-shadow duration-200"
+                        >
+                          <div className="relative h-ull w-[20%] flex items-center justify-center-safe bg-gray-100 flex-shrink-1">
+                            {product.product_image_url ? (
+                              <Image
+                                src={product.product_image_url}
+                                alt={product.product_name}
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="flex items-center justify-center h-full">
+                                <Info className="h-10 w-10 text-gray-300" />
+                              </div>
                             )}
                           </div>
-                          <div className="text-xs text-muted-foreground flex-shrink-0">
-                            {formatTime(notification?.notification_timestamp)}
+                          <div className="p-4 flex-1 truncate">
+                            <h3 className="font-medium text-lg line-clamp-2">
+                              {product.product_name}
+                            </h3>
+                            <div className="mt-2 flex items-center">
+                              <Badge variant="outline" className="text-xs">
+                                SKU: {product.product_sku}
+                              </Badge>
+                            </div>
                           </div>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                          {notification?.notification_body}
-                        </p>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-48">
+                    <Info className="h-12 w-12 text-gray-300 mb-4" />
+                    <p className="text-gray-500">
+                      No products found for this notification
+                    </p>
+                  </div>
+                )}
               </div>
-            ))}
 
-            {/* Sentinel element for infinite scrolling */}
-            {hasNextPage && (
-              <div
-                ref={sentinelRef}
-                className="h-10 flex items-center justify-center"
-              >
-                {isFetchingNextPage && <Loader2 className="animate-spin" />}
-              </div>
-            )}
-          </ScrollArea>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setProductPopupOpen(false)}
+                >
+                  Close
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+            <ScrollArea className="h-fit w-[70dvw]">
+              {Object.entries(groupedNotifications).map(
+                ([timeLabel, items]) => (
+                  <div key={timeLabel} className="w-full">
+                    <CommandGroup heading={timeLabel} className="w-full">
+                      {items.map((notification) => (
+                        <CommandItem
+                          key={notification?.notification_id}
+                          onSelect={() =>
+                            handleNotificationClick(
+                              notification?.notification_id
+                            )
+                          }
+                          className={`cursor-pointer w-full  border ${
+                            !isNotifRead(notification?.notification_id) &&
+                            "border-textColor"
+                          }`}
+                        >
+                          <div className="flex flex-col ">
+                            <div className="flex items-center justify-between max-w-[70dvw]">
+                              <div className="font-medium flex items-center truncate">
+                                <span className="truncate">
+                                  {notification?.notification_title}
+                                </span>
+                                {!isNotifRead(notification.notification_id) && (
+                                  <span className="ml-2 h-2 w-2 flex-shrink-0 rounded-full bg-blue-500"></span>
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground flex-shrink-0">
+                                {formatTime(
+                                  notification?.notification_timestamp
+                                )}
+                              </div>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                              {notification?.notification_body}
+                            </p>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </div>
+                )
+              )}
+
+              {/* Sentinel element for infinite scrolling */}
+              {hasNextPage && (
+                <div
+                  ref={sentinelRef}
+                  className="h-10 flex items-center justify-center"
+                >
+                  {isFetchingNextPage && <Loader2 className="animate-spin" />}
+                </div>
+              )}
+            </ScrollArea>
+          </Dialog>
         </CommandList>
       </Command>
     </div>

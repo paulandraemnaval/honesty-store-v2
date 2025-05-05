@@ -93,7 +93,7 @@ export function AppSidebar() {
     queryKey: ["notifications"],
     queryFn: ({ pageParam = "" }) => notificationPATCH(pageParam),
     getNextPageParam: (lastPage) => {
-      return lastPage.lastVisible || undefined;
+      return lastPage.lastVisible || null;
     },
     staleTime: 5 * 60 * 1000,
     cacheTime: 30 * 60 * 1000,
@@ -116,7 +116,7 @@ export function AppSidebar() {
   useEffect(() => {
     const unreadCount = userNotifications.reduce(
       (acc, notification) =>
-        notification.notification_read_status.includes(user?.account_id)
+        notification?.notification_read_status.includes(user?.account_id)
           ? acc
           : acc + 1,
       0
