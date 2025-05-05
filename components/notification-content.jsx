@@ -265,7 +265,7 @@ export function NotificationsContent({
                 </Button>
               </DialogFooter>
             </DialogContent>
-            <ScrollArea className="h-fit w-[70dvw]">
+            <ScrollArea className="h-fit w-full">
               {Object.entries(groupedNotifications).map(
                 ([timeLabel, items]) => (
                   <div key={timeLabel} className="w-full">
@@ -283,7 +283,7 @@ export function NotificationsContent({
                             "border-textColor"
                           }`}
                         >
-                          <div className="flex flex-col ">
+                          <div className="flex flex-col  max-w-full">
                             <div className="flex items-center justify-between max-w-[70dvw]">
                               <div className="font-medium flex items-center truncate">
                                 <span className="truncate">
