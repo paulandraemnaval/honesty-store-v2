@@ -21,7 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import ComboBox from "./combo-box";
 import { categorySchema } from "@/schemas/schemas";
 import { categoryDefaults } from "@/schemas/defaults";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { categoryDELETE, categoryPATCH, categoryPOST } from "@/lib/utils";
 import { useGlobalContext } from "@/contexts/global-context";
 import Image from "next/image";
@@ -30,6 +30,7 @@ import { categoriesGET } from "@/lib/utils";
 import DeleteButton from "./delete-button";
 
 export default function CategoryForm() {
+  const queryClient = useQueryClient();
   const { selectedCategory, categories, setSelectedCategory, setCategories } =
     useGlobalContext();
   const [activeTab, setActiveTab] = useState("add");
@@ -88,6 +89,7 @@ export default function CategoryForm() {
       }
     },
     onSuccess: () => {
+      queryClient.invalidateQueries(["categories"]);
       toast.success(
         activeTab === "edit"
           ? "Category updated successfully!"
@@ -111,6 +113,7 @@ export default function CategoryForm() {
     mutationKey: ["delete-category"],
     mutationFn: () => categoryDELETE(selectedCategory.category_id),
     onSuccess: () => {
+      queryClient.invalidateQueries(["categories"]);
       toast.success("Category deleted successfully!");
     },
     onError: (error) => {

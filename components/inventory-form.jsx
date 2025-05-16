@@ -1,7 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import {
+  QueryClient,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Calendar } from "lucide-react";
 import { format, set } from "date-fns";
 import { toast } from "sonner";
@@ -47,6 +51,8 @@ import ComboBox from "./combo-box";
 import DeleteButton from "./delete-button";
 
 export default function InventoryForm({ mode, setIsSheetOpen }) {
+  const queryClient = useQueryClient();
+
   const { selectedInventory, selectedProduct, suppliers } = useGlobalContext();
 
   const [selectedSupplier, setSelectedSupplier] = useState(
@@ -55,7 +61,7 @@ export default function InventoryForm({ mode, setIsSheetOpen }) {
 
   const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [expirationDate, setExpirationDate] = useState();
+  const [_, setExpirationDate] = useState();
   const [manualRetailPrice, setManualRetailPrice] = useState(false);
   const [manualProfitMargin, setManualProfitMargin] = useState(false);
 
@@ -101,6 +107,9 @@ export default function InventoryForm({ mode, setIsSheetOpen }) {
     mutationKey: ["inventory"],
     mutationFn: (obj) => {
       return mode === "edit" ? inventoryPATCH(obj) : inventoryPOST(obj);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["product_inventories"]);
     },
   });
 
@@ -234,6 +243,7 @@ export default function InventoryForm({ mode, setIsSheetOpen }) {
       mutationKey: ["delete-inventory"],
       mutationFn: () => inventoryDELETE(selectedInventory?.inventory_id),
       onSuccess: () => {
+        queryClient.invalidateQueries(["product_inventories"]);
         toast.success("Inventory deleted successfully", {});
       },
       onError: () => {

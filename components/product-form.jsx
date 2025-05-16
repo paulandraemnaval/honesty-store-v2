@@ -27,8 +27,10 @@ import { ScrollArea } from "./ui/scroll-area";
 import { productSchema } from "@/schemas/schemas";
 import { productDefaults } from "@/schemas/defaults";
 import DeleteButton from "./delete-button";
-
+import { useQueryClient } from "@tanstack/react-query";
 export default function ProductForm({ mode, setIsSheetOpen }) {
+  const queryClient = useQueryClient();
+
   const { selectedProduct, categories, setSelectedProduct } =
     useGlobalContext();
   const [showOptionalFields, setShowOptionalFields] = useState(false);
@@ -76,6 +78,7 @@ export default function ProductForm({ mode, setIsSheetOpen }) {
     },
     onSuccess: () => {
       toast.success("Product updated successfully");
+      queryClient.invalidateQueries(["products"]);
     },
     onError: () => {
       toast.error("Failed to update product");
@@ -86,6 +89,7 @@ export default function ProductForm({ mode, setIsSheetOpen }) {
     mutationKey: ["deleteProduct"],
     mutationFn: () => productDELETE(selectedProduct?.product_id),
     onSuccess: () => {
+      queryClient.invalidateQueries(["products"]);
       toast.success("Product deleted successfully");
     },
     onError: () => {

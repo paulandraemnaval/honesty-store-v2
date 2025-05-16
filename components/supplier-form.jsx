@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ComboBox from "./combo-box";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useGlobalContext } from "@/contexts/global-context";
 import { toast } from "sonner";
 import { supplierSchema } from "@/schemas/schemas";
@@ -34,6 +34,8 @@ import { ScrollArea } from "./ui/scroll-area";
 import DeleteButton from "./delete-button";
 
 export default function SupplierForm() {
+  const queryClient = useQueryClient();
+
   const { setSuppliers, suppliers, selectedSupplier, setSelectedSupplier } =
     useGlobalContext();
   const [activeTab, setActiveTab] = useState("add");
@@ -90,6 +92,7 @@ export default function SupplierForm() {
       }
     },
     onSuccess: () => {
+      queryClient.invalidateQueries(["suppliers"]);
       toast.success(
         activeTab === "edit"
           ? "Supplier updated successfully!"
@@ -114,8 +117,10 @@ export default function SupplierForm() {
       mutationKey: ["supplierDelete"],
       mutationFn: () => supplierDELETE(selectedSupplier.supplier_id),
       onSuccess: () => {
+        queryClient.invalidateQueries(["suppliers"]);
         toast.success("Supplier deleted successfully!");
       },
+
       onError: (error) => {
         toast.error(`Error deleting supplier: ${error.message}`);
       },

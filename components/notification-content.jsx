@@ -15,7 +15,7 @@ import {
   firebaseTimestampToLongDate,
   notificationProductsGET,
 } from "@/lib/utils";
-import { Loader2, X, Info } from "lucide-react";
+import { Loader2, Info } from "lucide-react";
 import { useGlobalContext } from "@/contexts/global-context";
 import {
   DialogHeader,
@@ -278,7 +278,7 @@ export function NotificationsContent({
                               notification?.notification_id
                             )
                           }
-                          className={`cursor-pointer w-full  border ${
+                          className={`cursor-pointer w-full mb-2  border ${
                             !isNotifRead(notification?.notification_id) &&
                             "border-textColor"
                           }`}

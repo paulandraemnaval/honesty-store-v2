@@ -20,7 +20,7 @@ import {
   firebaseTimestampToYYYY_MM_DD,
   productInventoriesGET,
 } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useGlobalContext } from "@/contexts/global-context";
 import { Loader2, RotateCw } from "lucide-react";
 import { useState } from "react";
@@ -47,6 +47,21 @@ export function InventoryTable() {
     refetch();
   };
 
+  function getColors(longdate) {
+    const date = new Date(longdate);
+    const today = new Date();
+    const diffTime = Math.abs(date - today);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 7) {
+      return "text-red-300";
+    } else if (diffDays <= 30) {
+      return "text-orange-300";
+    } else {
+      return "text-green-300";
+    }
+  }
+
   return (
     <>
       <ScrollArea className="h-[75vh] pr-2 w-full">
@@ -61,8 +76,9 @@ export function InventoryTable() {
             <TableRow>
               {isFetching ? null : (
                 <>
-                  <TableHead className="w-full">Date Created</TableHead>
-                  <TableHead className="text-left">ID</TableHead>
+                  <TableHead className="w-fit">ID</TableHead>
+                  <TableHead>Expiry Date</TableHead>
+                  <TableHead className="text-left">Remaining</TableHead>
                 </>
               )}
             </TableRow>
@@ -79,17 +95,24 @@ export function InventoryTable() {
               </TableRow>
             ) : (
               <>
-                {data?.data?.map((inv) => (
+                {data?.data?.map((inv, index) => (
                   <TableRow
                     key={inv.inventory_id}
                     onClick={() => handleRowClick(inv)}
                     className="cursor-pointer hover:bg-muted/50"
                   >
-                    <TableCell className="font-medium mr-auto">
-                      {firebaseTimestampToYYYY_MM_DD(inv.inventory_timestamp)}
+                    <TableCell className="font-medium">{index}</TableCell>
+                    <TableCell
+                      className={`font-medium ${getColors(
+                        inv?.inventory_expiration_date
+                      )}`}
+                    >
+                      {firebaseTimestampToYYYY_MM_DD(
+                        inv?.inventory_expiration_date
+                      )}
                     </TableCell>
-                    <TableCell className="font-medium text-left ">
-                      {inv.inventory_id}
+                    <TableCell className="font-medium mr-auto">
+                      {inv?.inventory_total_units}
                     </TableCell>
                   </TableRow>
                 ))}

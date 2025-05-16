@@ -86,7 +86,7 @@ const ProductsList = ({ customer }) => {
     if (!productsLoading && prodSuccess) {
       setProducts(data.pages.flatMap((page) => page.data));
     }
-  }, [prodSuccess]);
+  }, [data]);
 
   useEffect(() => {
     if (!localSupLoading && supSuccess) {
