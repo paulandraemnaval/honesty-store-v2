@@ -14,7 +14,6 @@ export function AuditProvider({ children }) {
   const [formData, setFormData] = useState(null);
   const queryClient = useQueryClient();
 
-  // Update filtered inventories whenever inventories or search term changes
   useEffect(() => {
     if (auditSearch && inventories.length > 0) {
       const filtered = inventories.filter((inventory) =>
@@ -47,7 +46,7 @@ export function AuditProvider({ children }) {
       toast.success("Audit submitted successfully");
       setAuditChanges([]);
       setFormData(null);
-      queryClient.invalidateQueries({ queryKey: ["inventoryforaudit"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     },
     onError: (error) => {
       toast.error(`Failed to submit audit: ${error.message}`);
