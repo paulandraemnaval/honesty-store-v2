@@ -122,18 +122,6 @@ export async function POST(request) {
       });
       await Promise.all(promises);
 
-      await setDoc(reportDoc, {
-        report_id: reportDoc.id,
-        account_id: user.account_id,
-        report_start_date,
-        report_end_date: Timestamp.now(),
-        report_cash_outflow,
-        report_cash_inflow,
-        report_timestamp: Timestamp.now(),
-        report_last_updated: Timestamp.now(),
-        report_soft_deleted: false,
-      });
-
       const inventoryRef = collection(db, "Inventory");
       const inventoryQuery = query(
         inventoryRef,
@@ -153,11 +141,27 @@ export async function POST(request) {
 
       await Promise.all(updatePromises);
 
+      let reportsTotal;
       try {
-        await generateReport(reportDoc.id);
+        reportsTotal = await generateReport(reportDoc.id);
       } catch (error) {
         throw new Error("Report generation not working");
       }
+
+      await setDoc(reportDoc, {
+        report_id: reportDoc.id,
+        account_id: user.account_id,
+        report_total_income: reportsTotal.data.totalIncome,
+        report_total_expense: reportsTotal.data.totalExpenses,
+        report_total_revenue: reportsTotal.data.totalRevenue,
+        report_start_date,
+        report_end_date: Timestamp.now(),
+        report_cash_outflow,
+        report_cash_inflow,
+        report_timestamp: Timestamp.now(),
+        report_last_updated: Timestamp.now(),
+        report_soft_deleted: false,
+      });
 
       const start =
         report_start_date instanceof Timestamp

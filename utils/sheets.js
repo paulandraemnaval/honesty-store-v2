@@ -205,8 +205,13 @@ export const generateReport = async (reportId) => {
     const inventoryData = await enrichInventoryData(cycleCounts);
 
     // Generate the report sheet
+    let reportTotals;
     try {
-      await financialReportSheetDesign(reportData, auditData, inventoryData);
+      reportTotals = await financialReportSheetDesign(
+        reportData,
+        auditData,
+        inventoryData
+      );
     } catch (error) {
       throw new Error("Google sheet cannot be created");
     }
@@ -214,6 +219,11 @@ export const generateReport = async (reportId) => {
     return {
       success: true,
       message: "Report generated successfully",
+      data: {
+        totalRevenue: reportTotals?.totalRevenue || 0,
+        totalIncome: reportTotals?.totalIncome || 0,
+        totalExpenses: reportTotals?.totalExpenses || 0,
+      },
     };
   } catch (error) {
     console.error("Error generating report:", error);

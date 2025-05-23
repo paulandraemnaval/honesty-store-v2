@@ -129,6 +129,10 @@ export async function financialReportSheetDesign(report, audits, inventories) {
     let row = 3,
       length = audits.length;
 
+    let totalExpenses = 0;
+    let totalRevenue = 0;
+    let totalIncome = 0;
+
     for (let i = 0; i < length; i++) {
       row++;
       for (let j = 0; j < 6; j++) {
@@ -149,6 +153,14 @@ export async function financialReportSheetDesign(report, audits, inventories) {
             type: "CURRENCY",
             pattern: "₱#,##0.00",
           };
+        }
+
+        if (j === 3 && typeof rawValue === "number") {
+          totalExpenses += rawValue;
+        } else if (j === 4 && typeof rawValue === "number") {
+          totalRevenue += rawValue;
+        } else if (j === 5 && typeof rawValue === "number") {
+          totalIncome += rawValue;
         }
       }
     }
@@ -276,6 +288,12 @@ export async function financialReportSheetDesign(report, audits, inventories) {
       }
     }
     await sheet.saveUpdatedCells();
+
+    return {
+      totalRevenue,
+      totalIncome,
+      totalExpenses,
+    };
   } catch (error) {
     console.error("Error updating sheet:", error);
   }
