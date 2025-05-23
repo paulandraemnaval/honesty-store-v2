@@ -1,10 +1,8 @@
 import { db } from "@/utils/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { NextResponse } from "next/server";
-import { report1 } from "@/utils/sheets";
 import { formatDate } from "@/utils/formatDate";
 import { roundToTwoDecimals } from "@/utils/calculations";
-import { getProfitData, getSalesData } from "@/utils/export";
 
 export const revalidate = 0;
 
@@ -34,32 +32,38 @@ export async function GET(request) {
       suppliers = querySnapshot.docs.length;
     }
 
-    const profit = await getProfitData(report1);
-    const sales = await getSalesData(report1);
+    let reports = [];
+    const reportRef = collection(db, "Report");
+    q = query(reportRef, where("report_soft_deleted", "==", false));
+    querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const reportData = querySnapshot.docs.map((doc) => doc.data());
 
-    const totalProfit = roundToTwoDecimals(
-      profit.reduce((acc, item) => {
-        return acc + item.total;
-      }, 0)
-    );
-
-    const totalSales = roundToTwoDecimals(
-      sales.reduce((acc, item) => {
-        return acc + item.total;
-      }, 0)
-    );
+      reports = reportData.map(
+        ({
+          report_start_date,
+          report_end_date,
+          report_total_expense,
+          report_total_income,
+          report_total_revenue,
+        }) => ({
+          report_start_date: formatDate(report_start_date.toDate()),
+          report_end_date: formatDate(report_end_date.toDate()),
+          report_total_expense: roundToTwoDecimals(report_total_expense),
+          report_total_income: roundToTwoDecimals(report_total_income),
+          report_total_revenue: roundToTwoDecimals(report_total_revenue),
+        })
+      );
+    }
 
     return NextResponse.json(
       {
-        message: "Sales successfully fetched",
+        message: "Dashboard data successfully fetched",
         data: {
-          profit,
-          sales,
           products,
           categories,
           suppliers,
-          totalProfit,
-          totalSales,
+          reports,
         },
       },
       { status: 200 }

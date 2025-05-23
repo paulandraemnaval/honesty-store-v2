@@ -54,7 +54,7 @@ export async function POST(request) {
       if (sheetCheck) {
         return NextResponse.json(
           { message: "Report already created for the same date range." },
-          { status: 404 }
+          { status: 409 }
         );
       }
     } else {
@@ -122,6 +122,21 @@ export async function POST(request) {
       });
       await Promise.all(promises);
 
+      await setDoc(reportDoc, {
+        report_id: reportDoc.id,
+        account_id: user.account_id,
+        report_total_income: 0,
+        report_total_expense: 0,
+        report_total_revenue: 0,
+        report_start_date,
+        report_end_date: Timestamp.now(),
+        report_cash_outflow,
+        report_cash_inflow,
+        report_timestamp: Timestamp.now(),
+        report_last_updated: Timestamp.now(),
+        report_soft_deleted: false,
+      });
+
       const inventoryRef = collection(db, "Inventory");
       const inventoryQuery = query(
         inventoryRef,
@@ -144,24 +159,27 @@ export async function POST(request) {
       let reportsTotal;
       try {
         reportsTotal = await generateReport(reportDoc.id);
-      } catch (error) {
-        throw new Error("Report generation not working");
-      }
 
-      await setDoc(reportDoc, {
-        report_id: reportDoc.id,
-        account_id: user.account_id,
-        report_total_income: reportsTotal.data.totalIncome,
-        report_total_expense: reportsTotal.data.totalExpenses,
-        report_total_revenue: reportsTotal.data.totalRevenue,
-        report_start_date,
-        report_end_date: Timestamp.now(),
-        report_cash_outflow,
-        report_cash_inflow,
-        report_timestamp: Timestamp.now(),
-        report_last_updated: Timestamp.now(),
-        report_soft_deleted: false,
-      });
+        await updateDoc(reportDoc, {
+          report_total_income: reportsTotal.data?.totalIncome || 0,
+          report_total_expense: reportsTotal.data?.totalExpenses || 0,
+          report_total_revenue: reportsTotal.data?.totalRevenue || 0,
+        });
+
+        // Check if report generation was successful
+        if (!reportsTotal || !reportsTotal.success) {
+          return NextResponse.json(
+            { message: reportsTotal?.message || "Report generation failed" },
+            { status: 500 }
+          );
+        }
+      } catch (error) {
+        console.error("Report generation error:", error);
+        return NextResponse.json(
+          { message: "Report generation failed", error: error.message },
+          { status: 500 }
+        );
+      }
 
       const start =
         report_start_date instanceof Timestamp

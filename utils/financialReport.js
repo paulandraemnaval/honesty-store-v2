@@ -166,6 +166,10 @@ export async function financialReportSheetDesign(report, audits, inventories) {
     }
     await sheet.saveUpdatedCells();
 
+    console.log("totalExpense:", totalExpenses);
+    console.log("totalRevenue:", totalRevenue);
+    console.log("totalIncome:", totalIncome);
+
     row = audits.length + 4;
     for (let i = 3; i < 6; i++) {
       const contentCell = sheet.getCell(row, i);
