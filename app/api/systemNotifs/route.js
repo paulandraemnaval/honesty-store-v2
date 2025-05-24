@@ -24,7 +24,7 @@ async function createNotificationForProducts(products, title, body) {
 
       await setDoc(invNotifDoc, {
         inventory_notification_id: invNotifDoc.id,
-        inventory_id: item.inventory_id,
+        product_id: product.product_id,
         notification_id: notifDoc.id,
       });
     } else {
