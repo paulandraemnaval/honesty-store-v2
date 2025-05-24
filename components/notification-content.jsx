@@ -167,11 +167,18 @@ export function NotificationsContent({
     // Make the parent container full width on small screens, fixed width on larger screens
     <div className="w-full lg:w-[500px] flex flex-col">
       <div className="flex items-center justify-between p-3 border-b">
-        <div className="flex items-center">
+        <div className="flex items-center justify-between w-full ">
           <h4 className="font-medium">Notifications</h4>
           {unreadCount > 0 && (
             <Badge className="ml-2 bg-mainButtonColor">{unreadCount}</Badge>
           )}
+          <Button
+            className="bg-mainButtonColor text-white hover:bg-mainButtonColor/80 hover:text-white cursor-pointer"
+            variant="ghost"
+            onClick={markAllAsRead}
+          >
+            Mark all as read
+          </Button>
         </div>
         {unreadCount > 0 && (
           <Button

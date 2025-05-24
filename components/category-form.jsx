@@ -88,7 +88,15 @@ export default function CategoryForm() {
         return categoryPOST(obj);
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data.status !== 200) {
+        toast.error(
+          `Error ${activeTab === "edit" ? "updating" : "creating"} category: ${
+            data.message
+          }`
+        );
+        return;
+      }
       queryClient.invalidateQueries(["categories"]);
       toast.success(
         activeTab === "edit"

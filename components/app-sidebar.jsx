@@ -453,7 +453,7 @@ export function AppSidebar() {
                   <NotificationsContent
                     infiniteQuery={notificationsQuery}
                     markAsRead={markAsRead}
-                    //markAllAsRead={markAllAsRead}
+                    markAllAsRead={markAllAsRead}
                     userNotifications={userNotifications}
                     unreadCount={unreadCount}
                   />

@@ -2,15 +2,14 @@
 
 import { useState, useEffect } from "react";
 import {
-  Bar,
-  BarChart,
+  Area,
+  AreaChart,
   CartesianGrid,
   XAxis,
   YAxis,
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-
 import {
   Card,
   CardContent,
@@ -27,27 +26,34 @@ import {
 
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function RevenueChart({ salesHist, isLoading }) {
+export function IncomeChart({ profitHist, isLoading }) {
   const [chartData, setChartData] = useState([]);
-  const [totalSales, setTotalSales] = useState(0);
+  const [totalProfit, setTotalProfit] = useState(0);
 
   useEffect(() => {
-    if (salesHist && salesHist.length > 0) {
-      // Filter out entries with null dates and calculate total
-      const validSales = salesHist.filter((item) => item.date.start !== null);
-      const total = validSales.reduce((sum, item) => sum + item.total, 0);
-      setTotalSales(total);
+    if (profitHist && profitHist.length > 0) {
+      // Filter out any invalid entries
+      const validProfit = profitHist.filter(
+        (item) =>
+          item.date &&
+          item.profit !== null &&
+          item.profit !== undefined &&
+          !isNaN(item.profit)
+      );
+
+      const total = validProfit.reduce((sum, item) => sum + item.profit, 0);
+      setTotalProfit(total);
 
       // Format the data for the chart
-      const formattedData = validSales.map((item) => {
-        const startDate = new Date(item.date.start);
+      const formattedData = validProfit.map((item) => {
+        const date = new Date(item.date);
         return {
-          date: startDate.toLocaleDateString("en-US", {
+          date: date.toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
           }),
-          sales: item.total,
-          fullDate: startDate, // Keep full date for sorting
+          profit: item.profit,
+          fullDate: date, // Keep full date for sorting
         };
       });
 
@@ -56,29 +62,33 @@ export function RevenueChart({ salesHist, isLoading }) {
 
       // Remove the redundant fullDate property before setting to state
       setChartData(formattedData.map(({ fullDate, ...rest }) => rest));
+    } else {
+      setChartData([]);
+      setTotalProfit(0);
     }
-  }, [salesHist]);
+  }, [profitHist]);
 
   const chartConfig = {
-    sales: {
-      label: "Revenue",
+    profit: {
+      label: "Profit",
       color: "#4285f4",
     },
   };
 
   if (isLoading) {
-    return <RevenueSkeleton />;
+    return <IncomeSkeleton />;
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Revenue</CardTitle>
+        <CardTitle>Income</CardTitle>
+        <CardDescription></CardDescription>
       </CardHeader>
-      <CardContent className="h-fit">
+      <CardContent className="h-fit py-0">
         <ChartContainer config={chartConfig}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
+            <AreaChart
               data={chartData}
               margin={{
                 top: 10,
@@ -91,8 +101,8 @@ export function RevenueChart({ salesHist, isLoading }) {
               <XAxis
                 dataKey="date"
                 tickLine={false}
-                tickMargin={10}
                 axisLine={false}
+                tickMargin={8}
                 angle={-45}
                 textAnchor="end"
               />
@@ -102,16 +112,17 @@ export function RevenueChart({ salesHist, isLoading }) {
                 tickFormatter={(value) => `₱${value}`}
               />
               <Tooltip
-                content={<ChartTooltipContent hideLabel />}
+                content={<ChartTooltipContent indicator="line" />}
                 formatter={(value) => [`₱${value.toFixed(2)}`]}
               />
-              <Bar
-                dataKey="sales"
-                fill="var(--color-sales, hsl(var(--chart-2)))"
-                radius={8}
-                fillOpacity={0.6}
+              <Area
+                dataKey="profit"
+                type="monotone"
+                stroke="var(--color-profit, hsl(var(--chart-1)))"
+                fill="var(--color-profit, hsl(var(--chart-1)))"
+                fillOpacity={0.4}
               />
-            </BarChart>
+            </AreaChart>
           </ResponsiveContainer>
         </ChartContainer>
       </CardContent>
@@ -119,26 +130,24 @@ export function RevenueChart({ salesHist, isLoading }) {
   );
 }
 
-function RevenueSkeleton() {
+function IncomeSkeleton() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Revenue</CardTitle>
-        <CardDescription>Loading Revenue data...</CardDescription>
+        <CardTitle>Income</CardTitle>
+        <CardDescription>Loading profit data...</CardDescription>
       </CardHeader>
       <CardContent className="h-80">
-        {/* Bar chart skeleton */}
+        {/* Chart skeleton */}
         <div className="space-y-2 w-full h-full flex flex-col justify-between">
           {/* Chart area skeleton */}
-          <div className="flex-1 flex items-end justify-between gap-2 px-2">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <Skeleton key={i} className="w-8 rounded-t-md" />
-            ))}
+          <div className="flex-1 relative">
+            <Skeleton className="absolute inset-0" />
           </div>
 
           {/* X-axis labels skeleton */}
           <div className="flex justify-between pt-2">
-            {Array.from({ length: 7 }).map((_, i) => (
+            {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-4 w-10" />
             ))}
           </div>
@@ -148,4 +157,4 @@ function RevenueSkeleton() {
   );
 }
 
-export default RevenueChart;
+export default IncomeChart;

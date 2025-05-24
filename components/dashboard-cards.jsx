@@ -32,9 +32,9 @@ export function SectionCards({ ...props }) {
       </Card>
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription className="text-black">Categories</CardDescription>
+          <CardDescription className="text-black">Suppliers</CardDescription>
           <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums text-textColor">
-            {props.categories}
+            {props.suppliers}
           </CardTitle>
         </CardHeader>
       </Card>
