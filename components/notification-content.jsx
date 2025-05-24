@@ -172,13 +172,13 @@ export function NotificationsContent({
           {unreadCount > 0 && (
             <Badge className="ml-2 bg-mainButtonColor">{unreadCount}</Badge>
           )}
-          <Button
+          {/* <Button
             className="bg-mainButtonColor text-white hover:bg-mainButtonColor/80 hover:text-white cursor-pointer"
             variant="ghost"
             onClick={markAllAsRead}
           >
             Mark all as read
-          </Button>
+          </Button> */}
         </div>
         {unreadCount > 0 && (
           <Button
@@ -197,7 +197,7 @@ export function NotificationsContent({
         <CommandList className="w-full">
           {isFetching && !isFetchingNextPage && (
             <div className="flex justify-center p-4">
-              <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
             </div>
           )}
 
@@ -293,11 +293,11 @@ export function NotificationsContent({
                           <div className="flex flex-col  max-w-full">
                             <div className="flex items-center justify-between max-w-[70dvw]">
                               <div className="font-medium flex items-center truncate">
-                                <span className="truncate">
+                                <span className="truncate font-semibold">
                                   {notification?.notification_title}
                                 </span>
                                 {!isNotifRead(notification.notification_id) && (
-                                  <span className="ml-2 h-2 w-2 flex-shrink-0 rounded-full bg-blue-500"></span>
+                                  <span className="ml-2 h-2 w-2 flex-shrink-0 rounded-full bg-orange-400"></span>
                                 )}
                               </div>
                               <div className="text-xs text-muted-foreground flex-shrink-0">
@@ -306,7 +306,7 @@ export function NotificationsContent({
                                 )}
                               </div>
                             </div>
-                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                               {notification?.notification_body}
                             </p>
                           </div>

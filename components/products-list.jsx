@@ -164,6 +164,7 @@ const ProductsList = ({ customer }) => {
         ) : (
           filteredProducts?.map((prodwinv, index) => {
             if (!prodwinv.inventory && customer) return null;
+            if (!prodwinv.inventory && hasNextPage) return null;
 
             return (
               <ProductCard
