@@ -52,7 +52,7 @@ import {
 
 import { Skeleton } from "./ui/skeleton";
 
-import { reportDELETE } from "@/lib/utils";
+import { reportDELETE, reportsGET } from "@/lib/utils";
 
 // Zod schema for report validation
 const ReportSchema = z.object({
@@ -91,22 +91,7 @@ export default function ReportList() {
     refetch,
   } = useQuery({
     queryKey: ["reports"],
-    queryFn: async () => {
-      const response = await fetch("/api/admin/report", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lastVisible: null }),
-      });
-
-      const data = await response.json();
-
-      try {
-        return ReportsResponseSchema.parse(data);
-      } catch (error) {
-        console.error("Data validation error:", error);
-        return { reports: [] };
-      }
-    },
+    queryFn: () => reportsGET(""),
   });
 
   const { mutateAsync: deleteReport } = useMutation({

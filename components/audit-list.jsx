@@ -7,7 +7,7 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Skeleton } from "./ui/skeleton";
-import { inventoryGETforAudit } from "@/lib/utils";
+import { firebaseTimestampToLongDate, inventoryGETforAudit } from "@/lib/utils";
 import { z } from "zod";
 import {
   Form,
@@ -180,6 +180,15 @@ const AuditList = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full px-6 py-4">
           {displayItems?.map((product) => {
             if (!product.inventory) return null;
+            if (product?.inventory?.inventory_total_units === 0) return null;
+            if (
+              new Date(
+                firebaseTimestampToLongDate(
+                  product.inventory.inventory_expiration_date
+                )
+              ) < new Date()
+            )
+              return null;
             const inventoryId = product.inventory.inventory_id;
 
             return (

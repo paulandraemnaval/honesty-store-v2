@@ -218,6 +218,8 @@ export async function POST(request) {
 export async function PATCH(request) {
   const { lastVisible } = await request.json();
 
+  console.log("Last Visible:", lastVisible);
+
   if (lastVisible && typeof lastVisible !== "string") {
     return NextResponse.json(
       { message: "Invalid lastVisible document ID." },
