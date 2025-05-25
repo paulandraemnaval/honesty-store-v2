@@ -212,7 +212,7 @@ export default function AccountForm() {
       return;
     }
 
-    await mutateAsync(values);
+    await mutateAsync({ ...values, account_id: selectedUser?.account_id });
   }
 
   const handleTabChange = (value) => {

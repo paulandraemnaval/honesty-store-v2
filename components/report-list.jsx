@@ -1,8 +1,7 @@
 "use client";
-
-import { useState } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { format } from "date-fns";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
 import {
@@ -30,15 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,12 +58,7 @@ const ReportSchema = z.object({
   report_soft_deleted: z.boolean().optional(),
 });
 
-const ReportsResponseSchema = z.object({
-  reports: z.array(ReportSchema),
-});
-
 export default function ReportList() {
-  const [currentPage, setCurrentPage] = useState(1);
   const [downloadingStates, setDownloadingStates] = useState({});
   const [dateFilter, setDateFilter] = useState("all");
 
@@ -82,16 +67,30 @@ export default function ReportList() {
   const [reportToDelete, setReportToDelete] = useState(null);
   const [deleteInProgress, setDeleteInProgress] = useState(false);
 
-  const reportsPerPage = 5;
+  // Intersection observer refs
+  const observerRef = useRef(null);
+  const sentinelRef = useRef(null);
 
-  // Fetch reports using React Query
+  // Fetch reports using Infinite Query
   const {
-    data: reportData,
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     isLoading,
     refetch,
-  } = useQuery({
-    queryKey: ["reports"],
-    queryFn: () => reportsGET(""),
+  } = useInfiniteQuery({
+    queryKey: ["reports", dateFilter],
+    queryFn: ({ pageParam = "" }) => reportsGET(pageParam, dateFilter),
+    getNextPageParam: (lastPage) => {
+      console.log("Last page:", lastPage.lastVisible);
+      return lastPage.lastVisible || undefined;
+    },
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   const { mutateAsync: deleteReport } = useMutation({
@@ -109,7 +108,50 @@ export default function ReportList() {
     },
   });
 
-  const reports = reportData?.reports || [];
+  // Flatten all reports from all pages and filter out soft deleted ones
+  const allReports = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages
+      .flatMap((page) => page.data || [])
+      .filter((report) => report.report_soft_deleted !== true);
+  }, [data]);
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    if (!sentinelRef.current || !hasNextPage) return;
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1, rootMargin: "100px" }
+    );
+
+    observerRef.current.observe(sentinelRef.current);
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  // Calculate total reports
+  const totalReports = allReports.length;
+
+  // Find latest report
+  const latestReport = useMemo(() => {
+    if (allReports.length === 0) return null;
+
+    return allReports.reduce((latest, report) => {
+      const currentDate = new Date(report.report_last_updated.seconds * 1000);
+      const latestDate = new Date(latest.report_last_updated.seconds * 1000);
+      return currentDate > latestDate ? report : latest;
+    }, allReports[0]);
+  }, [allReports]);
 
   const handleExportPDF = async (reportID, startDate, lastUpdated) => {
     try {
@@ -141,39 +183,6 @@ export default function ReportList() {
     }
   };
 
-  // Filter reports by date if needed
-  const filteredReports = reports.filter(
-    (report) => report.report_soft_deleted === false
-  );
-
-  // Calculate total reports
-  const totalReports = filteredReports.length;
-
-  // Find latest report
-  const latestReport =
-    filteredReports.length > 0
-      ? filteredReports.reduce((latest, report) => {
-          const currentDate = new Date(
-            report.report_last_updated.seconds * 1000
-          );
-          const latestDate = new Date(
-            latest.report_last_updated.seconds * 1000
-          );
-          return currentDate > latestDate ? report : latest;
-        }, filteredReports[0])
-      : null;
-
-  // Pagination logic
-  const indexOfLastReport = currentPage * reportsPerPage;
-  const indexOfFirstReport = indexOfLastReport - reportsPerPage;
-  const currentReports = filteredReports
-    .filter((report) => report.report_soft_deleted === false)
-    .slice(indexOfFirstReport, indexOfLastReport);
-  const totalPages = Math.ceil(filteredReports.length / reportsPerPage);
-
-  // Handle page change
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
   // Handle opening the delete confirmation dialog
   const openDeleteDialog = (report) => {
     setReportToDelete(report);
@@ -186,6 +195,11 @@ export default function ReportList() {
 
     setDeleteInProgress(true);
     await deleteReport(reportToDelete.report_id);
+  };
+
+  // Handle date filter change
+  const handleDateFilterChange = (value) => {
+    setDateFilter(value);
   };
 
   if (isLoading) {
@@ -235,13 +249,7 @@ export default function ReportList() {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <Select
-            value={dateFilter}
-            onValueChange={(value) => {
-              setDateFilter(value);
-              setCurrentPage(1);
-            }}
-          >
+          <Select value={dateFilter} onValueChange={handleDateFilterChange}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filter by date" />
             </SelectTrigger>
@@ -254,11 +262,21 @@ export default function ReportList() {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Show loading indicator when fetching next page */}
+        {isFetchingNextPage && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading more reports...
+          </div>
+        )}
       </div>
 
       <div className="rounded-md border mb-auto">
-        {currentReports.length === 0 ? (
-          <div className="py-8 text-center">No reports found</div>
+        {allReports.length === 0 ? (
+          <div className="py-8 text-center">
+            {isLoading ? "Loading reports..." : "No reports found"}
+          </div>
         ) : (
           <Table>
             <TableHeader>
@@ -271,7 +289,7 @@ export default function ReportList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {currentReports.map((report) => {
+              {allReports.map((report) => {
                 const startDate = new Date(
                   report.report_start_date.seconds * 1000
                 );
@@ -314,79 +332,40 @@ export default function ReportList() {
                           )
                         }
                       >
-                        <Download className="h-4 w-4" />
+                        {downloadingStates[report.report_id] ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
                       </Button>
                     </TableCell>
                   </TableRow>
                 );
               })}
+
+              {/* Sentinel row for infinite scrolling - only shows when there are more pages */}
+              {hasNextPage && (
+                <TableRow ref={sentinelRef} className="hover:bg-transparent">
+                  <TableCell colSpan={5} className="h-16 text-center">
+                    {isFetchingNextPage ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm text-muted-foreground">
+                          Loading more reports...
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">
+                        Scroll to load more reports
+                      </div>
+                    )}
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         )}
       </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => currentPage > 1 && paginate(currentPage - 1)}
-                className={
-                  currentPage === 1
-                    ? "cursor-not-allowed opacity-50"
-                    : "cursor-pointer"
-                }
-              />
-            </PaginationItem>
-
-            {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
-              let pageNumber;
-
-              // Logic to display page numbers around the current page
-              if (totalPages <= 5) {
-                pageNumber = idx + 1;
-              } else if (currentPage <= 3) {
-                pageNumber = idx + 1;
-              } else if (currentPage >= totalPages - 2) {
-                pageNumber = totalPages - 4 + idx;
-              } else {
-                pageNumber = currentPage - 2 + idx;
-              }
-
-              return (
-                <PaginationItem key={idx}>
-                  <PaginationLink
-                    onClick={() => paginate(pageNumber)}
-                    isActive={currentPage === pageNumber}
-                  >
-                    {pageNumber}
-                  </PaginationLink>
-                </PaginationItem>
-              );
-            })}
-
-            {totalPages > 5 && currentPage < totalPages - 2 && (
-              <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-            )}
-
-            <PaginationItem>
-              <PaginationNext
-                onClick={() =>
-                  currentPage < totalPages && paginate(currentPage + 1)
-                }
-                className={
-                  currentPage === totalPages
-                    ? "cursor-not-allowed opacity-50"
-                    : "cursor-pointer"
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      )}
 
       {/* Delete Confirmation Alert Dialog */}
       <AlertDialog
@@ -500,7 +479,7 @@ function ReportSkeleton() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Array.from({ length: 5 }).map((_, idx) => (
+            {Array.from({ length: 10 }).map((_, idx) => (
               <TableRow key={idx}>
                 <TableCell>
                   <Skeleton className="h-5 w-48" />
@@ -523,33 +502,6 @@ function ReportSkeleton() {
           </TableBody>
         </Table>
       </div>
-
-      {/* Pagination Skeleton */}
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious className="cursor-not-allowed opacity-50" />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink>
-              <Skeleton className="h-4 w-4" />
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink>
-              <Skeleton className="h-4 w-4" />
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink>
-              <Skeleton className="h-4 w-4" />
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext className="cursor-not-allowed opacity-50" />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
     </div>
   );
 }

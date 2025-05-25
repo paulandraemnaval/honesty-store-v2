@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import {
+  cn,
   firebaseTimestampToLongDate,
   notificationProductsGET,
 } from "@/lib/utils";
@@ -174,13 +175,6 @@ export function NotificationsContent({
               {unreadCount}
             </Badge>
           )}
-          {/* <Button
-            className="bg-mainButtonColor text-white hover:bg-mainButtonColor/80 hover:text-white cursor-pointer"
-            variant="ghost"
-            onClick={markAllAsRead}
-          >
-            Mark all as read
-          </Button> */}
         </div>
         {unreadCount > 0 && (
           <Button
@@ -278,7 +272,10 @@ export function NotificationsContent({
               {Object.entries(groupedNotifications).map(
                 ([timeLabel, items]) => (
                   <div key={timeLabel} className="w-full">
-                    <CommandGroup heading={timeLabel} className="w-full">
+                    <CommandGroup
+                      heading={timeLabel}
+                      className="w-full hover:bg-transparent"
+                    >
                       {items.map((notification) => (
                         <CommandItem
                           key={notification?.notification_id}
@@ -287,10 +284,12 @@ export function NotificationsContent({
                               notification?.notification_id
                             )
                           }
-                          className={`cursor-pointer w-full mb-2  border ${
-                            !isNotifRead(notification?.notification_id) &&
-                            "border-textColor"
-                          }`}
+                          className={cn(
+                            "cursor-pointer w-full mb-2 rounded-md border transition-colors duration-150",
+                            isNotifRead(notification.notification_id)
+                              ? "border-gray-200 hover:bg-gray-50"
+                              : "border-textColor hover:bg-orange-50"
+                          )}
                         >
                           <div className="flex flex-col  max-w-full">
                             <div className="flex items-center justify-between max-w-[70dvw]">

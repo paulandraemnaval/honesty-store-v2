@@ -58,26 +58,31 @@ const items = [
     title: "Dashboard",
     url: "/admin/user/",
     icon: icons.homeIcon,
+    roles: ["Secretary", "Admin"],
   },
   {
     title: "Products",
     url: "/admin/user/products",
     icon: icons.productsIcon,
+    roles: ["Auditor", "Treasurer", "Secretary", "Admin"],
   },
   {
     title: "Audit",
     url: "/admin/user/audit",
     icon: icons.auditIcon,
+    roles: ["Auditor", "Admin"],
   },
   {
     title: "Reports",
     url: "/admin/user/report",
     icon: icons.manageIcon,
+    roles: ["Treasurer", "Admin"],
   },
   {
     title: "Account Management",
     url: "/admin/user/account_management",
     icon: icons.accountsIcon,
+    roles: ["Admin"],
   },
 ];
 
@@ -93,6 +98,12 @@ export function AppSidebar() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const isMobile = useIsMobile();
+
+  const visibleItems = useMemo(() => {
+    if (!user?.account_role) return [];
+
+    return items.filter((item) => item.roles.includes(user.account_role));
+  }, [user?.account_role]);
 
   const notificationsQuery = useInfiniteQuery({
     queryKey: ["notifications"],
@@ -268,9 +279,9 @@ export function AppSidebar() {
           <SidebarMenu>
             <SidebarGroup>
               <SidebarGroupContent>
-                {items.map((item, index) => (
+                {visibleItems.map((item, index) => (
                   <Fragment key={item.title}>
-                    <SidebarMenuItem key={item.title}>
+                    <SidebarMenuItem>
                       <SidebarMenuButton asChild>
                         <Link href={item.url}>
                           <Image
@@ -284,7 +295,8 @@ export function AppSidebar() {
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                    {(index + 1) % 2 === 0 && index !== items.length - 1 ? (
+                    {(index + 1) % 2 === 0 &&
+                    index !== visibleItems.length - 1 ? (
                       <Separator className="my-2" />
                     ) : null}
                   </Fragment>
@@ -382,6 +394,9 @@ export function AppSidebar() {
               >
                 <Bell className="mr-2 h-4 w-4" />
                 Notifications
+                {notificationsQuery.isPending ? (
+                  <Loader2 className="ml-auto h-4 w-4 animate-spin" />
+                ) : null}
                 {unreadCount > 0 && (
                   <Badge className="ml-2 bg-mainButtonColor">
                     {unreadCount}
@@ -401,8 +416,11 @@ export function AppSidebar() {
                   >
                     <Bell className="mr-2 h-4 w-4" />
                     Notifications
+                    {notificationsQuery.isPending ? (
+                      <Loader2 className="ml-auto h-4 w-4 animate-spin" />
+                    ) : null}
                     {unreadCount > 0 ? (
-                      <Badge variant="destructive" className="ml-2">
+                      <Badge className="ml-2 bg-mainButtonColor text-white">
                         {unreadCount}
                       </Badge>
                     ) : null}

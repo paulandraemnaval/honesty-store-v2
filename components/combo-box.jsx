@@ -57,7 +57,17 @@ export default function ComboBox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full max-w-full p-0" align="start">
-        <Command>
+        <Command
+          filter={(value, search) => {
+            const item = safeData.find((i) => i[id_attr] === value);
+            if (!item) return 0;
+
+            const label = item[name_attr]?.toLowerCase() || "";
+            const term = search.toLowerCase();
+
+            return label.includes(term) ? 1 : 0;
+          }}
+        >
           <CommandInput placeholder={`Search ${datatype}`} />
           <CommandList>
             <CommandEmpty>No {datatype}s found.</CommandEmpty>
