@@ -170,7 +170,9 @@ export function NotificationsContent({
         <div className="flex items-center justify-between w-full ">
           <h4 className="font-medium">Notifications</h4>
           {unreadCount > 0 && (
-            <Badge className="ml-2 bg-mainButtonColor">{unreadCount}</Badge>
+            <Badge className="ml-2 mr-2 bg-mainButtonColor">
+              {unreadCount}
+            </Badge>
           )}
           {/* <Button
             className="bg-mainButtonColor text-white hover:bg-mainButtonColor/80 hover:text-white cursor-pointer"
@@ -185,7 +187,7 @@ export function NotificationsContent({
             variant="ghost"
             size="sm"
             onClick={markAllAsRead}
-            className="text-xs"
+            className="text-xs mr-6 custom-form-button"
           >
             Mark all as read
           </Button>

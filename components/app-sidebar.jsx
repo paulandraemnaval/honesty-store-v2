@@ -34,7 +34,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { Logout, notificationPATCH, notificationSEEN } from "@/lib/utils";
+import {
+  Logout,
+  markAllNotificaionsRead,
+  notificationPATCH,
+  notificationSEEN,
+} from "@/lib/utils";
 import Link from "next/link";
 import { AvatarImage } from "@radix-ui/react-avatar";
 import Cookies from "js-cookie";
@@ -102,6 +107,41 @@ export function AppSidebar() {
     refetchOnReconnect: false,
     enabled: true,
   });
+
+  const { mutateAsync: markAllAsRead, isPending: markAllPending } = useMutation(
+    {
+      mutationFn: () => markAllNotificaionsRead(),
+      onError: (error) => {
+        toast.error("Failed to mark all notifications as read");
+      },
+    }
+  );
+
+  function markAllNotificationsAsRead() {
+    const originalNotifications = [...userNotifications];
+    const originalUnreadCount = unreadCount;
+
+    const updatedNotifications = userNotifications.map((notification) => {
+      if (!notification.notification_read_status.includes(user?.account_id)) {
+        return {
+          ...notification,
+          notification_read_status: [
+            ...notification.notification_read_status,
+            user?.account_id,
+          ],
+        };
+      }
+      return notification;
+    });
+
+    setUserNotifications(updatedNotifications);
+    setUnreadCount(0);
+
+    markAllAsRead().catch(() => {
+      setUserNotifications(originalNotifications);
+      setUnreadCount(originalUnreadCount);
+    });
+  }
 
   useEffect(() => {
     if (notificationsQuery.isSuccess) {
@@ -292,7 +332,7 @@ export function AppSidebar() {
           <NotificationsContent
             infiniteQuery={notificationsQuery}
             markAsRead={markAsRead}
-            //markAllAsRead={markAllAsRead}
+            markAllAsRead={markAllNotificationsAsRead}
             unreadCount={unreadCount}
             userNotifications={userNotifications}
           />
@@ -372,7 +412,7 @@ export function AppSidebar() {
                   <NotificationsContent
                     infiniteQuery={notificationsQuery}
                     markAsRead={markAsRead}
-                    //markAllAsRead={markAllAsRead}
+                    markAllAsRead={markAllNotificationsAsRead}
                     userNotifications={userNotifications}
                     unreadCount={unreadCount}
                   />
@@ -453,7 +493,7 @@ export function AppSidebar() {
                   <NotificationsContent
                     infiniteQuery={notificationsQuery}
                     markAsRead={markAsRead}
-                    //markAllAsRead={markAllAsRead}
+                    markAllAsRead={markAllNotificationsAsRead}
                     userNotifications={userNotifications}
                     unreadCount={unreadCount}
                   />

@@ -19,6 +19,13 @@ import {
   FormControl,
   FormMessage,
 } from "./ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,6 +37,8 @@ import { useRouter } from "next/navigation";
 import { Login } from "@/lib/utils";
 import Image from "next/image";
 import icons from "@/constants/icons";
+import ForgotPasswordForm from "@/components/forgot-pass-form";
+
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string(),
@@ -66,6 +75,7 @@ function AuthForm() {
   });
 
   const [showPassword, setShowPassword] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
 
   function onSubmit(values) {
     mutateAsync(values);
@@ -73,6 +83,10 @@ function AuthForm() {
 
   function handlePeekPress() {
     setShowPassword((prev) => !prev);
+  }
+
+  function handleForgotPasswordClose() {
+    setForgotPasswordOpen(false);
   }
 
   return (
@@ -121,9 +135,24 @@ function AuthForm() {
                   <FormItem className="flex flex-col">
                     <div className="flex w-full">
                       <FormLabel htmlFor="name">Password</FormLabel>
-                      <span className="ml-auto underline font-thin text-slate-400 text-sm mt-2">
-                        Forgot Password?
-                      </span>
+                      <Dialog
+                        open={forgotPasswordOpen}
+                        onOpenChange={setForgotPasswordOpen}
+                      >
+                        <DialogTrigger asChild>
+                          <span className="ml-auto underline font-thin text-slate-400 text-sm mt-2 cursor-pointer hover:text-slate-600 transition-colors">
+                            Forgot Password?
+                          </span>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                          <DialogHeader>
+                            <DialogTitle>Reset Password</DialogTitle>
+                          </DialogHeader>
+                          <ForgotPasswordForm
+                            onClose={handleForgotPasswordClose}
+                          />
+                        </DialogContent>
+                      </Dialog>
                     </div>
                     <div className="flex flex-col">
                       <div className="flex gap-2">

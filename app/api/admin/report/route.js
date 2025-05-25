@@ -218,6 +218,8 @@ export async function POST(request) {
 export async function PATCH(request) {
   const { lastVisible } = await request.json();
 
+  console.log("Received lastVisible:", lastVisible);
+
   console.log("Last Visible:", lastVisible);
 
   if (lastVisible && typeof lastVisible !== "string") {
