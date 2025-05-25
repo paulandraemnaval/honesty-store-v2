@@ -297,7 +297,10 @@ export default function InventoryForm({ mode, setIsSheetOpen }) {
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel className="justify-between">
-                          Supplier*
+                          Supplier{" "}
+                          <span className="text-red-500 text-lg mr-auto">
+                            *
+                          </span>
                           {mode === "edit" && (
                             <DeleteButton
                               deleteFn={handleDelete}
@@ -333,7 +336,12 @@ export default function InventoryForm({ mode, setIsSheetOpen }) {
                     name="inventory_expiration_date"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Expiration Date*</FormLabel>
+                        <FormLabel>
+                          Expiration Date{" "}
+                          <span className="text-red-500 text-lg mr-auto">
+                            *
+                          </span>
+                        </FormLabel>
                         <Popover
                           open={calendarOpen}
                           onOpenChange={setCalendarOpen}
@@ -391,7 +399,12 @@ export default function InventoryForm({ mode, setIsSheetOpen }) {
                     name="inventory_total_units"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Total Units*</FormLabel>
+                        <FormLabel>
+                          Total Units{" "}
+                          <span className="text-red-500 text-lg mr-auto">
+                            *
+                          </span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -418,7 +431,12 @@ export default function InventoryForm({ mode, setIsSheetOpen }) {
                     name="inventory_wholesale_price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Wholesale Price*</FormLabel>
+                        <FormLabel>
+                          Wholesale Price{" "}
+                          <span className="text-red-500 text-lg mr-auto">
+                            *
+                          </span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -495,7 +513,12 @@ export default function InventoryForm({ mode, setIsSheetOpen }) {
                     name="inventory_retail_price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Retail Price*</FormLabel>
+                        <FormLabel>
+                          Retail Price{" "}
+                          <span className="text-red-500 text-lg mr-auto">
+                            *
+                          </span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -531,7 +554,12 @@ export default function InventoryForm({ mode, setIsSheetOpen }) {
                     name="inventory_profit_margin"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Profit Margin (%)*</FormLabel>
+                        <FormLabel>
+                          Profit Margin (%){" "}
+                          <span className="text-red-500 text-lg mr-auto">
+                            *
+                          </span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="number"

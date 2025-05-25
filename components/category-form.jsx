@@ -187,8 +187,8 @@ export default function CategoryForm() {
 
   return (
     <Form {...form}>
-      <Card className="w-full mx-auto overflow-hidden pt-0">
-        <CardContent className="pt-6">
+      <Card className="w-full  mx-auto overflow-hidden pt-0 ">
+        <CardContent className="pt-6 h-full">
           <Tabs
             defaultValue="add"
             className="w-full"
@@ -200,22 +200,25 @@ export default function CategoryForm() {
               <TabsTrigger value="edit">Edit Category</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="add" className="pt-4">
+            <TabsContent value="add" className="pt-4 ">
               <h2 className="form-title mb-4">Add New Category</h2>
               <form
                 onSubmit={form.handleSubmit(onSubmit, (errors) => {
                   console.log("Validation errors", errors);
                 })}
-                className="space-y-6"
+                className="space-y-6 "
               >
-                <ScrollArea className="form-scroll-area h-80">
+                <ScrollArea className="form-scroll-area">
                   <div className="space-y-6 pr-4">
                     <FormField
                       control={form.control}
                       name="file"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Category Image</FormLabel>
+                          <FormLabel>
+                            Category Image{" "}
+                            <span className="text-red-500 text-lg">*</span>
+                          </FormLabel>
                           <FormControl>
                             <div
                               onClick={handleImageClick}
@@ -270,7 +273,10 @@ export default function CategoryForm() {
                       name="category_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Category Name</FormLabel>
+                          <FormLabel>
+                            Category Name{" "}
+                            <span className="text-red-500 text-lg">*</span>
+                          </FormLabel>
                           <FormControl>
                             <Input
                               placeholder="Enter category name"
@@ -317,8 +323,11 @@ export default function CategoryForm() {
               </form>
             </TabsContent>
 
-            <TabsContent value="edit" className="pt-4 w-full">
-              <h2 className="form-title mb-4 justify-between flex items-center">
+            <TabsContent
+              value="edit"
+              className="pt-4 w-full h-full overflow-auto "
+            >
+              <h2 className="form-title mb-2 justify-between flex items-center">
                 Edit Category
                 {selectedCategory && (
                   <DeleteButton
@@ -357,16 +366,19 @@ export default function CategoryForm() {
                   onSubmit={form.handleSubmit(onSubmit, (errors) => {
                     console.log("Validation errors", errors);
                   })}
-                  className="space-y-6 "
+                  className="space-y-6 flex flex-col h-full"
                 >
-                  <ScrollArea className="form-scroll-area h-80">
+                  <ScrollArea className="form-scroll-area h-70">
                     <div className="space-y-6 pr-4">
                       <FormField
                         control={form.control}
                         name="file"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Category Image</FormLabel>
+                            <FormLabel>
+                              Category Image
+                              <span className="text-red-500 text-lg">*</span>
+                            </FormLabel>
                             <FormControl>
                               <div
                                 onClick={handleImageClick}
@@ -421,7 +433,10 @@ export default function CategoryForm() {
                         name="category_name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Category Name</FormLabel>
+                            <FormLabel>
+                              Category Name{" "}
+                              <span className="text-red-500 text-lg">*</span>
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Enter category name"
@@ -458,7 +473,7 @@ export default function CategoryForm() {
                   <Button
                     type="submit"
                     disabled={isPending}
-                    className="custom-form-button"
+                    className="custom-form-button w-fit"
                   >
                     {isPending && (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />

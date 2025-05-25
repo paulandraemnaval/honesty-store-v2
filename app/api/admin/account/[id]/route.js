@@ -53,14 +53,13 @@ export async function PATCH(request, { params }) {
     }
 
     const account = accountDoc.data();
-    const { name, file, role, url, email, password } =
-      Object.fromEntries(formData);
+    const { name, file, role, url, email } = Object.fromEntries(formData);
 
     console.log(Object.fromEntries(formData));
 
-    if (!email || !password || !name) {
+    if (!email || !name) {
       return NextResponse.json(
-        { error: "Email, password, and name are required." },
+        { error: "Email and name are required." },
         { status: 400 }
       );
     }
@@ -77,21 +76,17 @@ export async function PATCH(request, { params }) {
       }
     }
 
-    const password_hash = await bcryptjs.hash(password, account.account_salt);
-
     await updateDoc(accountRef, {
       account_name: name,
       account_email: email,
       account_profile_url: imageURL || null,
       account_role: role,
-      account_password_hash: password_hash,
       account_last_updated: Timestamp.now(),
     });
 
     try {
       await adminAuth.updateUser(account.account_auth_id, {
         email,
-        password,
       });
     } catch (err) {
       return NextResponse.json(

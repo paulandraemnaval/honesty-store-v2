@@ -108,8 +108,6 @@ export default function AccountForm() {
           name: selectedUser.account_name,
           email: selectedUser.account_email,
           role: selectedUser.account_role,
-          password: "",
-          confirmPassword: "",
           file: selectedUser?.account_profile_url,
         });
         setPhotoPreview(selectedUser.account_profile_url);
@@ -137,7 +135,11 @@ export default function AccountForm() {
         });
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data.status !== 200) {
+        toast.error(`An error occured, please try again later.`);
+        return;
+      }
       toast.success(
         activeTab === "edit"
           ? "User updated successfully!"
@@ -417,7 +419,10 @@ function AccountFormContent({
         name="file"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Profile Photo</FormLabel>
+            <FormLabel>
+              Profile Photo{" "}
+              <span className="text-red-500 text-lg mr-auto">*</span>
+            </FormLabel>
             <FormControl>
               <div className="flex items-center gap-4">
                 <div
@@ -485,7 +490,9 @@ function AccountFormContent({
         name="name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Username</FormLabel>
+            <FormLabel>
+              Username <span className="text-red-500 text-lg mr-auto">*</span>
+            </FormLabel>
             <FormControl>
               <Input
                 placeholder="Enter username"
@@ -505,7 +512,9 @@ function AccountFormContent({
         name="email"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Email</FormLabel>
+            <FormLabel>
+              Email <span className="text-red-500 text-lg mr-auto">*</span>
+            </FormLabel>
             <FormControl>
               <Input
                 placeholder="Enter email"
@@ -520,57 +529,15 @@ function AccountFormContent({
         )}
       />
 
-      {/* Password - Always required */}
-      <FormField
-        control={form.control}
-        name="password"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Password</FormLabel>
-            <FormControl>
-              <Input
-                placeholder="Enter password"
-                type="password"
-                {...field}
-                disabled={isPending}
-                value={field.value || ""}
-                required={true}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {/* Confirm Password - Always shown and required */}
-      <FormField
-        control={form.control}
-        name="confirmPassword"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Confirm Password</FormLabel>
-            <FormControl>
-              <Input
-                placeholder="Confirm password"
-                type="password"
-                {...field}
-                disabled={isPending}
-                value={field.value || ""}
-                required={true}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
       {/* Role Selection */}
       <FormField
         control={form.control}
         name="role"
         render={({ field }) => (
           <FormItem className="space-y-3">
-            <FormLabel>Role</FormLabel>
+            <FormLabel>
+              Role <span className="text-red-500 text-lg mr-auto">*</span>
+            </FormLabel>
             <FormControl>
               <RadioGroup
                 onValueChange={field.onChange}

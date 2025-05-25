@@ -170,8 +170,9 @@ export default function ProductForm({ mode, setIsSheetOpen }) {
                   name="file"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="justify-between">
+                      <FormLabel>
                         Product Image
+                        <span className="text-red-500 text-lg mr-auto">*</span>
                         {mode === "edit" && (
                           <DeleteButton
                             deleteFn={handleDelete}
@@ -232,7 +233,9 @@ export default function ProductForm({ mode, setIsSheetOpen }) {
                   name="product_category"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Category*</FormLabel>
+                      <FormLabel>
+                        Category <span className="text-red-500 text-lg">*</span>
+                      </FormLabel>
                       <FormControl>
                         <ComboBox
                           data={categories ?? []}
@@ -254,7 +257,10 @@ export default function ProductForm({ mode, setIsSheetOpen }) {
                   name="product_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Product Name</FormLabel>
+                      <FormLabel>
+                        Product Name{" "}
+                        <span className="text-red-500 text-lg">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Enter product name"
@@ -274,7 +280,10 @@ export default function ProductForm({ mode, setIsSheetOpen }) {
                   name="product_reorder_point"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Reorder Point*</FormLabel>
+                      <FormLabel>
+                        Reorder Point{" "}
+                        <span className="text-red-500 text-lg">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"

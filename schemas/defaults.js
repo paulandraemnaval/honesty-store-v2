@@ -37,7 +37,6 @@ export const supplierDefaults = {
 export const userDefaults = {
   name: "",
   email: "",
-  password: "",
   role: "",
   photo: undefined,
 };

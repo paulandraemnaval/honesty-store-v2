@@ -209,7 +209,7 @@ export default function SupplierForm() {
                 <ComboBox
                   datatype="Supplier"
                   data={suppliers ?? []}
-                  value={selectedSupplier}
+                  value={selectedSupplier?.supplier_id}
                   setSelectedValue={handleSupplierSelect}
                   disabled={isPending}
                   id_attr="supplier_id"
@@ -264,7 +264,7 @@ function SupplierFormContent({
       })}
       className="space-y-6"
     >
-      <ScrollArea className="flex-1 h-74 px-1">
+      <ScrollArea className="flex-1 h-60 px-1">
         {/* Required Fields Section */}
         <div className={`space-y-4 ${showOptionalFields ? "hidden" : "block"}`}>
           <FormField
@@ -272,7 +272,9 @@ function SupplierFormContent({
             name="supplier_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Supplier Name</FormLabel>
+                <FormLabel>
+                  Supplier Name <span className="text-red-500 text-lg">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input
                     placeholder="Enter supplier name"
@@ -290,7 +292,9 @@ function SupplierFormContent({
             name="supplier_contact_person"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Contact Person</FormLabel>
+                <FormLabel>
+                  Contact Person <span className="text-red-500 text-lg">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input
                     placeholder="Enter contact person"
@@ -308,7 +312,9 @@ function SupplierFormContent({
             name="supplier_contact_number"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Contact Number</FormLabel>
+                <FormLabel>
+                  Contact Number <span className="text-red-500 text-lg">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input
                     placeholder="Enter contact number (09XXXXXXXXX)"

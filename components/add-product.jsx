@@ -23,7 +23,13 @@ export default function AddProduct() {
         </Button>
       </SheetTrigger>
 
-      <SheetContent className="sheet-content">
+      <SheetContent className="sheet-content px-6  gap-2">
+        <SheetTitle>
+          <h2 className="font-bold text-2xl mt-8">Add New Product</h2>
+        </SheetTitle>
+        <SheetDescription className="mb-4">
+          Fill out the form below to add a new product to the Honesty Store.
+        </SheetDescription>
         <ProductForm mode={"add"} />
       </SheetContent>
     </Sheet>

@@ -137,41 +137,21 @@ export const reportFormSchema = z.object({
     }),
 });
 
-export const userSchema = z
-  .object({
-    name: z
-      .string()
-      .min(3, "Username must be at least 3 characters")
-      .max(50, "Username cannot exceed 50 characters"),
-    email: z.string().email("Please enter a valid email address"),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .optional()
-      .or(z.literal("")),
-    confirmPassword: z.string().optional().or(z.literal("")),
-    role: z.enum(["Admin", "Treasurer", "Auditor", "Secretary"], {
-      required_error: "Please select a role",
+export const userSchema = z.object({
+  name: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .max(50, "Username cannot exceed 50 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  role: z.enum(["Admin", "Treasurer", "Auditor", "Secretary"], {
+    required_error: "Please select a role",
+  }),
+  file: z
+    .union([
+      z.instanceof(File, { message: "Product image is required" }),
+      z.string().url({ message: "Product image is required" }),
+    ])
+    .refine((val) => val instanceof File || val.length > 0, {
+      message: "Product image is required.",
     }),
-    file: z
-      .union([
-        z.instanceof(File, { message: "Product image is required" }),
-        z.string().url({ message: "Product image is required" }),
-      ])
-      .refine((val) => val instanceof File || val.length > 0, {
-        message: "Product image is required.",
-      }),
-  })
-  .refine(
-    (data) => {
-      // In create mode, password is required
-      if (!data.password && data.password !== "") {
-        return true; // Skip validation if empty string in edit mode
-      }
-      return data.password === data.confirmPassword;
-    },
-    {
-      message: "Passwords don't match",
-      path: ["confirmPassword"],
-    }
-  );
+});
