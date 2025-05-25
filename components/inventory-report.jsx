@@ -86,7 +86,8 @@ const InventoryReport = () => {
       >
         <div className={cn("grid gap-2")}>
           <div className="text-sm">
-            Create an inventory report for a date range.
+            Create an inventory report for a date range.{" "}
+            <span className="text-red-500 text-lg mr-auto">*</span>
           </div>
           <Popover>
             <PopoverTrigger asChild>
@@ -109,7 +110,7 @@ const InventoryReport = () => {
                     format(date.from, "LLL dd, y")
                   )
                 ) : (
-                  <span>Pick a date range</span>
+                  <span>Pick a date range </span>
                 )}
               </Button>
             </PopoverTrigger>

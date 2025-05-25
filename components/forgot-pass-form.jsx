@@ -64,7 +64,9 @@ function ForgotPasswordForm({ onClose }) {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>
+                Email <span className="text-red-500 text-lg mr-auto">*</span>
+              </FormLabel>
               <FormControl>
                 <Input
                   placeholder="example@gmail.com"

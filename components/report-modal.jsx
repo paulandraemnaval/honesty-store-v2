@@ -96,7 +96,10 @@ export default function ReportDialog() {
               name="cash_inflow"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cash Inflow</FormLabel>
+                  <FormLabel>
+                    Cash Inflow{" "}
+                    <span className="text-red-500 text-lg mr-auto">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Enter cash inflow"
@@ -117,7 +120,10 @@ export default function ReportDialog() {
               name="cash_outflow"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cash Outflow</FormLabel>
+                  <FormLabel>
+                    Cash Outflow{" "}
+                    <span className="text-red-500 text-lg mr-auto">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Enter cash outflow"
