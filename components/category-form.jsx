@@ -97,7 +97,7 @@ export default function CategoryForm() {
         );
         return;
       }
-      queryClient.invalidateQueries(["categories", "category"]);
+      refetch();
       toast.success(
         activeTab === "edit"
           ? "Category updated successfully!"

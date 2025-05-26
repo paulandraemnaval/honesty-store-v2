@@ -285,7 +285,6 @@ const ProductCard = ({
       <CardContent className="p-3 h-full">
         {admin && (
           <div className="flex justify-between">
-            <p className="text-xs text-muted-foreground">{category}</p>
             {admin && inv ? (
               <p className="text-xs text-muted-foreground">
                 {inv?.inventory_total_units} units
@@ -293,6 +292,7 @@ const ProductCard = ({
             ) : null}
           </div>
         )}
+        <p className="text-xs text-muted-foreground">{category}</p>
         <p className="line-clamp-2 ">{prod?.product_name}</p>
       </CardContent>
       <CardFooter className="p-3 pt-0">
