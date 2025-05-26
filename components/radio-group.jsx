@@ -2,7 +2,7 @@ import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Label } from "./ui/label";
 
 export default function FormRadioGroup({
-  data,
+  data = [],
   currentSelected,
   setSelected,
   label_attr,
@@ -20,18 +20,20 @@ export default function FormRadioGroup({
           No Filter
         </Label>
       </div>
-      {data.map((item) => {
-        const label = item[label_attr];
-        const value = item[value_attr];
-        return (
-          <div key={value} className="flex items-center space-x-2 w-full">
-            <RadioGroupItem value={value} id={`radio-${value}`} />
-            <Label htmlFor={`radio-${value}`} className="mr-auto">
-              {label}
-            </Label>
-          </div>
-        );
-      })}
+      {data.length > 0
+        ? data?.map((item) => {
+            const label = item[label_attr];
+            const value = item[value_attr];
+            return (
+              <div key={value} className="flex items-center space-x-2 w-full">
+                <RadioGroupItem value={value} id={`radio-${value}`} />
+                <Label htmlFor={`radio-${value}`} className="mr-auto">
+                  {label}
+                </Label>
+              </div>
+            );
+          })
+        : null}
     </RadioGroup>
   );
 }
