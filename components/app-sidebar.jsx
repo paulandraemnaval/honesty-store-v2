@@ -255,6 +255,10 @@ export function AppSidebar() {
       setUnreadCount((prev) => prev + 1);
     });
   }
+  function openBugForm() {
+    const bugFormUrl = "https://forms.gle/aXcmFUgBwhrGZ2wx6";
+    window.open(bugFormUrl, "_blank");
+  }
   return (
     <Sidebar variant="sidebar" collapsible="icon">
       <SidebarHeader className="p-4">
@@ -452,6 +456,12 @@ export function AppSidebar() {
             <div className="pt-2 border-t">
               <p className="text-xs text-center text-muted-foreground">
                 &copy; 2025 Honesty Store IMS
+              </p>
+              <p
+                className="text-xs text-center underline text-textColor cursor-pointer"
+                onClick={openBugForm}
+              >
+                Report a bug
               </p>
             </div>
           </div>
